@@ -540,6 +540,8 @@ class StreamTableOptions:
     #: invented from the flowsheet's name would be worse than the blank,
     #: because it would look issued.
     sheet_drawing_number: str = ""
+    # True when title_block is already the independently controlled table face.
+    standalone: bool = False
 
 
 #: What a derived table-sheet drawing number puts after the diagram's.
@@ -582,6 +584,12 @@ def table_sheet_block(block: "TitleBlock | None",
     no reading of it that produces a filable set.
     """
     diagram = TitleBlock() if block is None else block
+    if type(options.standalone) is not bool:
+        raise ValueError('stream_table.standalone must be a boolean')
+    if options.standalone:
+        if options.sheet_drawing_number:
+            raise ValueError('A standalone table uses its own title_block drawing number')
+        return replace(diagram, subtitle=options.sheet_subtitle)
     number = diagram.drawing_number
     stated = options.sheet_drawing_number
     if stated and _same_number(stated, number):
@@ -747,9 +755,17 @@ class StreamLabelOptions:
     #: at the cost of reading like an instrument balloon on a sheet
     #: that carries instruments.
     enclosure: Literal["none", "diamond", "circle", "box"] = "none"
+    font_size: float = 10.0
 
     def __post_init__(self):
+        self.validate()
+
+    def validate(self):
+        import math
         self.enclosure = _resolve_enclosure(self.enclosure)
+        if (type(self.font_size) not in (int, float) or not math.isfinite(self.font_size)
+                or self.font_size <= 0):
+            raise ValueError('stream_labels.font_size must be positive and finite')
 
 
 # --------------------------------------------------------------

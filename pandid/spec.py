@@ -99,7 +99,6 @@ from pandid.document import (
     notes,
     _drawn_text,
     _drawn_text_fields,
-    _resolve_enclosure,
 )
 from pandid.flowsheet import (
     DEFAULT_LINE_NUMBER_START,
@@ -1207,6 +1206,10 @@ def _read_stream_table(entry: Any, where: str) -> StreamTableOptions:
     for key in ("sheet_subtitle", "sheet_drawing_number"):
         if key in data:
             setattr(options, key, _text(data[key], f"{where}.{key}"))
+    if 'standalone' in data:
+        if type(data['standalone']) is not bool:
+            raise SpecError(f'{where}.standalone must be a boolean')
+        options.standalone = data['standalone']
     return options
 
 
@@ -1220,13 +1223,10 @@ def _read_stream_labels(entry: Any, where: str) -> StreamLabelOptions:
     """
     data = _mapping(entry, where)
     _check_keys(data, {f.name for f in dataclass_fields(StreamLabelOptions)}, where)
-    if "enclosure" not in data:
-        return StreamLabelOptions()
-    shape = _text(data["enclosure"], f"{where}.enclosure")
     try:
-        return StreamLabelOptions(enclosure=_resolve_enclosure(shape))
+        return StreamLabelOptions(**data)
     except ValueError as exc:
-        raise SpecError(f"{where}.enclosure: {exc}") from exc
+        raise SpecError(f"{where}: {exc}") from exc
 
 
 def _read_title_block(entry: Any, where: str) -> TitleBlock:
@@ -1465,7 +1465,7 @@ def to_dict(fs: Flowsheet) -> dict:
         # and this is the way out. The same sentence either way, and a
         # :class:`ValueError` rather than a :class:`SpecError`: the
         # spec is not wrong, the flowsheet being written is.
-        _resolve_enclosure(fs.stream_labels.enclosure)
+        fs.stream_labels.validate()
         spec["stream_labels"] = labels
     if fs.title_block is not None:
         spec["title_block"] = _write_title_block(fs.title_block)

@@ -2092,7 +2092,6 @@ class Flowsheet:
         here either way, so an empty list after a ``check=False`` render
         means nothing was found rather than nothing was looked for.
         """
-        from pandid.document import _resolve_enclosure
         from pandid.render.svg import (check_render_arguments, draws_arrowheads,
                                        tabulates_boundary_flows)
         from pandid.validate import geometry_issues, model_issues
@@ -2118,7 +2117,7 @@ class Flowsheet:
         # argument no output answers to, with no fallback to draw --
         # ``check=False`` asks for the sheet unvalidated, not for a
         # shape that does not exist.
-        _resolve_enclosure(self.stream_labels.enclosure)
+        self.stream_labels.validate()
         # Before the model check, not after: `stream-name-reused` reads
         # the names, and `new_line_number` set after the last connect()
         # regroups the runs and so changes them.

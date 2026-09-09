@@ -446,7 +446,9 @@ def test_the_drawio_export_opens_on_the_same_paper():
     page = _page("A4")
     assert model is not None and page is not None
     assert model.get("page") == "1"
-    assert float(model.get("pageWidth") or 0) == pytest.approx(page.width, abs=0.01)
+    # draw.io's native A4 units use its own page preset, not SVG's 96 dpi
+    # coordinate system. The exporter scales the complete table to that preset.
+    assert (float(model.get('pageWidth')), float(model.get('pageHeight'))) == (1169, 827)
 
 
 def test_render_writes_the_table_sheet_to_whatever_the_extension_asks_for(tmp_path):

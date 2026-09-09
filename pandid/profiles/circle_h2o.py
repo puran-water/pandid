@@ -30,11 +30,12 @@ def block_diagram(name: str, blocks: list[dict], streams: list[dict], *,
     fs = Flowsheet(name)
     fs.title_block = title_block
     fs.print_scale = print_scale
-    fs.layout_options.column_gap = 65.0
-    fs.layout_options.row_gap = 45.0
+    fs.layout_options.column_gap = 80.0
+    fs.layout_options.row_gap = 70.0
     fs.layout_options.band_gap = 85.0
-    fs.layout_options.band_width = 1900.0
+    fs.layout_options.band_width = 2100.0
     fs.stream_labels.enclosure = "none"
+    fs.stream_labels.font_size = 14.5
     records = {row["key"]: row for row in blocks}
     if len(records) != len(blocks):
         raise ValueError("duplicate BFD block identity")

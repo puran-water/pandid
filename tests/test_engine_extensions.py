@@ -245,3 +245,48 @@ def test_side_tag_has_room_in_native_html_and_fallback_image():
     cell = next(c for c in cells.values() if c.get('value') == 'process.junction')
     style = dict(p.split('=', 1) for p in cell.get('style').split(';') if '=' in p)
     assert float(style['labelWidth']) > float(cell.find('mxGeometry').get('width'))
+
+
+def test_terminal_repair_looks_through_a_collinear_exit_projection():
+    from types import SimpleNamespace
+    from pandid.geometry import Route
+    from pandid.routing.separation import _shorten_conflicting_terminal_runs
+    first = SimpleNamespace(route=Route(waypoints=[(600,60),(695,60),(695,219.5),(720,219.5)],manual=True))
+    other = SimpleNamespace(route=Route(waypoints=[(600,219.5),(625,219.5),(701,219.5),(701,239.5),(720,239.5)]))
+    fs = SimpleNamespace(units=[], streams=[first, other])
+    _shorten_conflicting_terminal_runs(fs, 6)
+    assert other.route.waypoints == [(600,219.5),(689,219.5),(689,239.5),(720,239.5)]
+    assert first.route.waypoints[-2:] == [(695,219.5),(720,219.5)]
+
+
+def test_stream_type_size_controls_both_label_ink_and_reserved_space():
+    from pandid.render.svg import stream_numbers
+    fs = simple()
+    fs.to_drawio()
+    small = stream_numbers(fs, [], None, 'vertical')[0]
+    fs.stream_labels.font_size = 14.5
+    assert from_dict(to_dict(fs)).stream_labels.font_size == 14.5
+    xml = fs.to_drawio()
+    large = stream_numbers(fs, [], None, 'vertical')[0]
+    assert large.font_size == 14.5
+    assert large.box[2] - large.box[0] > small.box[2] - small.box[0]
+    edge = cells_by_id(ET.fromstring(xml))['stream-uuid']
+    assert 'fontSize=14.5;' in edge.get('style')
+
+
+def test_independently_controlled_table_keeps_its_own_document_number():
+    from pandid.document import table_sheet_block
+    fs = simple()
+    fs.title_block = TitleBlock(drawing_number='BAL-1008', title='Stream table')
+    fs.stream_table.standalone = True
+    assert from_dict(to_dict(fs)).stream_table.standalone
+    assert table_sheet_block(fs.title_block, fs.stream_table).drawing_number == 'BAL-1008'
+
+
+@pytest.mark.parametrize('size', [0, -1, float('nan'), True])
+def test_invalid_stream_type_size_fails_before_layout(size):
+    fs = simple()
+    fs.stream_labels.font_size = size
+    with pytest.raises(ValueError, match='font_size'):
+        fs.to_drawio()
+    assert all(u.frame is None for u in fs.units)

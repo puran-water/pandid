@@ -337,6 +337,8 @@ def _shorten_conflicting_terminal_runs(fs, spacing):
     """
     from pandid.portgeom import unit_box
     from pandid.routing.visibility import Rect
+    from pandid.render.svg import draws_arrowheads
+    minimum_terminal = 24 if draws_arrowheads(getattr(fs, '_drawn_as', None)) else 1
 
     streams = [s for s in fs.streams if s.route and len(s.route.waypoints) >= 2]
     if any(u.frame is None for u in fs.units):
@@ -366,7 +368,28 @@ def _shorten_conflicting_terminal_runs(fs, spacing):
                             found.add((left,i,right,j))
         return found
 
-    paths = [list(s.route.waypoints) for s in streams]
+    def physical_turns(stream):
+        points = list(stream.route.waypoints)
+        if stream.route.manual:
+            return points
+        # Exit projections can remain inside a straight terminal run. They
+        # are not another turn: retaining one hid the conflicting portion
+        # from this terminal repair and forced the peer's arrow lead shorter.
+        result = []
+        for point in points:
+            if result and point == result[-1]:
+                continue
+            while len(result) >= 2:
+                a, b = result[-2:]
+                straight = (a[0] == b[0] == point[0] or a[1] == b[1] == point[1])
+                between = all(min(a[k], point[k]) <= b[k] <= max(a[k], point[k]) for k in (0, 1))
+                if not (straight and between):
+                    break
+                result.pop()
+            result.append(point)
+        return result
+
+    paths = [physical_turns(s) for s in streams]
     before = conflicts(paths)
     for _ in range(len(streams) * 2):
         accepted = False
@@ -391,7 +414,7 @@ def _shorten_conflicting_terminal_runs(fs, spacing):
                     # The terminal must still hold its process arrow and a
                     # visible straight lead. A two-pixel tail lets the native
                     # marker extend backwards through the preceding corner.
-                    if abs(track - anchor[axis]) < 24:
+                    if abs(track - anchor[axis]) < minimum_terminal:
                         continue
                     proposal=list(points)
                     for n in (corner,neighbour):

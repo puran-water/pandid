@@ -199,7 +199,7 @@ from pandid.render.svg import (_DIAMOND_BALLOONS, _ENCLOSURE_STROKE,
                                _LEADER_HEAD, _scale_text, _Sheet, _too_small,
                                _SIGNAL_DASH, _stream_rung, _TAP_DASH,
                                fit_issue, HOP_R,
-                               NUMBER_TYPE, boundary_flag, enclosure_shape,
+                               boundary_flag, enclosure_shape,
                                label_findings,
                                draws_arrowheads, flange_marks, impulse_tap,
                                resolve_connections, sheet_connections,
@@ -2779,7 +2779,7 @@ class DrawioRenderer:
                     if number is not None:
                         keys += ([_NUMBER_PLATE] if number.words is not None
                                  else [])
-                        keys += _NUMBER_KEYS + [_drawn_type(NUMBER_TYPE, fit)]
+                        keys += _NUMBER_KEYS + [_drawn_type(fs.stream_labels.font_size, fit)]
                         if number.vertical:
                             keys.append("horizontal=0")
 
@@ -3564,7 +3564,7 @@ def _enclosure(edge_id: str, number, shape: str, ink: str, fit: "_Fit") -> list[
                 if number.words is not None else "")
              + f"strokeColor={ink};fontColor={ink};"
              f"strokeWidth={fit.length(_ENCLOSURE_STROKE):g};"
-             f"{_drawn_type(NUMBER_TYPE, fit)};verticalAlign=middle;align=center;"
+             f"{_drawn_type(number.font_size, fit)};verticalAlign=middle;align=center;"
              + ("horizontal=0;" if number.vertical else ""))
     return [
         f'        <mxCell id="{edge_id}-box" value={_attr(_html_text(number.text))} '

@@ -1638,6 +1638,7 @@ class StreamNumber(NamedTuple):
     words: "tuple | None"
     crossed: "tuple[str, ...]"
     display_label: str | None = None
+    font_size: float = NUMBER_TYPE
 
     @property
     def text(self) -> str:
@@ -1740,16 +1741,19 @@ def stream_numbers(fs, placed: list, joints: "str | None",
     # longest name would rub out a run's worth of pipe on either side of
     # every short one for nothing at all.
     shape = enclosure_shape(fs)
-    widest = max((len(display_names[name]) * _HALO_CHAR + _HALO_PAD
+    fs.stream_labels.validate()
+    text_scale = fs.stream_labels.font_size / NUMBER_TYPE
+    halo_char, halo_pad, halo_deep = (v * text_scale for v in (_HALO_CHAR, _HALO_PAD, _HALO_DEEP))
+    widest = max((len(display_names[name]) * halo_char + halo_pad
                   for _s, name, _c, _k in label_items), default=0.0)
-    uniform = enclosure_box(shape, widest, _HALO_DEEP)
+    uniform = enclosure_box(shape, widest, halo_deep)
 
     out: list[StreamNumber] = []
     for seg, name, color, keep in label_items:
         (sx1, sy1), (sx2, sy2) = seg
         # What the words occupy, and what is reserved for them. One box
         # with no enclosure; with one, the second contains the first.
-        tw, th = len(display_names[name]) * _HALO_CHAR + _HALO_PAD, _HALO_DEEP
+        tw, th = len(display_names[name]) * halo_char + halo_pad, halo_deep
         hw, hh = (tw, th) if shape == "none" else uniform
         cx, cy = (sx1 + sx2) / 2, (sy1 + sy2) / 2
         vertical = abs(sx2 - sx1) < abs(sy2 - sy1)
@@ -1911,7 +1915,7 @@ def stream_numbers(fs, placed: list, joints: "str | None",
             placed.append((min(ax0, ax1), min(ay0, ay1),
                            max(ax0, ax1), max(ay0, ay1)))
         out.append(StreamNumber(name, color, seg, tx, ty, turned, halo,
-                                leader, words, crossed, display_names[name]))
+                                leader, words, crossed, display_names[name], fs.stream_labels.font_size))
     return out
 
 
@@ -5380,7 +5384,7 @@ class SvgRenderer:
             turn = f' transform="rotate(-90, {tx:.1f}, {ty:.1f})"' if number.vertical else ""
             lines.append(
                 f'    <text x="{tx:.1f}" y="{ty:.1f}" font-family="sans-serif" '
-                f'font-size="{NUMBER_TYPE}" '
+                f'font-size="{number.font_size:g}" '
                 f'text-anchor="middle" dominant-baseline="middle" '
                 f'fill="{color}"{turn}>{escaped(name)}</text>'
             )
