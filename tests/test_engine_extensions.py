@@ -225,3 +225,13 @@ def test_divided_reference_flag_preserves_code_and_service_in_both_exports():
     assert 'ref-uuid-code' in xml and 'PERMEATE&lt;br&gt;FROM SHEET 2' in xml
     assert 'PERMEATE' in fs.to_svg()
     assert from_dict(to_dict(fs)).units[0].reference_code == 'A'
+def test_long_controlled_number_fits_native_strip_without_abbreviation():
+    from pandid import Revision, TitleBlock
+    from pandid.render.furniture import measure_title_strip, title_strip_fit
+    block = TitleBlock(title='SYNTHETIC — IDENTICAL EQUIPMENT GROUPING',
+        drawing_number='EXAMPLE-CH2O-PR-1000-PFD-synthetic-grouped-pumps',
+        company='Circle H2O', date='2026-09-09', status='HOLD - NOT FOR CONSTRUCTION',
+        scale='NTS', fit_fields=True,
+        revisions=[Revision('01', '2026-09-09', 'Review', 'Circle H2O', 'PENDING', 'PENDING')])
+    assert measure_title_strip(block)[0] < 1117
+    assert not title_strip_fit(block, '', '2026-09-09')

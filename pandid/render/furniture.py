@@ -1622,13 +1622,27 @@ def _strip_widths(tb):
         width = max([width, *(text_width(v, _REV_TYPE) + 2 * _REV_PAD + 1 for v in values)])
         columns.append((heading, width, attr))
     info = max(_INFO_W,
-               (text_width(_stated(tb, "drawing_number"), _VALUE_TYPE, True) + 12) / .38,
+               sum(_information_minima(tb)),
                text_width(_stated(tb, "title"), _TITLE_TYPE, True) + 10 + _SHEET_W,
                text_width(_stated(tb, "subtitle"), _SUBTITLE_TYPE) + 12,
                text_width(_stated(tb, "status"), _VALUE_TYPE, True) + 12,
                *(text_width(value, _HDR_TYPE) + _header_value_x(tb) + 5
                  for _, value in _header_lines(tb)))
     return tuple(columns), info
+
+
+def _information_minima(tb):
+    """Fit the four native information cells without wasting the other three.
+
+    A long controlled number must not force the short scale, date and revision
+    cells to grow in the same ratio. Preserve their native minimum widths and
+    allocate each field enough room for its complete value at the reading size.
+    """
+    revision = _stated(tb.revisions[-1], 'rev') if tb.revisions else '0'
+    values = (_stated(tb, 'drawing_number'), _stated(tb, 'scale'),
+              _stated(tb, 'date') or '2000-01-01', revision)
+    return tuple(max(_INFO_W * share, text_width(value, _VALUE_TYPE, i != 2) + 12)
+                 for i, (share, value) in enumerate(zip((.38, .21, .29, .12), values)))
 
 
 def _header_value_x(tb):
@@ -1933,6 +1947,12 @@ def title_strip_layout(tb, name: str, date: str, right: float, bottom: float,
         (info_w * 0.21, "SCALE", scale, scale_field),
         (info_w * 0.29, "DATE", date, date_field),
         (info_w * 0.12, "REV", rev_id, rev_field)]
+    if getattr(tb, 'fit_fields', False):
+        minima = _information_minima(tb)
+        spare = max(0.0, info_w - sum(minima))
+        cells = [(width + spare * share, caption, value, field)
+                 for width, share, (_old, caption, value, field)
+                 in zip(minima, (.38, .21, .29, .12), cells)]
     cxr = ix
     for j, (seg_w, seg_label, seg_val, seg_field) in enumerate(cells):
         if j:
