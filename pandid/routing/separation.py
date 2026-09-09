@@ -388,6 +388,11 @@ def _shorten_conflicting_terminal_runs(fs, spacing):
                 for track in sorted(candidates, key=lambda c: abs(c-points[corner][axis])):
                     if not min(anchor[axis],points[corner][axis])+.01 < track < max(anchor[axis],points[corner][axis])-.01:
                         continue
+                    # The terminal must still hold its process arrow and a
+                    # visible straight lead. A two-pixel tail lets the native
+                    # marker extend backwards through the preceding corner.
+                    if abs(track - anchor[axis]) < 24:
+                        continue
                     proposal=list(points)
                     for n in (corner,neighbour):
                         pt=list(proposal[n]);pt[axis]=track;proposal[n]=tuple(pt)

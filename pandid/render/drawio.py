@@ -2163,9 +2163,14 @@ class DrawioRenderer:
         # overflow. `_LABEL_SIDE` gives the label its own box outside
         # the cell and mxGraph draws it at whatever size it is told
         # (`mxGraphView.updateVertexLabelOffset`).
+        # Native HTML can overflow a narrow symbol, while Desktop's fallback
+        # image clips to the label box. Give side tags their measured width so
+        # SVG fallback and PDF carry the same complete inscription.
+        width = max((F.text_width(line, _TAG_TYPE) for line in lines), default=0) + 12
+        label_width = [f"labelWidth={fit.length(width):g}"] if side != 'center' else []
         return "<br>".join(_html_text(line) for line in lines), _LABEL_SIDE.get(
             side, _LABEL_SIDE["top"]
-        ) + [_drawn_type(_TAG_TYPE, fit)], (fit.length(dx), fit.length(dy))
+        ) + [_drawn_type(_TAG_TYPE, fit), *label_width], (fit.length(dx), fit.length(dy))
 
     @staticmethod
     def _cell_box(u) -> "tuple[float, float, float, float]":

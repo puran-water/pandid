@@ -235,3 +235,13 @@ def test_long_controlled_number_fits_native_strip_without_abbreviation():
         revisions=[Revision('01', '2026-09-09', 'Review', 'Circle H2O', 'PENDING', 'PENDING')])
     assert measure_title_strip(block)[0] < 1117
     assert not title_strip_fit(block, '', '2026-09-09')
+
+
+def test_side_tag_has_room_in_native_html_and_fallback_image():
+    from pandid import Splitter
+    fs = Flowsheet('Legend')
+    fs.add(Splitter('process.junction'))
+    cells = cells_by_id(ET.fromstring(fs.to_drawio()))
+    cell = next(c for c in cells.values() if c.get('value') == 'process.junction')
+    style = dict(p.split('=', 1) for p in cell.get('style').split(';') if '=' in p)
+    assert float(style['labelWidth']) > float(cell.find('mxGeometry').get('width'))
