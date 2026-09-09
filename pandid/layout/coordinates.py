@@ -26,6 +26,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING
 
 from pandid.layout.halo import Pad
+from pandid.layout.options import for_units
 from pandid.layout.stages import slot
 
 if TYPE_CHECKING:
@@ -187,14 +188,15 @@ def _bands(units: list["Unit"], columns: dict[int, _Column],
     of the page between them.
     """
     order = sorted(columns)
-    if not wrappable or _lay_columns(columns, order, pads) <= BAND_WIDTH:
+    band_width = for_units(units).band_width
+    if not wrappable or _lay_columns(columns, order, pads) <= band_width:
         return [order]
 
     crossings = _seam_cost(units)
     bands: list[list[int]] = []
     band: list[int] = []
     for column in order:
-        if band and _lay_columns(columns, [*band, column], pads) > BAND_WIDTH:
+        if band and _lay_columns(columns, [*band, column], pads) > band_width:
             band = _slide(band, crossings)
             bands.append(band)
             band = []
@@ -271,6 +273,7 @@ def _lay_columns(columns: dict[int, _Column], band: list[int],
     # column starts on the margin, and a boundary flag whose pennant
     # reaches back past its own origin reaches into the margin rather
     # than pushing the whole sheet right.
+    gap = for_units(u for c in band for u in columns[c].units).column_gap
     wall: dict[int, float] = {}
     cursor = float(MARGIN_X)
     for column in band:
@@ -284,12 +287,12 @@ def _lay_columns(columns: dict[int, _Column], band: list[int],
             for u in held.units:
                 if slot(u).x is None:
                     slot(u).x = x
-        cursor = x + held.body + COL_GAP
+        cursor = x + held.body + gap
         for u in held.units:
             row = slot(u).row or 0
             wall[row] = max(wall.get(row, 0.0),
                             x + slot(u).w + pads.get(u, Pad()).east)
-    return max([cursor - COL_GAP, *wall.values()], default=cursor) - MARGIN_X
+    return max([cursor - gap, *wall.values()], default=cursor) - MARGIN_X
 
 
 def _lay_band(columns: dict[int, _Column], band: list[int], top: float,
@@ -299,6 +302,7 @@ def _lay_band(columns: dict[int, _Column], band: list[int], top: float,
     if not members:
         return top
 
+    options = for_units(members)
     _lay_columns(columns, band, pads, place=True)
 
     # Bands are built for every row the sheet names between the band's
@@ -336,7 +340,7 @@ def _lay_band(columns: dict[int, _Column], band: list[int], top: float,
     cursor_y = top
     for index, row in enumerate(rows):
         if index:
-            cursor_y += body[rows[index - 1]] + ROW_GAP
+            cursor_y += body[rows[index - 1]] + options.row_gap
         here = cursor_y + body[row] / 2.0
         for u in holds[row]:
             pad = pads.get(u, Pad())
@@ -351,7 +355,7 @@ def _lay_band(columns: dict[int, _Column], band: list[int], top: float,
     for u in members:
         if slot(u).y is None:
             slot(u).y = axis[slot(u).row or 0] - slot(u).h / 2.0
-    return max([cursor_y + body[rows[-1]], *floor.values()], default=top) + BAND_GAP
+    return max([cursor_y + body[rows[-1]], *floor.values()], default=top) + options.band_gap
 
 
 # ---------------------------------------------------------------------------

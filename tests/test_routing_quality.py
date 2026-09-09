@@ -368,17 +368,24 @@ def test_separation_only_moves_runs_that_actually_collide():
     # Two interior runs sharing a corridor two spacings apart, and two on top
     # of each other. Only the second pair has anything to resolve.
     streams[0].via([(50, 100), (50, 200), (400, 200), (400, 300)])
-    streams[1].via([(50, 460), (50, 212), (400, 212), (400, 500)])
+    # The outgoing riser is also clear; otherwise terminal-overlap repair
+    # legitimately moves it even though the horizontal spacing is adequate.
+    streams[1].via([(50, 460), (50, 212), (420, 212), (420, 500)])
     streams[2].via([(150, 760), (150, 850), (500, 850), (500, 900)])
     streams[3].via([(150, 1060), (150, 850), (500, 850), (500, 1100)])
     fs.layout()
-    fs.route()
+    # Feed synthetic automatic routes to the separation pass.
+    from pandid.routing.separation import separate_streams
+    for stream in fs.streams:
+        stream.route.manual = False
+    separate_streams(fs)
 
     clear = [s.route.waypoints[1][1] for s in streams[:2]]
     assert clear == [200, 212], f"already-legible runs were moved: {clear}"
 
     stacked = [s.route.waypoints[1][1] for s in streams[2:]]
     assert abs(stacked[0] - stacked[1]) >= 6, f"coincident runs left stacked: {stacked}"
+
 
 
 def test_a_stream_jogging_between_its_nozzles_keeps_both_of_them():
@@ -399,7 +406,11 @@ def test_a_stream_jogging_between_its_nozzles_keeps_both_of_them():
     # An interior run of another stream, laid across the same corridor 1px off.
     other.via([(0, 300), (50, 300), (50, 101), (150, 101), (150, 400), (200, 400)])
     fs.layout()
-    fs.route()
+    # Feed synthetic automatic routes to the separation pass.
+    from pandid.routing.separation import separate_streams
+    for stream in fs.streams:
+        stream.route.manual = False
+    separate_streams(fs)
 
     wp = jog.route.waypoints
     assert wp[0][1] == 100 and wp[1][1] == 100, f"source nozzle run moved: {wp}"
@@ -413,6 +424,7 @@ def test_a_stream_jogging_between_its_nozzles_keeps_both_of_them():
     assert min(abs(moved - 100), abs(moved - 106)) >= 6, (
         f"the free run was left on a nozzle track: {moved}"
     )
+
 
 
 def test_separated_runs_end_up_at_least_the_minimum_apart():
@@ -430,7 +442,11 @@ def test_separated_runs_end_up_at_least_the_minimum_apart():
         s.via([(50 + i, 300 + 40 * i), (50 + i, y), (500 + i, y), (500 + i, 300 + 40 * i)])
         streams.append(s)
     fs.layout()
-    fs.route()
+    # Feed synthetic automatic routes to the separation pass.
+    from pandid.routing.separation import separate_streams
+    for stream in fs.streams:
+        stream.route.manual = False
+    separate_streams(fs)
 
     ys = sorted(s.route.waypoints[1][1] for s in streams)
     gaps = [b - a for a, b in zip(ys, ys[1:])]

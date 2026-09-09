@@ -1637,6 +1637,11 @@ class StreamNumber(NamedTuple):
     leader: "tuple | None"
     words: "tuple | None"
     crossed: "tuple[str, ...]"
+    display_label: str | None = None
+
+    @property
+    def text(self) -> str:
+        return self.name if self.display_label is None else self.display_label
 
 
 def stream_numbers(fs, placed: list, joints: "str | None",
@@ -1691,8 +1696,9 @@ def stream_numbers(fs, placed: list, joints: "str | None",
     # the sheet writes it once, on the longest piece.
     label_items: list = []
     labeled_names: set = set()
+    display_names = {s.name: s.label for s in fs.streams}
     for s in fs.streams:
-        if s.kind in _SIGNAL_KINDS or s.name in labeled_names:
+        if s.kind in _SIGNAL_KINDS or s.name in labeled_names or not s.label:
             continue
         points = stream_polyline(s)
         longest_seg, max_len = None, -1.0
@@ -1734,7 +1740,7 @@ def stream_numbers(fs, placed: list, joints: "str | None",
     # longest name would rub out a run's worth of pipe on either side of
     # every short one for nothing at all.
     shape = enclosure_shape(fs)
-    widest = max((len(name) * _HALO_CHAR + _HALO_PAD
+    widest = max((len(display_names[name]) * _HALO_CHAR + _HALO_PAD
                   for _s, name, _c, _k in label_items), default=0.0)
     uniform = enclosure_box(shape, widest, _HALO_DEEP)
 
@@ -1743,7 +1749,7 @@ def stream_numbers(fs, placed: list, joints: "str | None",
         (sx1, sy1), (sx2, sy2) = seg
         # What the words occupy, and what is reserved for them. One box
         # with no enclosure; with one, the second contains the first.
-        tw, th = len(name) * _HALO_CHAR + _HALO_PAD, _HALO_DEEP
+        tw, th = len(display_names[name]) * _HALO_CHAR + _HALO_PAD, _HALO_DEEP
         hw, hh = (tw, th) if shape == "none" else uniform
         cx, cy = (sx1 + sx2) / 2, (sy1 + sy2) / 2
         vertical = abs(sx2 - sx1) < abs(sy2 - sy1)
@@ -1905,7 +1911,7 @@ def stream_numbers(fs, placed: list, joints: "str | None",
             placed.append((min(ax0, ax1), min(ay0, ay1),
                            max(ax0, ax1), max(ay0, ay1)))
         out.append(StreamNumber(name, color, seg, tx, ty, turned, halo,
-                                leader, words, crossed))
+                                leader, words, crossed, display_names[name]))
     return out
 
 
@@ -3281,17 +3287,18 @@ class _Sheet(NamedTuple):
     name: str
     width_mm: float
     height_mm: float
+    print_scale: float = 1.0
 
     @property
     def width(self) -> float:
-        return self.width_mm * _PX_PER_MM
+        return self.width_mm * _PX_PER_MM / self.print_scale
 
     @property
     def height(self) -> float:
-        return self.height_mm * _PX_PER_MM
+        return self.height_mm * _PX_PER_MM / self.print_scale
 
 
-def _page(page_size: "str | None") -> "_Sheet | None":
+def _page(page_size: "str | None", print_scale: float = 1.0) -> "_Sheet | None":
     """Resolve ``page_size``; ``None`` fits the sheet to the drawing."""
     if page_size is None:
         return None
@@ -3301,7 +3308,9 @@ def _page(page_size: "str | None") -> "_Sheet | None":
             f"Unknown page size {page_size!r}; use one of {', '.join(_PAGE_SIZES)}, "
             "or omit page_size to fit the sheet to the drawing."
         )
-    return _Sheet(page_size.upper(), *dims)
+    if not math.isfinite(print_scale) or print_scale <= 0:
+        raise ValueError("print_scale must be positive and finite")
+    return _Sheet(page_size.upper(), *dims, print_scale)
 
 
 # The frame the sheet is ruled with: sheet furniture, a statement about
@@ -4164,7 +4173,7 @@ class SvgRenderer:
         border, diagram = _resolve_sheet(border, diagram)
         arrows = draws_arrowheads(diagram)
         joints = sheet_connections(diagram, connections)
-        sheet = _page(page_size)
+        sheet = _page(page_size, fs.print_scale)
         if table_sheet:
             return self._table_sheet(fs, sheet, border)
 
@@ -4188,6 +4197,9 @@ class SvgRenderer:
             assert nominal is not None
             dx0 = dy0 = 0.0
             dx1, dy1 = nominal.width, nominal.height
+
+        from pandid.render.nameplates import plan as nameplate_plan
+        nameplates, (dx0, dy0, dx1, dy1) = nameplate_plan(fs, (dx0, dy0, dx1, dy1))
 
         # 2. The stream table, measured. Shared with the draw.io
         #    exporter, which docks and rules the same one.
@@ -4269,6 +4281,8 @@ class SvgRenderer:
         # Drawn with the equipment tags at the end, on the same halo.
         quadrants = quadrant_labels(fs, jump_direction)
         drawing: list[str] = []
+        for block in nameplates:
+            drawing.extend(F.draw_annotation(block.annotation, block.x, block.y, report=report))
         # Every opaque white plate the sheet lays down, collected only
         # when the overlay is going to be drawn. The overlay is emitted
         # *under* the drawing, so a plate is the one thing that can
@@ -4807,6 +4821,9 @@ class SvgRenderer:
         # ``2`` that only happened to agree with it.
         out = [f'    <polygon points="{points}" fill="transparent" '
                f'stroke="black" stroke-width="{LineWeight.EQUIPMENT.width:g}" />']
+        if getattr(u, "reference_code", ""):
+            from pandid.render.reference_flags import svg
+            return out + svg(u)
         if ref:
             out.append(f'    <text x="{tx}" y="{mid - 4}" font-family="sans-serif" font-size="12" text-anchor="middle" dominant-baseline="middle">{safe_name}</text>')
             out.append(f'    <text x="{tx}" y="{mid + 8}" font-family="sans-serif" font-size="10.5" text-anchor="middle" dominant-baseline="middle" fill="#333">{escaped(ref)}</text>')
@@ -4828,6 +4845,8 @@ class SvgRenderer:
         # tag it shares and named apart only so it can be addressed.
         tag = getattr(u, "tag", "") or u.name
         top, bot = split_tag(getattr(u, "type", "") or tag, getattr(u, "number", "") or "")
+        if getattr(u, "area", ""):
+            bot = f"{u.area}-{bot}"
         cx, cy = x + u_width / 2, y + u_height / 2
         if variant in _DIAMOND_BALLOONS:
             # A diamond is widest on its horizontal diagonal and
@@ -5126,6 +5145,14 @@ class SvgRenderer:
                 rx, ry, rx1, ry1 = box
                 out.append(f'    <rect x="{rx:.1f}" y="{ry:.1f}" width="{rx1 - rx:.1f}" '
                            f'height="{ry1 - ry:.1f}" fill="white" />')
+            if "\n" in text and item[4] == "center":
+                lines = text.split("\n")
+                first_y = ly - (len(lines) - 1) * 9
+                for index, line in enumerate(lines):
+                    out.append(f'<text x="{lx}" y="{first_y + index * 18}" '
+                               f'font-family="sans-serif" font-size="12" '
+                               f'text-anchor="{anchor}" dominant-baseline="middle">{line}</text>')
+                continue
             out.append(f'    <text x="{lx}" y="{ly}" font-family="sans-serif" '
                        f'font-size="12" text-anchor="{anchor}" '
                        f'dominant-baseline="{baseline}">{text}</text>')
@@ -5347,7 +5374,7 @@ class SvgRenderer:
         self._findings += label_findings(fs, shape, numbers, jump_direction)
         fills = fillable_enclosures(fs, shape, numbers, jump_direction)
         for number, fill in zip(numbers, fills):
-            tx, ty, name = number.x, number.y, number.name
+            tx, ty, name = number.x, number.y, number.text
             color = escaped(number.color)
             lines += _enclosure_svg(shape, number.box, number.words, color, fill)
             turn = f' transform="rotate(-90, {tx:.1f}, {ty:.1f})"' if number.vertical else ""

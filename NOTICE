@@ -104,3 +104,15 @@ and Splitter symbols, the pipe tee and the block flow diagram's box are original
 geometric primitives and fall under section 1. The draw.io library draws no bare
 junction, and the tee is two straight line segments; it draws no block either,
 being a set of equipment, and a block is one rectangle.
+
+3. Circle H2O / PuranOS extensions (2026-09-09)
+-----------------------------------------------
+
+This fork adds stable draw.io metadata, physical page conversion, embedded
+company branding in the native title strip, divided continuation flags,
+individual equipment-data blocks, magnetic primary elements, reviewed house
+MBR symbols, explicit layout options and preservation of manual routes.
+Modified engine files remain under the PolyForm licence in section 1.
+The added scripts/vendor_data/drawio/misc.xml and generated stencil derivatives
+are from jgraph/drawio v31.4.4 and remain under section 2. The house MBR symbols
+are original schematic candidates; no ISA certification is asserted.

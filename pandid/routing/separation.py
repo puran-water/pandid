@@ -54,7 +54,7 @@ def _compute_offsets(
 
         for i in range(n_segs):
             p1, p2 = pts[i], pts[i+1]
-            is_fixed = (i == 0) or (i == n_segs - 1)
+            is_fixed = s.route.manual or (i == 0) or (i == n_segs - 1)
             flat_x = abs(p1[0] - p2[0]) < 0.1
             flat_y = abs(p1[1] - p2[1]) < 0.1
 
@@ -278,6 +278,7 @@ def separate_streams(fs: "Flowsheet", spacing: float = 6.0) -> None:
     for s in fs.streams:
         if id(s) in new_waypoints:
             s.route.waypoints = new_waypoints[id(s)]  # type: ignore[union-attr]
+    _shorten_conflicting_terminal_runs(fs, spacing)
 
 
 def preview_separated_waypoints(
@@ -324,3 +325,90 @@ def preview_separated_waypoints(
     """
     h_offsets, v_offsets = _compute_offsets(streams, spacing)
     return _apply_offsets(streams, h_offsets, v_offsets)
+
+
+def _shorten_conflicting_terminal_runs(fs, spacing):
+    """Resolve a fixed-nozzle run crossed by another fixed-nozzle run.
+
+    Track offsets cannot move either nozzle. They can move the next free
+    perpendicular leg toward its own nozzle, shortening the terminal run and
+    keeping both end points exact. Accept only moves that remove an overlap,
+    create no new overlap, and enter no equipment. Explicit via() paths stay put.
+    """
+    from pandid.portgeom import unit_box
+    from pandid.routing.visibility import Rect
+
+    streams = [s for s in fs.streams if s.route and len(s.route.waypoints) >= 2]
+    if any(u.frame is None for u in fs.units):
+        # Public separation previews can precede layout. Without equipment
+        # frames there is no evidence that moving a leg is collision-free.
+        return
+    boxes = [Rect(x0, x1, y0, y1) for x0, y0, x1, y1 in (unit_box(u, u.frame) for u in fs.units)]
+
+    def overlap(a, b):
+        for axis in (0, 1):
+            cross = 1 - axis
+            if (abs(a[0][cross]-a[1][cross]) < .01 and abs(b[0][cross]-b[1][cross]) < .01
+                    and abs(a[0][cross]-b[0][cross]) < .01):
+                lo=max(min(p[axis] for p in a), min(p[axis] for p in b))
+                hi=min(max(p[axis] for p in a), max(p[axis] for p in b))
+                if hi-lo > .01:
+                    return axis
+        return None
+
+    def conflicts(paths):
+        found = set()
+        for left, a in enumerate(paths):
+            for right in range(left+1, len(paths)):
+                for i, seg in enumerate(zip(a,a[1:])):
+                    for j, other in enumerate(zip(paths[right],paths[right][1:])):
+                        if overlap(seg,other) is not None:
+                            found.add((left,i,right,j))
+        return found
+
+    paths = [list(s.route.waypoints) for s in streams]
+    before = conflicts(paths)
+    for _ in range(len(streams) * 2):
+        accepted = False
+        for left,i,right,j in sorted(before):
+            for at, index, peer, peer_index in ((left,i,right,j), (right,j,left,i)):
+                points = paths[at]
+                if streams[at].route.manual or len(points) < 4 or index not in (0,len(points)-2):
+                    continue
+                corner, neighbour = (1,2) if index == 0 else (len(points)-2,len(points)-3)
+                if neighbour in (0,len(points)-1):
+                    continue
+                segment=(points[index], points[index+1])
+                other=(paths[peer][peer_index], paths[peer][peer_index+1])
+                axis=overlap(segment,other)
+                if axis is None or abs(points[corner][axis]-points[neighbour][axis]) > .01:
+                    continue
+                anchor=points[0] if index == 0 else points[-1]
+                candidates=(min(p[axis] for p in other)-spacing, max(p[axis] for p in other)+spacing)
+                for track in sorted(candidates, key=lambda c: abs(c-points[corner][axis])):
+                    if not min(anchor[axis],points[corner][axis])+.01 < track < max(anchor[axis],points[corner][axis])-.01:
+                        continue
+                    proposal=list(points)
+                    for n in (corner,neighbour):
+                        pt=list(proposal[n]);pt[axis]=track;proposal[n]=tuple(pt)
+                    moved=[(a,b) for n,(a,b) in enumerate(zip(proposal,proposal[1:])) if a!=points[n] or b!=points[n+1]]
+                    # Only new equipment intersections are forbidden; the
+                    # nozzle's own original intersection is unchanged.
+                    bad=False
+                    for box in boxes:
+                        new=sum(box.intersects_segment(*a,*b) for a,b in moved)
+                        old=sum(box.intersects_segment(*points[n],*points[n+1]) for n,(a,b) in enumerate(zip(proposal,proposal[1:])) if a!=points[n] or b!=points[n+1])
+                        if new>old: bad=True;break
+                    if bad:
+                        continue
+                    trial=list(paths);trial[at]=proposal
+                    after=conflicts(trial)
+                    if after < before:
+                        paths,before=trial,after
+                        accepted=True
+                        break
+                if accepted:break
+            if accepted:break
+        if not accepted:break
+    for stream, points in zip(streams,paths):
+        stream.route.waypoints=points

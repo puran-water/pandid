@@ -804,6 +804,8 @@ class Symbol:
     # plain rectangle rather than an error, so the sheet would quietly
     # stop being a P&ID.
     drawio_shape: str = ""
+    # A palette inscription absent from the stencil itself (e.g. magnetic M).
+    drawio_inscription: str = ""
     # How a *derived* symbol differs from the stencil ``drawio_shape``
     # names, for the two derivations this module makes. Neither is a
     # stencil of its own, so the reference alone would draw the shape it
@@ -1451,6 +1453,8 @@ def label_span(text: str) -> float:
     instead of catching it.
     """
     from pandid.render.furniture import script_counts
+    if "\n" in text:
+        return max(label_span(line) for line in text.split("\n"))
     narrow, wide, zero = script_counts(text)
     if not wide and not zero:
         return _LABEL_EM * len(text) + _LABEL_PAD
@@ -1539,9 +1543,10 @@ def block_symbol(faces: tuple[tuple[str, str], ...], label: str = "") -> Symbol:
     on: dict[str, list[str]] = {face: [] for face in _BLOCK_FACES}
     for port_name, face in faces:
         on[face].append(port_name)
-    width = max(BLOCK_MIN_WIDTH, label_span(label),
+    width = max(BLOCK_MIN_WIDTH, *(label_span(line) for line in label.split("\n")),
                 block_span(len(on["N"])), block_span(len(on["S"])))
-    height = max(BLOCK_MIN_HEIGHT, block_span(len(on["W"])), block_span(len(on["E"])))
+    height = max(BLOCK_MIN_HEIGHT, 18 * len(label.split("\n")) + 16,
+                 block_span(len(on["W"])), block_span(len(on["E"])))
     ports: dict[str, tuple[float, float]] = {}
     for face in _BLOCK_FACES:
         members = on[face]
@@ -4994,6 +4999,8 @@ class SymbolRegistry:
         self._register_evaporators()
         self._register_kilns()
         self._register_steam_trap()
+        from pandid.render._house_symbols import register_house
+        register_house(self)
 
     def _register_steam_trap(self):
         """ISO 10628-2 Table 2 item 24.15, registered 2181: the steam

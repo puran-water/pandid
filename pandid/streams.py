@@ -165,6 +165,7 @@ class Stream:
     # pandid.render.svg.resolve_connections(), which also holds the
     # P&ID-only rule that outranks all of this.
     ends: "str | tuple[str, str] | None" = None
+    display_label: str | None = None  # None inherits identity; empty hides only lettering.
     auto_named: bool = True  # False if the caller named it
     # Line-number components. The author supplies all but `sequence`,
     # which auto-numbering fills; see Flowsheet.renumber_streams().
@@ -213,10 +214,17 @@ class Stream:
     _CHECKED = {"color": check_color, "dasharray": check_dasharray}
 
     def __setattr__(self, name: str, value) -> None:
+        if name == "display_label" and value is not None and not isinstance(value, str):
+            raise ValueError("stream display_label must be text or None")
         check = self._CHECKED.get(name)
         if check is not None and value is not None:
             check(str(value), self)
         object.__setattr__(self, name, value)
+
+    @property
+    def label(self) -> str:
+        """Displayed designation; independent of the stable run identity."""
+        return self.name if self.display_label is None else self.display_label
 
     @property
     def is_recycle(self) -> bool:

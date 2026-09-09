@@ -712,6 +712,7 @@ class _Approximation(NamedTuple):
     keys: tuple = ()
     inscribed: "str | None" = None
     pieces: "tuple[_Piece, ...]" = ()
+    bars: int = 0
 
 
 #: How far a cell's proportions may drift from its symbol's before the
@@ -782,14 +783,11 @@ _APPROXIMATIONS = {
         # A circle is a circle: nothing lost.
         "ellipse", "", fill=_BALLOON_FILL, weight=LineWeight.DETAIL.width),
     ("instrument", "panel"): _Approximation(
-        "ellipse", "the bar across the balloon that puts the instrument in a panel",
-        fill=_BALLOON_FILL, weight=LineWeight.DETAIL.width),
+        "ellipse", "", bars=1, fill=_BALLOON_FILL, weight=LineWeight.DETAIL.width),
     ("instrument", "aux"): _Approximation(
-        "ellipse", "the double bar that puts the instrument in an auxiliary panel",
-        fill=_BALLOON_FILL, weight=LineWeight.DETAIL.width),
+        "ellipse", "", bars=2, fill=_BALLOON_FILL, weight=LineWeight.DETAIL.width),
     ("instrument", "shared"): _Approximation(
-        "ellipse", "the square around the balloon that puts the function in a "
-                   "shared display, and the bar that puts it in the control room",
+        None, "", bars=1, inscribed="ellipse",
         fill=_BALLOON_FILL, weight=LineWeight.DETAIL.width),
     ("instrument", "computer"): _Approximation(
         # The computer hexagon, drawn as one.
@@ -1468,7 +1466,7 @@ def _html_text(value) -> str:
     text = writable(value)
     for char, entity in (("&", "&amp;"), ("<", "&lt;"), (">", "&gt;")):
         text = text.replace(char, entity)
-    return text
+    return text.replace("\n", "<br>")
 
 
 def _num(v: float) -> str:
@@ -1501,7 +1499,7 @@ def _dash(pattern: str) -> list[str]:
     process line. With it the multiplier is 1 and the numbers are
     drawing units, as they are everywhere else in this library.
     """
-    if not pattern:
+    if not pattern or pattern.strip().lower() == "none":
         return []
     return ["dashed=1", f"dashPattern={pattern.replace(',', ' ')}", "fixDash=1"]
 
@@ -1656,7 +1654,7 @@ class DrawioRenderer:
         if table_sheet and border is None:
             border = "zone"
         border, _diagram = _resolve_sheet(border, diagram)
-        sheet = _page(page_size)
+        sheet = _page(page_size, fs.print_scale)
         if table_sheet:
             return self._table_sheet(fs, sheet, border)
 
@@ -1707,6 +1705,14 @@ class DrawioRenderer:
         for n, code in enumerate(tags.codes):
             body.extend(_quadrant_cell(f"q{n}", code, fit))
 
+        from pandid.render.nameplates import plan
+        data, _ = plan(fs, self._drawing_box(fs, equipment_data=False))
+        for block in data:
+            # The exporter uses fitted coordinates. A group transformation
+            # keeps native textbox metrics, padding and line spacing in step.
+            pieces = self._furniture_cell(f"np{block.unit_index}", block.annotation,
+                                          block.x, block.y, block.w, block.h)
+            body.extend(_fit_cells(pieces, fit))
         return self._document(fs, sheet, frame, body)
 
     def _table_sheet(self, fs, sheet, border) -> str:
@@ -1821,7 +1827,7 @@ class DrawioRenderer:
         # about the old one.
         fs.warnings = [w for w in fs.warnings
                        if getattr(w, "code", "") not in _EXPORT_CODES] + self._findings
-        return "\n".join([
+        document = "\n".join([
             '<?xml version="1.0" encoding="UTF-8"?>',
             # ``agent`` is where draw.io writes the user-agent string of
             # whatever produced the file, so it is where the version
@@ -1843,6 +1849,10 @@ class DrawioRenderer:
             '  </diagram>',
             '</mxfile>',
         ]) + "\n"
+        from pandid.drawio_metadata import apply_bindings, physical_page
+        if sheet is not None:
+            document = physical_page(document, sheet)
+        return apply_bindings(document, fs)
 
     # ------------------------------------------------------ units
 
@@ -2086,6 +2096,8 @@ class DrawioRenderer:
         if u.kind == "instrument":
             letters, number = split_tag(getattr(u, "type", "") or u.tag,
                                         getattr(u, "number", "") or "")
+            if getattr(u, "area", ""):
+                number = f"{u.area}-{number}"
             # A diamond carries the number alone, as the sheet draws it:
             # its letters are only the tag prefix and there is no room
             # under them.
@@ -2111,6 +2123,8 @@ class DrawioRenderer:
                           _drawn_type(_TAG_TYPE, fit, lines=len(parts),
                                       box=self._cell_box(u))], (0.0, 0.0)
 
+        if getattr(u, "reference_code", ""):
+            return "", [], (0.0, 0.0)
         lines = [u.tag] if u.tag else []
         if u.kind in ("feed", "product"):
             reference = getattr(u, "reference", "") or ""
@@ -2218,15 +2232,60 @@ class DrawioRenderer:
                  '          </mxGeometry>']
                 if (round(dx, 2) or round(dy, 2)) else [geometry + " />"])
         cid = self._id(index)
+        inscription = []
+        if sym.drawio_inscription:
+            inscription = _rect(cid + "-mark", x0, y0, x1-x0, y1-y0,
+                                "text;html=1;align=center;verticalAlign=middle;"
+                                "strokeColor=none;fillColor=none;"
+                                + _drawn_type(_TAG_TYPE, fit) + ";")
+            inscription[0] = inscription[0].replace('value=""',
+                                                    "value=" + _attr(sym.drawio_inscription))
         return [
             f'        <mxCell id="{cid}" value={_attr(text)} '
             f'style={_attr(style)} vertex="1" parent="1">',
             *body,
             '        </mxCell>',
             *self._inscribed(cid, approx, x1 - x0, y1 - y0, fit),
+            *self._location_bars(cid, approx, x1 - x0, y1 - y0, fit),
             *self._pieces(u, approx, cid, x1 - x0, y1 - y0, fit),
             *self._overlay_cells(cid, sym, x1 - x0, y1 - y0, fit, u.frame, u.name),
+            *inscription,
+            *self._reference_cells(u, cid, fit),
         ]
+
+    @staticmethod
+    def _reference_cells(unit, cid, fit):
+        if not getattr(unit, "reference_code", ""):
+            return []
+        from pandid.render.reference_flags import parts
+        divider, code, body = parts(unit)
+        # Child geometry is local to the flag; dragging the native symbol
+        # carries its code, divider and service inscription with it.
+        ox, oy, _right, _bottom = boundary_flag(unit, unit.frame).box
+        at = lambda x, y: (fit.length(x - ox), fit.length(y - oy))
+        x1, y1 = at(*divider[:2]); x2, y2 = at(*divider[2:])
+        out = _segment(cid + '-divider', x1, y1, x2, y2, '#111111', fit.length(1))
+        for suffix, text, box, font in [('code', unit.reference_code, code, 15), ('description', unit.tag, body, 12)]:
+            x, y = at(*box[:2]); w, h = map(fit.length, box[2:])
+            style = f'text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;strokeColor=none;fillColor=none;spacing=1;fontFamily=Arial;fontSize={fit.length(font):g};'
+            cells = _rect(cid + '-' + suffix, x, y, w, h, style)
+            out.extend(line.replace('value=""', 'value=' + _attr(_html_text(text))) for line in cells)
+        return [line.replace('parent="1"', f'parent="{cid}"') for line in out]
+
+    @staticmethod
+    def _location_bars(cid, approx, width, height, fit):
+        if approx is None or not approx.bars:
+            return []
+        out = []
+        offsets = (0,) if approx.bars == 1 else (-3, 3)
+        for index, offset in enumerate(offsets):
+            # A location mark belongs to the symbol and moves with it.
+            out += [f'<mxCell id="{cid}-bar{index}" value="" vertex="1" parent="{cid}" '
+                    f'style="shape=line;strokeColor={approx.stroke};fillColor=none;'
+                    f'strokeWidth={fit.length(approx.weight):g};connectable=0;movable=0;">',
+                    f'<mxGeometry x="0" y="{height/2 + fit.length(offset):g}" '
+                    f'width="{width:g}" height="0" as="geometry"/>', '</mxCell>']
+        return out
 
     def _report_reshape(self, u, sym, approx: "_Approximation | None") -> None:
         """Say so when draw.io will stretch a drawing the sheet holds still.
@@ -2711,7 +2770,7 @@ class DrawioRenderer:
                 number = numbers.get(s.name)
                 boxed = number is not None and shape != "none"
                 if not boxed:
-                    label = s.name
+                    label = s.label
                     if number is not None:
                         keys += ([_NUMBER_PLATE] if number.words is not None
                                  else [])
@@ -2886,7 +2945,7 @@ class DrawioRenderer:
     # -------------------------------------------------- furniture
 
     @staticmethod
-    def _drawing_box(fs) -> "tuple[float, float, float, float]":
+    def _drawing_box(fs, *, equipment_data=True) -> "tuple[float, float, float, float]":
         """The drawing's own bounding box, which is what the furniture
         docks around.
 
@@ -2913,7 +2972,11 @@ class DrawioRenderer:
                 for px, py in s.route.waypoints:
                     x0, y0 = min(x0, px), min(y0, py)
                     x1, y1 = max(x1, px), max(y1, py)
-        return (x0, y0, x1, y1)
+        inner = (x0, y0, x1, y1)
+        if equipment_data:
+            from pandid.render.nameplates import plan
+            return plan(fs, inner)[1]
+        return inner
 
     @staticmethod
     def _page_box(sheet, frame) -> "tuple[float, float]":
@@ -3062,6 +3125,11 @@ class DrawioRenderer:
         scale = "" if free is None else _scale_text(fit.scale)
         out: list[str] = []
         for n, (obj, x, y, w, h) in enumerate(placed):
+            if fs.drawio_metadata:
+                # Docking order changes when an annotation moves corners.
+                # Bound document identities follow declaration order instead:
+                # f0 remains the title strip, independent of its neighbours.
+                n = next(i for i, item in enumerate(items) if item[0] is obj)
             out += self._furniture_cell(f"f{n}", obj, x, y, w, h, name, date, scale)
         return out, frame, fit
 
@@ -3157,8 +3225,11 @@ class DrawioRenderer:
             # measured in, so the key column is measured in the face its
             # key is drawn in.
             heavy = [True] + [False] * (ncol - 1)
-            return _table(cid, title, [], grid, x, y, w, h,
-                          columns(grid, [size] * ncol, w, bold=heavy), title_h,
+            widths = columns(grid, [size] * ncol, w, bold=heavy)
+            if getattr(obj, "line_samples", None):
+                widths = [66.0, w - 66.0]
+            result = _table(cid, title, [], grid, x, y, w, h,
+                          widths, title_h,
                           font=size,
                           # `_ANNOTATION_KEYS` leaves the container's
                           # own border as the only rule this box draws,
@@ -3170,6 +3241,15 @@ class DrawioRenderer:
                                 + f"strokeWidth={F._BOX_RULE:g};"),
                           col_keys=[f"align=left;spacingLeft=4;{'fontStyle=1;' if b else ''}"
                                     for b in heavy])
+            for i, sample in enumerate(getattr(obj, "line_samples", [])):
+                sy = y + title_h + (i + .5) * (h - title_h) / len(grid)
+                parts = _segment(f"{cid}-sample-{i}", x + 9, sy, x + 49, sy,
+                                 sample.get("color", "#111111"), 2.0)
+                style = ";".join(_dash(sample.get("dasharray", "none"))) + ";"
+                if sample.get("arrow"):
+                    parts = [part.replace("endArrow=none;", "endArrow=block;endSize=6;endFill=1;") for part in parts]
+                result += [part.replace("edgeStyle=none;", "edgeStyle=none;" + style) for part in parts]
+            return result
         # Not tabular: a titled box of free-form lines, which is what it
         # is on the sheet too. Anything docked that is neither an
         # Annotation nor a TableBox lands here as well, on the two
@@ -3179,7 +3259,7 @@ class DrawioRenderer:
         _s, _row_h, title_h, _col_w = F._ann_layout(obj) if rows or title else (
             size, 0.0, 0.0, [])
         return _text_box(cid, title, [str(r) for r in rows], x, y, w, h, size,
-                         title_h)
+                         title_h, title_align=getattr(obj, "title_align", "center"))
 
     def _title_strip(self, cid: str, block, x, y, w, h, name: str, date: str,
                      scale: str) -> list[str]:
@@ -3240,6 +3320,14 @@ class DrawioRenderer:
             out += _strip_rule(f"{cid}-v{n}", part)
         out += _rev_table(f"{cid}-rev", strip.rev)
         for n, part in enumerate(strip.parts):
+            if part[0] == "image":
+                _, lx, ly, lw, lh, uri = part
+                # mxGraph's image data URI grammar omits the base64 marker.
+                uri = uri.replace(";base64,", ",", 1)
+                out += _rect(f"{cid}-logo", lx, ly, lw, lh,
+                             "shape=image;imageAspect=1;aspect=fixed;"
+                             f"strokeColor=none;fillColor=none;image={uri};")
+                continue
             out += (_strip_rule(f"{cid}-p{n}", part) if part[0] == "rule"
                     else _strip_label(f"{cid}-p{n}", part))
         return out
@@ -3474,7 +3562,7 @@ def _enclosure(edge_id: str, number, shape: str, ink: str, fit: "_Fit") -> list[
              f"{_drawn_type(NUMBER_TYPE, fit)};verticalAlign=middle;align=center;"
              + ("horizontal=0;" if number.vertical else ""))
     return [
-        f'        <mxCell id="{edge_id}-box" value={_attr(_html_text(number.name))} '
+        f'        <mxCell id="{edge_id}-box" value={_attr(_html_text(number.text))} '
         f'style={_attr(style)} vertex="1" parent="1">',
         f'          <mxGeometry x="{_num(x)}" y="{_num(y)}" '
         f'width="{_num(fit.length(x1 - x0))}" height="{_num(fit.length(y1 - y0))}" '
@@ -4126,7 +4214,7 @@ def _stream_table(cid: str, table, x, y) -> list[str]:
 
 
 def _text_box(cid: str, title: str, rows, x, y, w, h, font: float = 11.0,
-              title_h: float = 0.0) -> list[str]:
+              title_h: float = 0.0, title_align: str = "center") -> list[str]:
     """A box of free-form lines, for furniture that is not a grid.
 
     A note list written as sentences has one column, and ruling one
@@ -4157,8 +4245,8 @@ def _text_box(cid: str, title: str, rows, x, y, w, h, font: float = 11.0,
         # Centred, bold and one point larger, which is draw_annotation's
         # own rule; the band is `_ann_layout`'s so the rule under it
         # lands where the sheet rules it.
-        out += _strip_label(f"{cid}-t", ("text", x + w / 2, y + title_h - 6,
-                                         title, font + 1, "middle", True, "black"))
+        out += _strip_label(f"{cid}-t", ("text", x + (9 if title_align == "left" else w / 2), y + title_h - 6,
+                                         title, font + 1, "start" if title_align == "left" else "middle", True, "black"))
         out += _segment(f"{cid}-r", x, y + title_h, x + w, y + title_h,
                         _INK, F._BOX_UNDERLINE)
     # The body, in the sheet's own gutter: `draw_annotation` sets a row
@@ -4393,3 +4481,38 @@ def _strip_size(block) -> "tuple[float, float]":
     exported strip land on the same paper the rendered one does.
     """
     return F.measure_title_strip(block)
+
+
+def _fit_cells(pieces, fit):
+    import re
+    import xml.etree.ElementTree as ET
+    root = ET.fromstring('<root>' + ''.join(pieces) + '</root>')
+    for cell in root:
+        g = cell.find('mxGeometry')
+        if g is not None:
+            if g.get('relative') == '1':
+                pass
+            elif cell.get('parent') == '1':
+                x, y = fit.at(float(g.get('x', 0)), float(g.get('y', 0)))
+                g.set('x', _num(x)); g.set('y', _num(y))
+            else:
+                for key in ('x', 'y'):
+                    if key in g.attrib:
+                        g.set(key, _num(fit.length(float(g.get(key)))))
+            for key in ('width', 'height'):
+                if key in g.attrib:
+                    g.set(key, _num(fit.length(float(g.get(key)))))
+        parts = []
+        for part in cell.get('style', '').split(';'):
+            key, sep, value = part.partition('=')
+            if sep and key in {'fontSize', 'spacing', 'spacingLeft', 'spacingRight', 'spacingTop', 'spacingBottom', 'strokeWidth', 'startSize'}:
+                value = _num(fit.length(float(value)))
+            parts.append(key + sep + value)
+        cell.set('style', ';'.join(parts))
+        if cell.get('value'):
+            cell.set('value', re.sub(r'font-size:([\d.]+)px', lambda m: 'font-size:' + _num(fit.length(float(m[1]))) + 'px', cell.get('value')))
+    for point in root.iter('mxPoint'):
+        x, y = float(point.get('x', 0)), float(point.get('y', 0))
+        x, y = (fit.length(x), fit.length(y)) if point.get('as') == 'offset' else fit.at(x, y)
+        point.set('x', _num(x)); point.set('y', _num(y))
+    return [ET.tostring(cell, encoding='unicode') for cell in root]

@@ -48,6 +48,15 @@ OUT = HERE.parent / "pandid" / "render" / "_vendored_symbols.py"
 
 # (kind, variant) -> (stencil, shape_name, {port_name: "constraint" | (edge, along)})
 KIND_MAP = {
+    ("liquid_screen", "default"): ("misc", "Screening Device, Sieve, Strainer", {"inlet": "N", "outlet": "S", "reject": "E"}),
+    ("liquid_screen", "coarse_rake"): ("misc", "Screening Device, Sieve, Strainer (Coarse Rake)", {"inlet": "N", "outlet": "S", "reject": "E"}),
+    ("liquid_screen", "fine_rake"): ("misc", "Screening Device, Sieve, Strainer (Fine Rake)", {"inlet": "N", "outlet": "S", "reject": "E"}),
+    ("blower", "gas"): ("pumps", "Gas Blower", {"suction": ("W", 35), "discharge": "S"}),
+    ("valve", "butterfly_2"): ("valves", "Butterfly Valve 2", {"inlet": "W", "outlet": "E", "actuator": ("N", 49)}),
+    ("valve", "check_2"): ("valves", "Check Valve 2", {"inlet": "W", "outlet": "E", "actuator": ("N", 49)}),
+    ("tank", "concrete"): ("vessels", "Concrete Tank", {"inlet": ("W", 30), "outlet": ("E", 30)}),
+    ("tank", "vertical"): ("vessels", "Tank", {"inlet": "W", "outlet": "E"}),
+
     # Valves: inline family (inlet W / outlet E).
     #
     # ``actuator`` is where a controller's output lands. It is a signal terminal
@@ -685,6 +694,8 @@ KIND_MAP = {
     ("fitting", "flow_nozzle"):    ("flow_sensors", "Flow Nozzle",
                                     {"inlet": "W", "outlet": "E"}),
     ("fitting", "coriolis"):       ("flow_sensors", "Coriolis",
+                                    {"inlet": "W", "outlet": "E"}),
+    ("fitting", "magnetic"):       ("flow_sensors", "Magnetic",
                                     {"inlet": "W", "outlet": "E"}),
     ("fitting", "vortex"):         ("flow_sensors", "Vortex",
                                     {"inlet": "W", "outlet": "E"}),
@@ -2622,6 +2633,13 @@ def render() -> str:
                 )
         for method, suffix, shape_name in states:
             inner, w, h, ports, menu, series, aspect = drawn[suffix]
+            inscription = "M" if (kind, variant) == ("fitting", "magnetic") else ""
+            if inscription:
+                # The palette labels this otherwise empty square M. Carry
+                # that mark in both exporters; it is not a second instrument.
+                inner += (f'<text x="{w/2:g}" y="{h/2:g}" text-anchor="middle" '
+                          f'dominant-baseline="central" font-family="sans-serif" '
+                          f'font-size="12" fill="#111">{inscription}</text>')
             sid = kind if variant == "default" else f"{kind}_{variant}"
             svg = f'<g id="sym_{sid}{suffix}">{inner}</g>'
             lines += [
@@ -2640,6 +2658,9 @@ def render() -> str:
                 f"        drawio_shape="
                 f"{drawio_shape_key(namespaces[stencil], shape_name)!r},",
             ]
+            # A registration number is a conformance claim about the
+            if inscription:
+                lines.append(f"        drawio_inscription={inscription!r},")
             # A registration number is a conformance claim about the
             # geometry above, so it is only ever added for the (kind,
             # variant) someone has actually measured against Table 2; see

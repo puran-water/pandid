@@ -153,13 +153,26 @@ DRAWINGS = _every_drawing()
 DRAWING_IDS = [f"{kind}/{variant}" for kind, variant, _ in DRAWINGS]
 
 
+def _resolves_shape(key):
+    if key in STENCIL_KEYS or key in _BUILTIN_SHAPES:
+        return True
+    if not key.startswith('stencil(') or not key.endswith(')'):
+        return False
+    import base64, zlib
+    from pandid.render.house_artwork import ARTWORK
+    decoded = zlib.decompress(base64.b64decode(key[8:-1], validate=True), -15).decode()
+    # A contained original stencil must resolve to its reviewed source bytes,
+    # just as a named upstream shape must resolve to the vendored catalogue.
+    return decoded in {a.stencil for a in ARTWORK.values()} and ET.fromstring(decoded).tag == 'shape'
+
+
 @pytest.mark.parametrize("entry", DRAWINGS, ids=DRAWING_IDS)
 def test_every_shape_reference_resolves_to_a_vendored_stencil(entry):
     """The check the export turns on; see this module's docstring."""
     kind, variant, sym = entry
     if not sym.drawio_shape:
         pytest.skip("drawn here rather than vendored; the approximations cover it")
-    assert sym.drawio_shape in STENCIL_KEYS, (
+    assert _resolves_shape(sym.drawio_shape), (
         f"{kind}/{variant} references {sym.drawio_shape!r}, which no vendored "
         f"stencil defines. draw.io answers an unresolvable shape with a plain "
         f"rectangle and no error, so this would export a sheet of boxes."
@@ -206,7 +219,9 @@ def test_a_shape_key_survives_being_written_into_a_style(entry):
     anywhere to be searched for.
     """
     _, _, sym = entry
-    assert ";" not in sym.drawio_shape and "=" not in sym.drawio_shape
+    assert ";" not in sym.drawio_shape
+    if "=" in sym.drawio_shape:
+        assert sym.drawio_shape.startswith("stencil(") and _resolves_shape(sym.drawio_shape)
 
 
 def test_the_approximations_name_only_shapes_and_symbols_that_exist():
@@ -394,7 +409,7 @@ def test_an_exported_sheet_references_only_shapes_that_resolve(every_symbol_shee
             if key.startswith("shape="):
                 shapes.add(key[len("shape=") :])
     assert shapes, "no shape references at all -- the sheet exported as blank boxes"
-    unresolved = sorted(s for s in shapes if s not in STENCIL_KEYS and s not in _BUILTIN_SHAPES)
+    unresolved = sorted(s for s in shapes if not _resolves_shape(s))
     assert not unresolved, f"unresolvable shape references: {unresolved}"
 
 
@@ -414,7 +429,7 @@ def _model(fs: Flowsheet, **kwargs) -> ET.Element:
     assert len(models) == 1
     roots = models[0].findall("root")
     assert len(roots) == 1
-    return roots[0]
+    return _css_coordinates(roots[0], fs, kwargs)
 
 
 @pytest.fixture(scope="module")
@@ -817,6 +832,38 @@ def test_the_backend_is_a_renderer_in_its_own_right(sample):
 # ---------------------------------------------------------------------------
 # The geometry, against the renderer's.
 # ---------------------------------------------------------------------------
+
+
+def _css_coordinates(root, fs, kwargs):
+    """Compare both exporters in SVG's CSS units; draw.io paper uses 100/in.
+
+    The physical-paper tests independently inspect the unconverted XML.
+    Geometry equivalence tests below compare against pandid's SVG geometry.
+    """
+    if not kwargs.get("page_size"):
+        return root
+    factor = 96 / (100 * fs.print_scale)
+    lengths = {"fontSize", "strokeWidth", "spacing", "spacingTop", "spacingBottom",
+               "spacingLeft", "spacingRight", "startSize", "endSize", "jumpSize",
+               "labelWidth", "exitDx", "exitDy", "entryDx", "entryDy"}
+    for cell in root.iter("mxCell"):
+        parts = []
+        for item in cell.get("style", "").split(";"):
+            k, eq, v = item.partition("=")
+            if eq and k in lengths:
+                try:
+                    v = f"{float(v) * factor:.5g}"
+                except ValueError:
+                    pass
+            parts.append(k + eq + v)
+        cell.set("style", ";".join(parts))
+    for node in root.iter():
+        if node.tag not in {"mxGeometry", "mxRectangle", "mxPoint"}:
+            continue
+        for k in ("x", "y", "width", "height"):
+            if k in node.attrib and not (node.get("relative") == "1" and k in {"x", "y"}):
+                node.set(k, f"{float(node.get(k)) * factor:.6f}")
+    return root
 
 
 def _cells(fs: Flowsheet, **kwargs) -> dict[str, ET.Element]:
@@ -1700,12 +1747,8 @@ _DRAWIO_KWARGS = (
 
 
 def _drawio_cells(fs, kwargs) -> dict:
-    return {
-        c.get("id"): c
-        for c in ET.fromstring(
-            fs.to_drawio(**{k: v for k, v in kwargs.items() if k in _DRAWIO_KWARGS})
-        ).iter("mxCell")
-    }
+    document = ET.fromstring(fs.to_drawio(**{k: v for k, v in kwargs.items() if k in _DRAWIO_KWARGS}))
+    return {c.get("id"): c for c in _css_coordinates(document, fs, kwargs).iter("mxCell")}
 
 
 def _drawio_furniture(fs, kwargs):
@@ -2309,8 +2352,8 @@ def test_a_page_size_is_the_paper_the_file_opens_on():
     model = ET.fromstring(fs.to_drawio(page_size="A3", check=False)).find("diagram/mxGraphModel")
     sheet = _page("A3")
     assert model.get("page") == "1"
-    assert float(model.get("pageWidth")) == pytest.approx(sheet.width, abs=0.01)
-    assert float(model.get("pageHeight")) == pytest.approx(sheet.height, abs=0.01)
+    assert float(model.get("pageWidth")) == pytest.approx(sheet.width_mm * 100 / 25.4, abs=0.51)
+    assert float(model.get("pageHeight")) == pytest.approx(sheet.height_mm * 100 / 25.4, abs=0.51)
     # ...and without one there is no page *view* to rule, which is the whole of
     # what page="0" says. It does not mean there is no page: see below.
     plain = ET.fromstring(fs.to_drawio(check=False)).find("diagram/mxGraphModel")
@@ -2363,7 +2406,7 @@ def test_every_export_states_a_page_that_holds_the_whole_drawing(page_size, bord
         # Paper: the page is the paper, and page="1" anchors draw.io's page grid
         # at the model origin, which is where the fitted drawing already sits.
         assert page == "1"
-        assert (pw, ph) == pytest.approx((sheet.width, sheet.height), abs=0.01)
+        assert (pw, ph) == pytest.approx((sheet.width_mm * 100 / 25.4, sheet.height_mm * 100 / 25.4), abs=0.51)
         return
 
     # No paper: the page is the extent of what the file draws, and page="0" is
@@ -2528,8 +2571,8 @@ def _lands_on_its_paper(stem, _page):
             continue  # a table row or cell, measured inside its own container
         x, y = float(geo.get("x")), float(geo.get("y"))
         w, h = float(geo.get("width") or 0), float(geo.get("height") or 0)
-        assert -1 <= x and x + w <= sheet.width + 1, f"{cell.get('id')} runs off the page"
-        assert -1 <= y and y + h <= sheet.height + 1, f"{cell.get('id')} runs off the page"
+        assert -1 <= x and x + w <= sheet.width_mm * 100 / 25.4 + 1, f"{cell.get('id')} runs off the page"
+        assert -1 <= y and y + h <= sheet.height_mm * 100 / 25.4 + 1, f"{cell.get('id')} runs off the page"
 
 
 def test_an_unruled_sheet_draws_no_frame():

@@ -339,6 +339,9 @@ def _resolve_kind(value: Any, where: str) -> type[Unit]:
 # --------------------------------------------------------------
 
 _TOP_KEYS = {
+    "drawio_metadata", "equipment_data",
+    "print_scale",
+    "layout_options",
     "name", "stream_naming_scheme", "stream_number_start",
     "line_numbering_scheme", "line_number_start", "loop_number_start",
     "auto_faces", "components", "units", "loops",
@@ -353,10 +356,12 @@ _RETIRED_KEYS = {
 }
 _PIN_KEYS = {"x", "y", "col", "row", "orientation", "mirrored", "port"}
 _UNIT_KEYS = {
+    "display_label",
     "kind", "name", "variant", "description", "reference", "width", "height",
     "label_pos", "new_line_number", "pin", "port_faces",
 }
 _INSTRUMENT_KEYS = {
+    "area",
     "type", "number", "variant", "display", "description", "reference", "width",
     "height", "label_pos", "new_line_number", "sensing", "acting_on", "near",
     "at", "offset", "angle", "pin", "port_faces", "quadrants",
@@ -378,7 +383,7 @@ _QUADRANT_KEYS = {"safety": "a", "variable": "b", "high": "c", "low": "d"}
 _LOOP_KEYS = {"variable", "number"}
 _STREAM_KEYS = {
     "from", "to", "kind", "name", "draw_as_recycle", "properties", "tabulate", "via",
-    "color", "dasharray", "ends",
+    "color", "dasharray", "ends", "display_label",
     *LINE_NUMBER_FIELDS,
 }
 _COMPONENT_KEYS = {"name", "formula"}
@@ -403,6 +408,7 @@ _KIND_SIZES = {
 # valve or a blind sits with the plant running; a pump has no such
 # position, so naming one on it is a statement nothing draws.
 _KIND_TEXT = {
+    "reference_code": ("Feed", "Product"),
     "normal_position": ("Valve", "Fitting"),
     # Where an actuated valve goes on loss of motive power. Narrower
     # than ``normal_position``: a blind has a position but no actuator.
@@ -552,6 +558,22 @@ def from_dict(spec: Mapping[str, Any]) -> Flowsheet:
         fs.stream_labels = _read_stream_labels(data["stream_labels"], "stream_labels")
     if "title_block" in data:
         fs.title_block = _read_title_block(data["title_block"], "title_block")
+    if "equipment_data" in data:
+        from pandid.render.nameplates import validate as validate_equipment_data
+        fs.equipment_data = dict(validate_equipment_data(data["equipment_data"]))
+    if "drawio_metadata" in data:
+        from pandid.drawio_metadata import validate_bindings
+        fs.drawio_metadata = validate_bindings(data["drawio_metadata"])
+    if "print_scale" in data:
+        fs.print_scale = _number(data["print_scale"], "print_scale")
+        if fs.print_scale <= 0:
+            raise SpecError("print_scale must be positive")
+    if "layout_options" in data:
+        from pandid.layout.options import LayoutOptions
+        values = _mapping(data["layout_options"], "layout_options")
+        _check_keys(values, {f.name for f in dataclass_fields(LayoutOptions)}, "layout_options")
+        fs.layout_options = LayoutOptions(**values)
+        fs.layout_options.validate()
     for i, entry in enumerate(_sequence(data.get("annotations", []), "annotations")):
         fs.add_annotation(_read_annotation(fs, entry, f"annotations[{i}]"))
     return fs
@@ -705,7 +727,7 @@ def _read_instrument(fs: Flowsheet, entry: Any, where: str) -> Instrument:
         raise SpecError(f"{where}.number must be a loop number or text, got {number!r}")
 
     kwargs: dict[str, Any] = {}
-    for key in ("variant", "display", "description", "reference"):
+    for key in ("variant", "display", "description", "reference", "area"):
         if key in data:
             kwargs[key] = _text(data[key], f"{where}.{key}")
     for key in ("width", "height"):
@@ -740,6 +762,8 @@ def _read_common(fs: Flowsheet, unit: Unit, data: Mapping[str, Any], where: str)
     """Apply the shared fields, then register the unit on the sheet."""
     if "label_pos" in data:
         unit.label_pos = _text(data["label_pos"], f"{where}.label_pos")
+    if "display_label" in data:
+        unit.display_label = _text(data["display_label"], f"{where}.display_label")
     if "new_line_number" in data:
         unit.new_line_number = _flag(data["new_line_number"], f"{where}.new_line_number")
     try:
@@ -1029,6 +1053,8 @@ def _read_stream(fs: Flowsheet, entry: Any, where: str) -> Stream:
     for key in ("color", "dasharray"):
         if key in data:
             setattr(stream, key, _text(data[key], f"{where}.{key}"))
+    if "display_label" in data:
+        stream.display_label = _text(data["display_label"], f"{where}.display_label")
     if "properties" in data:
         stream.properties = _read_properties(data["properties"], f"{where}.properties")
     if "tabulate" in data:
@@ -1230,11 +1256,20 @@ def _read_title_block(entry: Any, where: str) -> TitleBlock:
     """
     data = _mapping(entry, where)
     text_fields = _drawn_text_fields(TitleBlock)
-    _check_keys(data, text_fields | {"revisions"}, where)
+    _check_keys(data, text_fields | {"revisions", "logo", "logo_aspect", "fit_fields", "extra_fields"}, where)
     kwargs: dict[str, Any] = {
         key: _drawn_text(value) for key, value in data.items() if key in text_fields
     }
     revisions = []
+    if "logo" in data:
+        kwargs["logo"] = _text(data["logo"], f"{where}.logo")
+    if "logo_aspect" in data:
+        kwargs["logo_aspect"] = _number(data["logo_aspect"], f"{where}.logo_aspect")
+    if "fit_fields" in data:
+        kwargs["fit_fields"] = _flag(data["fit_fields"], f"{where}.fit_fields")
+    if "extra_fields" in data:
+        kwargs["extra_fields"] = {str(k): _drawn_text(v) for k, v in
+                                  _mapping(data["extra_fields"], f"{where}.extra_fields").items()}
     for i, item in enumerate(_sequence(data.get("revisions", []), f"{where}.revisions")):
         rev_where = f"{where}.revisions[{i}]"
         rev = _mapping(item, rev_where)
@@ -1244,7 +1279,7 @@ def _read_title_block(entry: Any, where: str) -> TitleBlock:
 
 
 _ANNOTATION_KEYS = {
-    "annotation": {"type", "title", "rows", "align", "position", "margin", "width", "font_size"},
+    "annotation": {"type", "title", "rows", "align", "position", "margin", "width", "font_size", "line_samples", "title_align"},
     "table": {"type", "title", "headers", "rows", "align", "position", "margin", "font_size",
               "col_align"},
     "equipment_list": {"type", "title", "align", "position", "margin", "width", "include"},
@@ -1332,6 +1367,11 @@ def _read_annotation(fs: Flowsheet, entry: Any, where: str) -> Annotation | Tabl
                                                                 f"{where}.rows"))]
             return TableBox(**kwargs)
         kwargs["rows"] = _read_rows(data.get("rows", []), f"{where}.rows")
+        if "title_align" in data:
+            kwargs["title_align"] = _text(data["title_align"], f"{where}.title_align")
+        if "line_samples" in data:
+            kwargs["line_samples"] = [dict(_mapping(v, f"{where}.line_samples"))
+                                      for v in _sequence(data["line_samples"], f"{where}.line_samples")]
         return Annotation(**kwargs)
     except SpecError:
         raise  # already carries its own path
@@ -1431,16 +1471,34 @@ def to_dict(fs: Flowsheet) -> dict:
         spec["title_block"] = _write_title_block(fs.title_block)
     if fs.annotations:
         spec["annotations"] = [_write_annotation(a) for a in fs.annotations]
+    if fs.equipment_data:
+        from pandid.render.nameplates import validate as validate_equipment_data
+        spec["equipment_data"] = dict(validate_equipment_data(fs.equipment_data, {u.name for u in fs.units}))
+    if fs.drawio_metadata:
+        from pandid.drawio_metadata import validate_bindings
+        spec["drawio_metadata"] = validate_bindings(fs.drawio_metadata)
+    if fs.print_scale != 1.0:
+        spec["print_scale"] = fs.print_scale
+    fs.layout_options.validate()
+    layout = {f.name: getattr(fs.layout_options, f.name)
+              for f in dataclass_fields(fs.layout_options)
+              if getattr(fs.layout_options, f.name) != f.default}
+    if layout:
+        spec["layout_options"] = layout
     return spec
 
 
 def _write_common(unit: Unit, entry: dict[str, Any]) -> dict[str, Any]:
+    if unit.display_label is not None:
+        entry["display_label"] = unit.display_label
     if unit.variant != "default":
         entry["variant"] = unit.variant
     if unit.description:
         entry["description"] = unit.description
     if unit.reference:
         entry["reference"] = unit.reference
+    if isinstance(unit, (unit_types.Feed, unit_types.Product)) and unit.reference_code:
+        entry["reference_code"] = unit.reference_code
     for key in ("width", "height", "label_pos"):
         if getattr(unit, key) is not None:
             entry[key] = getattr(unit, key)
@@ -1593,7 +1651,8 @@ def _write_unit(unit: Unit) -> dict[str, Any]:
     # carrying one label, and reading them back re-derives the names the
     # flowsheet tells the taps apart by. A tee has no tag, so its name
     # is written instead.
-    entry: dict[str, Any] = {"kind": kind, "name": unit.tag or unit.name}
+    entry: dict[str, Any] = {"kind": kind, "name":
+        unit._tag if isinstance(unit, (unit_types.Feed, unit_types.Product)) else unit.name}
     _write_common(unit, entry)
     _write_composition(unit, entry)
     if isinstance(unit, unit_types.Block):
@@ -1680,6 +1739,8 @@ def _write_instrument(inst: Instrument) -> dict[str, Any]:
         {"balloon_of": inst._marks.name} if inst._marks is not None
         else {"type": inst.type, "number": inst.number}
     )
+    if inst.area and inst._marks is None:
+        entry["area"] = inst.area
     _write_common(inst, entry)
     # The two axes apart again. ``_write_common`` wrote the registry's
     # spelling, which folds them together, and ``panel`` and ``aux``
@@ -1751,6 +1812,8 @@ def _write_stream(stream: Stream) -> dict[str, Any]:
     for key in ("color", "dasharray"):
         if getattr(stream, key) is not None:
             entry[key] = getattr(stream, key)
+    if stream.display_label is not None:
+        entry["display_label"] = stream.display_label
     if stream.ends is not None:
         # A pair goes out as a list, which is what it came in as and
         # what YAML writes anyway; one name for both ends stays one
@@ -1792,6 +1855,15 @@ def _stated_text(obj: TitleBlock | Revision) -> dict[str, Any]:
 
 def _write_title_block(block: TitleBlock) -> dict[str, Any]:
     entry: dict[str, Any] = _stated_text(block)
+    block.validate_branding()
+    if block.logo:
+        entry["logo"] = block.logo
+    if block.logo_aspect != 1.0:
+        entry["logo_aspect"] = block.logo_aspect
+    if block.fit_fields:
+        entry["fit_fields"] = True
+    if block.extra_fields:
+        entry["extra_fields"] = dict(block.extra_fields)
     if block.revisions:
         entry["revisions"] = [_stated_text(rev) for rev in block.revisions]
     return entry
@@ -1812,6 +1884,10 @@ def _write_annotation(box: Annotation | TableBox) -> dict[str, Any]:
             entry["col_align"] = list(box.col_align)
     else:
         entry["rows"] = [row if isinstance(row, str) else list(row) for row in box.rows]
+        if box.title_align != "center":
+            entry["title_align"] = box.title_align
+        if box.line_samples:
+            entry["line_samples"] = [dict(sample) for sample in box.line_samples]
     entry["align"] = box.align
     if box.position is not None:
         entry["position"] = list(box.position)

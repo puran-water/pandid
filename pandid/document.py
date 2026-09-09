@@ -194,6 +194,11 @@ class TitleBlock:
     project: str = ""
     client: str = ""
     company: str = ""
+    # Embedded artwork only; aspect is width/height. No recipient-local files.
+    logo: str = field(default="", metadata={"drawn_text": False})
+    logo_aspect: float = 1.0
+    fit_fields: bool = False
+    extra_fields: dict[str, str] = field(default_factory=dict)
     status: str = ""
     sheet: str = "1"
     of_sheets: str = "1"
@@ -203,6 +208,33 @@ class TitleBlock:
     approved_by: str = ""
     date: str = ""
     revisions: list[Revision] = field(default_factory=list)
+
+    def __post_init__(self):
+        self.validate_branding()
+
+    def validate_branding(self):
+        import base64
+        import math
+        if (type(self.logo_aspect) not in {float, int}
+                or not math.isfinite(self.logo_aspect) or self.logo_aspect <= 0):
+            raise ValueError("logo_aspect must be positive and finite")
+        if not isinstance(self.logo, str):
+            raise ValueError("logo must be an embedded image string")
+        if type(self.fit_fields) is not bool:
+            raise ValueError("fit_fields must be a boolean")
+        if not isinstance(self.extra_fields, dict) or any(
+                not isinstance(k, str) or not isinstance(v, str) for k, v in self.extra_fields.items()):
+            raise ValueError("extra_fields must map text captions to text values")
+        if self.logo:
+            prefix, separator, content = self.logo.partition(",")
+            if not separator or prefix not in {
+                "data:image/svg+xml;base64", "data:image/png;base64", "data:image/jpeg;base64"
+            }:
+                raise ValueError("title block logo must be an embedded base64 SVG, PNG or JPEG")
+            try:
+                base64.b64decode(content, validate=True)
+            except ValueError as exc:
+                raise ValueError("invalid title block logo encoding") from exc
 
 
 def _drawn_text(value: Any) -> str:
@@ -257,7 +289,8 @@ def _drawn_text_fields(cls: type) -> frozenset[str]:
     strip agree about which fields are text on the day a field is added
     rather than on the day a cell is noticed drawing the wrong thing.
     """
-    return frozenset(f.name for f in fields(cls) if isinstance(f.default, str))
+    return frozenset(f.name for f in fields(cls)
+                     if isinstance(f.default, str) and f.metadata.get("drawn_text", True))
 
 
 # The nine positions a box can dock to on the sheet *frame* (not the
@@ -330,9 +363,29 @@ class Annotation:
     margin: float = 0.0
     width: float | None = None
     font_size: float = 11.0
+    line_samples: list[dict] = field(default_factory=list)
+    title_align: str = "center"
 
     def __post_init__(self):
         self.align = _resolve_align(self.align, "top-right")
+        if self.title_align not in {"left", "center"}:
+            raise ValueError("annotation title_align must be left or center")
+        if self.line_samples:
+            if len(self.line_samples) != len(self.rows):
+                raise ValueError("line_samples must provide one sample per legend row")
+            if any(not isinstance(row, (list, tuple)) or len(row) != 2 or row[0] for row in self.rows):
+                raise ValueError("line legend rows need an empty sample column and a description")
+            import re
+            for sample in self.line_samples:
+                if set(sample) - {"color", "dasharray", "arrow"}:
+                    raise ValueError("unknown line sample field")
+                if not re.fullmatch(r"#[0-9A-Fa-f]{6}", sample.get("color", "#111111")):
+                    raise ValueError("line sample color must be #RRGGBB")
+                pattern = sample.get("dasharray", "none")
+                if pattern != "none" and not re.fullmatch(r"\d+(?:\.\d+)?(?: +\d+(?:\.\d+)?)+", pattern):
+                    raise ValueError("invalid line sample dasharray")
+                if type(sample.get("arrow", False)) is not bool:
+                    raise ValueError("line sample arrow must be a boolean")
 
 
 @dataclass
@@ -739,6 +792,9 @@ _MAJOR_EQUIPMENT = frozenset({
 # code quoted at the reader in place of the equipment description an
 # engineer would write.
 _KIND_LABELS = {
+    "airlift": "Airlift",
+    "liquid_screen": "Liquid Screen",
+    "membrane_cage": "Membrane Cage",
     "block": "Process Block",
     "blower": "Blower",
     "boiler": "Boiler",

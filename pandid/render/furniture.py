@@ -450,6 +450,8 @@ def _ann_layout(ann):
                 col_w[i] = max(col_w[i], text_width(c, size))
         else:
             col_w[0] = max(col_w[0], text_width(r, size))
+    if getattr(ann, "line_samples", None):
+        col_w[0] = max(col_w[0], 45.0)
     return size, row_h, title_h, col_w
 
 
@@ -502,13 +504,22 @@ def draw_annotation(ann, x: float, y: float, *,
     L = [f'<rect x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{h:.1f}" '
          f'fill="white" stroke="black" stroke-width="{_BOX_RULE:g}"/>']
     if ann.title:
-        L.append(_text(x + w / 2, y + title_h - 6, ann.title, size + 1,
-                       anchor="middle", bold=True))
+        left = ann.title_align == "left"
+        L.append(_text(x + (pad if left else w / 2), y + title_h - 6, ann.title, size + 1,
+                       anchor="start" if left else "middle", bold=True))
         L.append(f'<line x1="{x:.1f}" y1="{y + title_h:.1f}" x2="{x + w:.1f}" '
                  f'y2="{y + title_h:.1f}" stroke="black" '
                  f'stroke-width="{_BOX_UNDERLINE:g}"/>')
     ry = y + title_h + row_h - 4
-    for r in ann.rows:
+    for row_index, r in enumerate(ann.rows):
+        if getattr(ann, "line_samples", None):
+            sample = ann.line_samples[row_index]
+            sx, sy = x + pad, ry - size / 3
+            color = sample.get("color", "#111111")
+            dash = sample.get("dasharray", "none")
+            L.append(f'<path d="M{sx:g} {sy:g}h40" fill="none" stroke="{color}" stroke-width="2" stroke-dasharray="{dash}"/>')
+            if sample.get("arrow"):
+                L.append(f'<path d="M{sx+40:g} {sy:g}l-6 -3v6Z" fill="{color}"/>')
         if isinstance(r, (tuple, list)):
             cx = x + pad
             for i, c in enumerate(r):
@@ -1544,6 +1555,8 @@ def company_overflow(tb) -> "tuple[int, float, float] | None":
     """
     lines = company_lines(_stated(tb, "company"))
     _, room = measure_title_strip(tb)
+    if getattr(tb, "logo", ""):
+        room *= 0.45
     need = len(lines) * _COMPANY_LEAD
     return (len(lines), room, need) if need > room else None
 
@@ -1589,13 +1602,46 @@ def undrawn_signatories(tb) -> "list[tuple[str, str, str]]":
 def _header_lines(tb) -> list[tuple[str, str]]:
     return [(label, value) for label, value
             in (("CLIENT", _stated(tb, "client")),
-                ("PROJECT", _stated(tb, "project"))) if value]
+                ("PROJECT", _stated(tb, "project")),
+                *getattr(tb, "extra_fields", {}).items()) if value]
+
+
+def _strip_widths(tb):
+    """Keep the native ruling, widening fields when explicitly requested.
+
+    This is useful for database document numbers and full signatory names:
+    an ellipsis cannot identify a controlled document or say PENDING.
+    """
+    if not getattr(tb, "fit_fields", False):
+        return _REV_COLS, _INFO_W
+    columns = []
+    for heading, width, attr in _REV_COLS:
+        values = [_stated(row, attr) for row in tb.revisions]
+        if attr in _BACKFILL:
+            values.append(_stated(tb, _BACKFILL[attr]))
+        width = max([width, *(text_width(v, _REV_TYPE) + 2 * _REV_PAD + 1 for v in values)])
+        columns.append((heading, width, attr))
+    info = max(_INFO_W,
+               (text_width(_stated(tb, "drawing_number"), _VALUE_TYPE, True) + 12) / .38,
+               text_width(_stated(tb, "title"), _TITLE_TYPE, True) + 10 + _SHEET_W,
+               text_width(_stated(tb, "subtitle"), _SUBTITLE_TYPE) + 12,
+               text_width(_stated(tb, "status"), _VALUE_TYPE, True) + 12,
+               *(text_width(value, _HDR_TYPE) + _header_value_x(tb) + 5
+                 for _, value in _header_lines(tb)))
+    return tuple(columns), info
+
+
+def _header_value_x(tb):
+    return max([_HDR_VALUE_X, *(text_width(label, _CAPTION) + 12
+                               for label, _value in _header_lines(tb))])
 
 
 def measure_title_strip(tb) -> tuple[float, float]:
+    tb.validate_branding()
     n = len(tb.revisions)
     h = max((n + 1) * _REV_ROW, _BODY_H) + _HDR_ROW * len(_header_lines(tb))
-    return _REV_W + _COMPANY_W + _INFO_W, h
+    columns, info = _strip_widths(tb)
+    return sum(width for _, width, _ in columns) + _COMPANY_W + info, h
 
 
 class RevGrid(NamedTuple):
@@ -1688,9 +1734,12 @@ def title_strip_layout(tb, name: str, date: str, right: float, bottom: float,
     # already thrown away, and a whitespace date with today's.
     name, date = str(name or "").strip(), str(date or "").strip()
     date = _stated(tb, "date") or date
+    columns, info_w = _strip_widths(tb)
+    rev_w = sum(width for _, width, _ in columns)
+    title_w = info_w - 10 - _SHEET_W
     w, h = measure_title_strip(tb)
     x, y = right - w, bottom - h
-    rx = x + _REV_W
+    rx = x + rev_w
     cx2 = rx + _COMPANY_W
     rules = [("rule", vx, y, vx, bottom, 1.5) for vx in (rx, cx2)]
     if report is not None:
@@ -1706,10 +1755,10 @@ def title_strip_layout(tb, name: str, date: str, right: float, bottom: float,
         """
         return [clip(v, cw - 2 * _REV_PAD, _REV_TYPE, bold,
                      field=f, report=report if f else None)
-                for (_, cw, _attr), (v, f) in zip(_REV_COLS, cells)]
+                for (_, cw, _attr), (v, f) in zip(columns, cells)]
 
     header_y = bottom - _REV_ROW
-    headings = rev_cells([(c[0], "") for c in _REV_COLS], bold=True)
+    headings = rev_cells([(c[0], "") for c in columns], bold=True)
     # Clipped newest first, which is the order the strip used to draw
     # them in and so the order a caller watching ``report`` already
     # sees; stored oldest first, which is the order they are read in.
@@ -1718,7 +1767,7 @@ def title_strip_layout(tb, name: str, date: str, right: float, bottom: float,
         newest = idx == 0
         i = len(tb.revisions) - 1 - idx
         row = []
-        for _heading, _cw, attr in _REV_COLS:
+        for _heading, _cw, attr in columns:
             cell, value = f"revisions[{i}].{attr}", _stated(rv, attr)
             # The block-level drawn/checked/approved fields backfill the
             # newest row's signatories when that revision leaves them
@@ -1730,17 +1779,26 @@ def title_strip_layout(tb, name: str, date: str, right: float, bottom: float,
             else:
                 row.append((value, cell))
         newest_first.append(rev_cells(row))
-    rev = RevGrid(x, y, _REV_W, h,
+    rev = RevGrid(x, y, rev_w, h,
                   tuple((heading, cw) for heading, (_, cw, _a)
-                        in zip(headings, _REV_COLS)),
+                        in zip(headings, columns)),
                   _REV_ROW, header_y, list(reversed(newest_first)))
 
     parts: list[tuple] = []
 
     # Company / logo cell (middle) -------------------------------
+    if getattr(tb, "logo", ""):
+        text_height = len(company_lines(_stated(tb, "company"))) * _COMPANY_LEAD
+        available_h = max(0.0, h - text_height - 16)
+        logo_w = min(_COMPANY_W - 12, available_h * tb.logo_aspect)
+        logo_h = logo_w / tb.logo_aspect
+        parts.append(("image", rx + (_COMPANY_W - logo_w) / 2,
+                      y + (h - text_height - logo_h) / 2,
+                      logo_w, logo_h, tb.logo))
     if _stated(tb, "company"):
         lines = company_lines(_stated(tb, "company"))
-        cy = y + h / 2 - (len(lines) - 1) * _COMPANY_LEAD / 2
+        cy = (bottom - len(lines) * _COMPANY_LEAD + 3 if getattr(tb, "logo", "")
+              else y + h / 2 - (len(lines) - 1) * _COMPANY_LEAD / 2)
         for ln in lines:
             # A word too long for the cell has no break point the
             # wrapper may use: hyphenating a company name invents one,
@@ -1754,6 +1812,7 @@ def title_strip_layout(tb, name: str, date: str, right: float, bottom: float,
     # --- Info block (right): client/project, title, status, dwg/rev
     ix = cx2
     header = _header_lines(tb)
+    header_value_x = _header_value_x(tb)
     top = y + _HDR_ROW * len(header)     # top of the title band
     body = h - _HDR_ROW * len(header)
     band2 = top + body * _TITLE_BAND
@@ -1764,8 +1823,8 @@ def title_strip_layout(tb, name: str, date: str, right: float, bottom: float,
             parts.append(("rule", ix, hy, x + w, hy, _STRIP_HAIRLINE))
         parts.append(("text", ix + 6, hy + _HDR_ROW - 4, label, _CAPTION,
                       "start", False, CAPTION_INK))
-        parts.append(("text", ix + _HDR_VALUE_X, hy + _HDR_ROW - 4,
-                      clip(value, _INFO_W - _HDR_VALUE_X - 5, _HDR_TYPE,
+        parts.append(("text", ix + header_value_x, hy + _HDR_ROW - 4,
+                      clip(value, info_w - header_value_x - 5, _HDR_TYPE,
                            field=label.lower(), report=report),
                       _HDR_TYPE, "start", False, "black"))
         hy += _HDR_ROW
@@ -1799,16 +1858,16 @@ def title_strip_layout(tb, name: str, date: str, right: float, bottom: float,
     # truncated" about a field they never set goes looking in the wrong
     # place. Same for the three cells below it; see :data:`Reporter`.
     title = _stated(tb, "title") or name
-    title_type = fit_size(title, _TITLE_W, _TITLE_TYPE, _SUBTITLE_TYPE, True)
+    title_type = fit_size(title, title_w, _TITLE_TYPE, _SUBTITLE_TYPE, True)
     parts.append(("text", ix + 6, top + 15,
-                  clip(title, _TITLE_W, title_type, True,
+                  clip(title, title_w, title_type, True,
                        field=("title" if _field(tb, "title")
                               else "Flowsheet name -> title"),
                        report=report),
                   title_type, "start", True, "black"))
     if _stated(tb, "subtitle"):
         parts.append(("text", ix + 6, band2 - 6,
-                      clip(_stated(tb, "subtitle"), _INFO_W - 12, _SUBTITLE_TYPE,
+                      clip(_stated(tb, "subtitle"), info_w - 12, _SUBTITLE_TYPE,
                            field="subtitle", report=report),
                       _SUBTITLE_TYPE, "start", False, "black"))
     # One cell drawn from two fields, so the finding names both: which
@@ -1823,7 +1882,7 @@ def title_strip_layout(tb, name: str, date: str, right: float, bottom: float,
     parts.append(("text", ix + 6, band2 + 8, "STATUS", _CAPTION,
                   "start", False, CAPTION_INK))
     parts.append(("text", ix + 6, band3 - 5,
-                  clip(_stated(tb, "status") or "—", _INFO_W - 12,
+                  clip(_stated(tb, "status") or "—", info_w - 12,
                        _VALUE_TYPE, True,
                        field="status", report=report),
                   _VALUE_TYPE, "start", True, "black"))
@@ -1869,11 +1928,11 @@ def title_strip_layout(tb, name: str, date: str, right: float, bottom: float,
     date_field = ("date" if _field(tb, "date")
                   else "today's date -> date")
     cells: list[tuple[float, str, str, str]] = [
-        (_INFO_W * 0.38, "DRAWING No",
+        (info_w * 0.38, "DRAWING No",
          _stated(tb, "drawing_number") or "—", "drawing_number"),
-        (_INFO_W * 0.21, "SCALE", scale, scale_field),
-        (_INFO_W * 0.29, "DATE", date, date_field),
-        (_INFO_W * 0.12, "REV", rev_id, rev_field)]
+        (info_w * 0.21, "SCALE", scale, scale_field),
+        (info_w * 0.29, "DATE", date, date_field),
+        (info_w * 0.12, "REV", rev_id, rev_field)]
     cxr = ix
     for j, (seg_w, seg_label, seg_val, seg_field) in enumerate(cells):
         if j:
@@ -1950,6 +2009,10 @@ def title_strip_fit(tb, name: str, date: str, fit_scale: str = ""
 
 def _strip_part(part) -> str:
     """One laid-out strip part, as SVG."""
+    if part[0] == "image":
+        _, x, y, w, h, uri = part
+        return (f'<image x="{x:g}" y="{y:g}" width="{w:g}" height="{h:g}" '
+                f'href="{escaped(uri)}" preserveAspectRatio="xMidYMid meet"/>')
     if part[0] == "rule":
         _, x1, y1, x2, y2, weight = part
         return (f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" '

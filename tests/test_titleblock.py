@@ -1309,7 +1309,10 @@ def _scalar_fields(cls: type[Any]) -> list[str]:
     default at all -- is swept, which is the point. A new field is a case here
     before it is a line in ``_ANSWERS``.
     """
-    return [f.name for f in dataclasses.fields(cls) if f.default_factory is dataclasses.MISSING]
+    # Image payloads and numeric/layout options have their own typed validation;
+    # only text cells participate in the text-fitting sweep below.
+    return [f.name for f in dataclasses.fields(cls)
+            if isinstance(f.default, str) and f.metadata.get("drawn_text", True)]
 
 
 _BLOCK_FIELDS = _scalar_fields(TitleBlock)

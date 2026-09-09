@@ -492,6 +492,13 @@ class Flowsheet:
         # Generic titled boxes (equipment list, notes, legend, tables)
         # docked to the sheet corners. See pandid.document.
         self.annotations: list = []
+        # Opaque engineering custody, carried without supplying layout facts.
+        self.drawio_metadata: dict = {}
+        self.equipment_data: dict = {}
+        # Uniform physical enlargement, including the native title strip.
+        self.print_scale: float = 1.0
+        from pandid.layout.options import LayoutOptions
+        self.layout_options = LayoutOptions()
         # Section headers to inject into the stream table: (before_key,
         # label). Content rather than a setting -- the heading text the
         # table draws -- which is why it is here beside `title_block`

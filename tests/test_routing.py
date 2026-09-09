@@ -977,6 +977,8 @@ def test_preview_separated_waypoints_does_not_mutate_and_matches_the_real_pass()
     )
     assert s1.route is not None and s2.route is not None  # ``.via()`` sets both directly
 
+    # Synthetic router results, not author-frozen .via() overrides.
+    s1.route.manual = s2.route.manual = False
     raw_s1, raw_s2 = list(s1.route.waypoints), list(s2.route.waypoints)
     preview = preview_separated_waypoints(fs.streams)
 
@@ -998,7 +1000,7 @@ def test_preview_separated_waypoints_does_not_mutate_and_matches_the_real_pass()
     assert s1.route.waypoints != raw_s1 or s2.route.waypoints != raw_s2
 
 
-def test_a_later_streams_recording_uses_separated_not_raw_geometry():
+def test_frozen_manual_geometry_is_recorded_without_offset():
     # #483's round-5 review, point 2: the router recorded every route's
     # *raw*, pre-separation geometry into ``crossing_index``, then only
     # afterwards ran ``separate_streams`` -- once, on the whole sheet -- to
@@ -1009,9 +1011,9 @@ def test_a_later_streams_recording_uses_separated_not_raw_geometry():
     #
     # Two manual routes share an unfixed middle run at y=100, overlapping
     # in x (see the preview test above), so ``separate_streams`` moves the
-    # second one to y=106 once both are on the sheet -- confirmed against
+    # second one to y=100 once both are on the sheet -- confirmed against
     # s2's own final waypoints below, not assumed. What gets *recorded* for
-    # s2 has to show that same y=106, not the raw y=100 that s2 never
+    # s2 has to show that same y=100, not the raw y=100 that s2 never
     # actually draws by the time the sheet is finished; a spy on
     # ``CrossingIndex.record`` reads that off directly rather than needing
     # a downstream routing decision to flip.
@@ -1040,12 +1042,12 @@ def test_a_later_streams_recording_uses_separated_not_raw_geometry():
         CrossingIndex.record = original_record
 
     assert s2.route is not None
-    assert s2.route.waypoints[1][1] == 106.0, (
-        f"expected separate_streams to move s2's shared run to y=106: {s2.route.waypoints}"
+    assert s2.route.waypoints[1][1] == 100.0, (
+        f"expected separate_streams to preserve s2's frozen run to y=100: {s2.route.waypoints}"
     )
     s2_recordings = [p for p in recorded if p and p[0][0] == 100.0]
     assert s2_recordings, f"s2's geometry was never recorded: {recorded}"
-    assert s2_recordings[-1][1][1] == 106.0, (
+    assert s2_recordings[-1][1][1] == 100.0, (
         f"s2 was recorded at its raw, pre-separation position rather than "
         f"the one actually drawn: {s2_recordings[-1]}"
     )

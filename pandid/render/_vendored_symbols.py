@@ -7,6 +7,72 @@ def register_vendored(registry):
     defaults of the same (kind, variant)."""
     from pandid.render.symbols import FROM_START, PortSeries, Symbol
 
+    # draw.io misc:Screening Device, Sieve, Strainer (aspect=variable) -> liquid_screen/default
+    registry.register('liquid_screen', Symbol(
+        svg='<g id="sym_liquid_screen"><path d="M 0.0 0.0 L 80.0 0.0 L 80.0 80.0 L 40.0 120.0 L 0.0 80.0 Z" fill="white" stroke="#111" stroke-width="2.0"/><path d="M 0.5 0.75 L 80.0 79.5" fill="none" stroke="#111" stroke-width="2.0" stroke-dasharray="4 4"/></g>',
+        width=80.0, height=120.0,
+        ports={'inlet': (40.0, 0.0), 'outlet': (40.0, 120.0), 'reject': (80.0, 60.0)},
+        drawio_shape='mxgraph.pid.misc.screening_device,_sieve,_strainer',
+    ), 'default')
+
+    # draw.io misc:Screening Device, Sieve, Strainer (Coarse Rake) (aspect=variable) -> liquid_screen/coarse_rake
+    registry.register('liquid_screen', Symbol(
+        svg='<g id="sym_liquid_screen_coarse_rake"><path d="M 0.0 0.0 L 80.0 0.0 L 80.0 80.0 L 40.0 120.0 L 0.0 80.0 Z" fill="white" stroke="#111" stroke-width="2.0"/><path d="M 31.43 23.44 L 38.51 16.38 L 63.91 41.9 L 56.82 48.95 M 46.98 24.89 L 39.89 31.94 M 55.44 33.39 L 48.36 40.45" fill="none" stroke="#111" stroke-width="2.0"/><path d="M 0.5 0.75 L 80.0 79.5" fill="none" stroke="#111" stroke-width="2.0" stroke-dasharray="4 4"/></g>',
+        width=80.0, height=120.0,
+        ports={'inlet': (40.0, 0.0), 'outlet': (40.0, 120.0), 'reject': (80.0, 60.0)},
+        drawio_shape='mxgraph.pid.misc.screening_device,_sieve,_strainer_(coarse_rake)',
+    ), 'coarse_rake')
+
+    # draw.io misc:Screening Device, Sieve, Strainer (Fine Rake) (aspect=variable) -> liquid_screen/fine_rake
+    registry.register('liquid_screen', Symbol(
+        svg='<g id="sym_liquid_screen_fine_rake"><path d="M 0.0 0.0 L 80.0 0.0 L 80.0 80.0 L 40.0 120.0 L 0.0 80.0 Z" fill="white" stroke="#111" stroke-width="2.0"/><path d="M 31.43 23.44 L 38.51 16.38 L 63.91 41.9 L 56.82 48.95 M 46.98 24.89 L 39.89 31.94 M 55.44 33.39 L 48.36 40.45 M 42.48 20.39 L 35.39 27.44 M 51.1 28.89 L 44.02 35.94 M 59.6 37.39 L 52.52 44.44" fill="none" stroke="#111" stroke-width="2.0"/><path d="M 0.5 0.75 L 80.0 79.5" fill="none" stroke="#111" stroke-width="2.0" stroke-dasharray="4 4"/></g>',
+        width=80.0, height=120.0,
+        ports={'inlet': (40.0, 0.0), 'outlet': (40.0, 120.0), 'reject': (80.0, 60.0)},
+        drawio_shape='mxgraph.pid.misc.screening_device,_sieve,_strainer_(fine_rake)',
+    ), 'fine_rake')
+
+    # draw.io pumps:Gas Blower (aspect=variable) -> blower/gas
+    registry.register('blower', Symbol(
+        svg='<g id="sym_blower_gas"><path d="M 22.0 54.0 L 10.0 67.0 L 70.0 67.0 L 58.0 54.0" fill="white" stroke="#111" stroke-width="2.0"/><path d="M 0.0 0.0 L 40.0 0.0 A 30.0 30.0 0.0 1 1 11.5 20.0 L 0.0 19.75 Z" fill="white" stroke="#111" stroke-width="2.0"/><ellipse cx="40.0" cy="30.0" rx="10.0" ry="10.0" fill="none" stroke="#111" stroke-width="2.0"/></g>',
+        width=72.3, height=67.0,
+        ports={'suction': (0.0, 35.0), 'discharge': (39.8, 67.0)},
+        drawio_shape='mxgraph.pid.pumps.gas_blower',
+    ), 'gas')
+
+    # draw.io valves:Butterfly Valve 2 (aspect=variable) -> valve/butterfly_2
+    registry.register('valve', Symbol(
+        svg='<g id="sym_valve_butterfly_2"><g transform="scale(0.25)"><path d="M 0.0 60.0 L 0.0 0.0 L 98.0 60.0 L 98.0 0.0 Z M 34.0 55.0 L 64.0 5.0" fill="white" stroke="#111" stroke-width="8.0"/></g></g>',
+        width=24.5, height=15.0,
+        ports={'inlet': (0.0, 7.5), 'outlet': (24.5, 7.5), 'actuator': (12.2, 0.0)},
+        drawio_shape='mxgraph.pid.valves.butterfly_valve_2',
+        trim=True,
+    ), 'butterfly_2')
+
+    # draw.io valves:Check Valve 2 (aspect=variable) -> valve/check_2
+    registry.register('valve', Symbol(
+        svg='<g id="sym_valve_check_2"><g transform="scale(0.25)"><path d="M 0.0 2.0 L 0.0 62.0 L 95.5 2.0 L 95.5 62.0" fill="none" stroke="#111" stroke-width="8.0"/><ellipse cx="95.5" cy="3.0" rx="3.0" ry="3.0" fill="white" stroke="#111" stroke-width="8.0"/><path d="M 9.0 50.0 L 0.0 62.0 L 14.5 59.5 L 9.0 56.5 Z" fill="white" stroke="#111" stroke-width="8.0"/></g></g>',
+        width=24.6, height=15.5,
+        ports={'inlet': (0.0, 7.8), 'outlet': (23.9, 7.8), 'actuator': (12.2, 0.0)},
+        drawio_shape='mxgraph.pid.valves.check_valve_2',
+        trim=True,
+    ), 'check_2')
+
+    # draw.io vessels:Concrete Tank (aspect=variable) -> tank/concrete
+    registry.register('tank', Symbol(
+        svg='<g id="sym_tank_concrete"><path d="M 0.0 0.0 L 10.0 0.0 L 10.0 65.0 L 150.0 65.0 L 150.0 0.0 L 160.0 0.0 L 160.0 75.0 L 0.0 75.0 Z M 0.0 5.0 L 5.0 0.0 M 0.0 15.0 L 10.0 5.0 M 0.0 25.0 L 10.0 15.0 M 0.0 35.0 L 10.0 25.0 M 0.0 45.0 L 10.0 35.0 M 0.0 55.0 L 10.0 45.0 M 40.0 75.0 L 50.0 65.0 M 0.0 65.0 L 10.0 55.0 M 0.0 75.0 L 10.0 65.0 M 10.0 75.0 L 20.0 65.0 M 20.0 75.0 L 30.0 65.0 M 30.0 75.0 L 40.0 65.0 M 50.0 75.0 L 60.0 65.0 M 60.0 75.0 L 70.0 65.0 M 70.0 75.0 L 80.0 65.0 M 80.0 75.0 L 90.0 65.0 M 90.0 75.0 L 100.0 65.0 M 110.0 75.0 L 120.0 65.0 M 120.0 75.0 L 130.0 65.0 M 130.0 75.0 L 140.0 65.0 M 140.0 75.0 L 160.0 55.0 M 150.0 75.0 L 160.0 65.0 M 150.0 55.0 L 160.0 45.0 M 150.0 45.0 L 160.0 35.0 M 150.0 35.0 L 160.0 25.0 M 150.0 25.0 L 160.0 15.0 M 150.0 15.0 L 160.0 5.0 M 150.0 5.0 L 155.0 0.0 M 100.0 75.0 L 110.0 65.0" fill="white" stroke="#111" stroke-width="2.0"/></g>',
+        width=160.0, height=75.0,
+        ports={'inlet': (0.0, 30.0), 'outlet': (160.0, 30.0)},
+        drawio_shape='mxgraph.pid.vessels.concrete_tank',
+    ), 'concrete')
+
+    # draw.io vessels:Tank (aspect=variable) -> tank/vertical
+    registry.register('tank', Symbol(
+        svg='<g id="sym_tank_vertical"><path d="M 40.0 7.69 L 40.0 87.69 A 20.0 7.6923 0.0 0 1 20.0 95.3823 A 20.0 7.6923 0.0 0 1 0.0 87.69 L 0.0 7.69 A 20.0 7.6923 0.0 0 1 20.0 -0.0023 A 20.0 7.6923 0.0 0 1 40.0 7.69 Z M 0.0 7.69 L 40.0 7.69 M 0.0 87.69 L 40.0 87.69" fill="white" stroke="#111" stroke-width="2.0"/></g>',
+        width=40.0, height=95.4,
+        ports={'inlet': (0.0, 47.7), 'outlet': (40.0, 47.7)},
+        drawio_shape='mxgraph.pid.vessels.tank',
+    ), 'vertical')
+
     # draw.io valves:Gate Valve (aspect=variable) -> valve/default
     registry.register('valve', Symbol(
         svg='<g id="sym_valve"><g transform="scale(0.25)"><path d="M 0.0 60.0 L 0.0 0.0 L 98.0 60.0 L 98.0 0.0 Z" fill="white" stroke="#111" stroke-width="8.0"/></g></g>',
@@ -643,6 +709,16 @@ def register_vendored(registry):
         drawio_shape='mxgraph.pid.flow_sensors.coriolis',
         trim=True,
     ), 'coriolis')
+
+    # draw.io flow_sensors:Magnetic (aspect=variable) -> fitting/magnetic
+    registry.register('fitting', Symbol(
+        svg='<g id="sym_fitting_magnetic"><g transform="scale(0.25)"><rect x="0.0" y="0.0" width="50.0" height="50.0" fill="white" stroke="#111" stroke-width="8.0"/></g><text x="6.25" y="6.25" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="12" fill="#111">M</text></g>',
+        width=12.5, height=12.5,
+        ports={'inlet': (0.0, 6.2), 'outlet': (12.5, 6.2)},
+        drawio_shape='mxgraph.pid.flow_sensors.magnetic',
+        drawio_inscription='M',
+        trim=True,
+    ), 'magnetic')
 
     # draw.io flow_sensors:Vortex (aspect=variable) -> fitting/vortex
     registry.register('fitting', Symbol(

@@ -40,6 +40,9 @@ __all__ = [
     "Feed",
     "Product",
     "Pump",
+    "MembraneCage",
+    "LiquidScreen",
+    "Airlift",
     "Compressor",
     "Blower",
     "Valve",
@@ -158,6 +161,7 @@ _UnitT = TypeVar("_UnitT", bound="Unit")
 _LAYOUT_INPUTS = frozenset(
     {
         "name",
+        "display_label",
         "variant",
         "label_pos",
         # The placement intent, in its two halves: the coordinates and
@@ -527,6 +531,7 @@ class Unit:
         if not name:
             raise ValueError("Unit name cannot be empty")
         self.name = name
+        self.display_label: str | None = None
         if self.VARIANTS and variant not in self.VARIANTS:
             raise self._unknown_variant(name, variant)
         # The registry's spelling, never the class-local one; see
@@ -641,7 +646,8 @@ class Unit:
         is empty, so moving it is the whole of what a primary element's
         balloon does to the element.
         """
-        return "" if self.balloon is not None else self.name
+        return "" if self.balloon is not None else (
+            self.name if self.display_label is None else self.display_label)
 
     def repeats(self, other: "Unit") -> bool:
         """Whether this unit is *another drawing of* ``other``.
@@ -1264,6 +1270,7 @@ class _Boundary(Unit):
         description: str = "",
         reference: str = "",
         header: bool = False,
+        reference_code: str = "",
     ):
         super().__init__(
             name,
@@ -1282,6 +1289,9 @@ class _Boundary(Unit):
         # header needs a name of its own to be addressed by. See
         # :attr:`tag`.
         self._tag = name
+        if not isinstance(reference_code, str):
+            raise ValueError("reference_code must be text")
+        self.reference_code = reference_code
 
     @property
     def tag(self) -> str:
@@ -1292,7 +1302,7 @@ class _Boundary(Unit):
         flowsheet keeps a distinct name for each tap to address it by
         (``CWSH``, ``CWSH (2)``).
         """
-        return self._tag
+        return self._tag if self.display_label is None else self.display_label
 
     @property
     def connection(self) -> Port:
@@ -1429,6 +1439,33 @@ class Product(_Boundary):
 
     kind = "product"
     PORTS = [("inlet", "inlet", "product")]
+
+
+class LiquidScreen(Unit):
+    """Liquid screening with a separately identified screenings outlet."""
+    inlet: Port
+    outlet: Port
+    reject: Port
+    kind = "liquid_screen"
+    PORTS = [("inlet", "inlet", "process"), ("outlet", "outlet", "process"), ("reject", "outlet", "process")]
+
+
+class MembraneCage(Unit):
+    """Submerged membrane cage; its drawing does not prescribe module count."""
+
+    kind = "membrane_cage"
+    PORTS = [("feed", "inlet", "process"), ("mixed_liquor", "outlet", "process"),
+             ("permeate", "outlet", "process"), ("air", "inlet", "process")]
+    PLACES = {"feed": "W", "mixed_liquor": "E", "permeate": "N", "air": "S"}
+
+
+class Airlift(Unit):
+    """Liquid riser driven by a separately connected air supply."""
+
+    kind = "airlift"
+    PORTS = [("liquid_in", "inlet", "process"), ("air_in", "inlet", "process"),
+             ("discharge", "outlet", "process")]
+    PLACES = {"liquid_in": "S", "air_in": "W", "discharge": "E"}
 
 
 class Pump(Unit):
@@ -4312,7 +4349,17 @@ class Instrument(Unit):
         description: str = "",
         reference: str = "",
         display: str | None = None,
+        area: str = "",
     ):
+        # House tags add a process area without changing ISA function letters.
+        house = re.fullmatch(r"([0-9]+)-([A-Za-z]+)-(.+)", type.strip())
+        if house and (number == "" or number is None):
+            if area and area != house[1]:
+                raise ValueError("instrument tag and area disagree")
+            area, type, number = house.groups()
+        if area and not re.fullmatch(r"[A-Za-z0-9]+", area):
+            raise ValueError("instrument area must contain letters or digits")
+        self.area = area
         letters, num = split_tag(type, number)
         # Built from the SPLIT, not from the arguments. ``split_tag``
         # promises that ("FT", 101), "FT-101" and "FT101" are one
@@ -4327,6 +4374,8 @@ class Instrument(Unit):
         # spellings converge; ``letters + num`` is what a tag that is
         # all letters or all digits comes out as.
         name = f"{letters}-{num}" if letters and num else letters + num
+        if area:
+            name = f"{area}-{name}"
         #: Which of :data:`DISPLAYS` this balloon states. Set by the
         #: resolver below, which is also what turns the pair into the
         #: one variant the registry, the exporter and :mod:`pandid.spec`
@@ -4353,6 +4402,7 @@ class Instrument(Unit):
         # square needs a name of its own to be addressed by. See
         # :attr:`tag`.
         self._tag = name
+        self.reference_code = ""
         # Attachment intent (set only via attach()); the layout engine
         # resolves it into a frame, as Pin -> Frame for equipment.
         self.host: "Stream | Unit | None" = None
@@ -4547,7 +4597,7 @@ class Instrument(Unit):
         times while the flowsheet keeps a distinct name for each square
         to address it by (``I-1``, ``I-1 (2)``).
         """
-        return self._tag
+        return self._tag if self.display_label is None else self.display_label
 
     def repeats(self, other: "Unit") -> bool:
         """Whether this balloon is *another mark of* ``other``.
