@@ -50,7 +50,7 @@ def _wrapped(text, width, font):
     return result
 
 
-def _aligned_positions(desired, widths, left, gap=20):
+def _aligned_positions(desired, widths, left, gap=20, right=None):
     """Least-squares alignment without the former one-way rightward drift.
 
     Subtract cumulative box widths, then use pooled adjacent violators to
@@ -65,9 +65,13 @@ def _aligned_positions(desired, widths, left, gap=20):
             b=pools.pop();a=pools.pop()
             pools.append([a[0],b[1],a[2]+b[2],a[3]+b[3]])
         offset += width+gap
+    # Use available paper on both sides. A heading can move toward its unit
+    # only within the existing drawing width (or the minimum width needed by
+    # the row). Otherwise a late unit needlessly enlarges the whole A1 sheet.
+    upper = max(left, right - (offset-gap)) if right is not None else math.inf
     result=[0.0]*len(desired)
     for start,end,total,count in pools:
-        for index in range(start,end):result[index]=max(left,total/count)+offsets[index]
+        for index in range(start,end):result[index]=min(upper,max(left,total/count))+offsets[index]
     return result
 
 
@@ -99,7 +103,7 @@ def plan(fs, inner):
         w, h = measure_annotation(annotation)
         x = unit.frame.x
         blocks.append(DataBlock(index, annotation, x, 0, w, h))
-    positions=_aligned_positions([b.x for b in blocks],[b.w for b in blocks],inner[0])
+    positions=_aligned_positions([b.x for b in blocks],[b.w for b in blocks],inner[0],right=inner[2])
     blocks=[DataBlock(b.unit_index,b.annotation,x,0,b.w,b.h) for b,x in zip(blocks,positions)]
     height = max(b.h for b in blocks)
     y = inner[3] + 65 if next(iter(records.values())).get('side', 'below') == 'below' else inner[1] - height - 65

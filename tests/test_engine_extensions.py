@@ -184,6 +184,15 @@ def test_house_mbr_symbols_have_native_artwork_and_real_ports():
     assert to_dict(from_dict(to_dict(fs))) == to_dict(fs)
 
 
+def test_nameplates_use_available_left_space_before_growing_the_drawing():
+    from pandid.render.nameplates import _aligned_positions
+    positions = _aligned_positions([200, 490], [180, 220], 0, right=600)
+    assert positions[-1]+220 <= 600
+    assert positions[1] >= positions[0]+200
+    wide = _aligned_positions([200, 490], [380, 420], 0, right=600)
+    assert wide == [0, 400]
+
+
 def test_fixed_nozzle_overlap_is_removed_without_moving_nozzles_or_manual_routes():
     from types import SimpleNamespace
     from pandid.geometry import Route
