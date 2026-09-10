@@ -125,6 +125,22 @@ def test_set_audit_rejects_one_page_with_different_drafting(damage):
         inspect_drawio(root)
 
 
+def test_set_audit_keeps_declared_main_and_secondary_energy_weights_distinct():
+    from pandid.profiles.process import inspect_drawio
+    root=ET.Element('mxfile')
+    for line_class in ('main','secondary'):
+        fs=example()
+        for stream in fs.streams:
+            stream.kind='energy'
+            stream.flow_class=line_class
+        fs.drawio_metadata={'page_id':line_class, 'streams': {
+            s.name: {'id':s.name,'attributes': {'puran-kind':'connection',
+                'connection-kind':'energy','flow-class':line_class}} for s in fs.streams}}
+        root.extend(ET.fromstring(fs.to_drawio(page_size='A1')).findall('diagram'))
+    samples=inspect_drawio(root)['samples']
+    assert samples['lineweight:energy:main']['value'][0] == 2*samples['lineweight:energy:secondary']['value'][0]
+
+
 def test_only_declared_host_is_accessible_to_diffuser_air_line():
     from pandid.containment import accessible
     from pandid.routing.visibility import VisibilityGraph,Rect

@@ -68,7 +68,7 @@ def inspect_drawio(document):
             symbol=obj.get('symbol-key','')
             if kind in {'connection','legend-line'}:
                 line_kind=obj.get('connection-kind','material')
-                line_class=obj.get('flow-class','main') if line_kind=='material' else line_kind
+                line_class=(line_kind+':'+obj.get('flow-class','main')) if line_kind in {'material','energy'} else line_kind
                 record('lineweight:'+line_class,[style.get('strokeWidth',1)],page.get('id'),uid)
             if kind in {'entity','legend-symbol'} and symbol in {'instrument.field','instrument.control-room','controller.plc','boundary.reference'}:
                 record('symbol:'+symbol, [geo.get('width',0),geo.get('height',0)],page.get('id'),uid)
