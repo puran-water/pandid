@@ -26,7 +26,7 @@ def validate(value, units=None):
         if not isinstance(row.get('rows'), list) or any(not isinstance(s, str) for s in row['rows']):
             raise ValueError('equipment_data rows must be text')
         sides.add(row.get('side', 'below'))
-        for field, default in (('width', 220), ('font_size', 11), ('heading_font_size', 20)):
+        for field, default in (('width', 220), ('font_size', 11), ('heading_font_size', 24)):
             number = row.get(field, default)
             if isinstance(number, bool) or not isinstance(number, (int, float)) or not math.isfinite(number) or number <= 0:
                 raise ValueError('equipment_data ' + field + ' must be positive and finite')
@@ -91,7 +91,7 @@ def plan(fs, inner):
             continue
         row = records[unit.name]
         font = row.get('font_size', 11)
-        heading = row.get('heading_font_size', max(font+1,20))
+        heading = row.get('heading_font_size', max(font+1,24))
         width = max(row.get('width', 220), text_width(row['tags'], heading, bold=True) + 18)
         lines = [part for line in row['rows'] for part in _wrapped(line, width - 18, font)]
         annotation = Annotation(title=row['tags'], rows=lines, width=width, font_size=font,

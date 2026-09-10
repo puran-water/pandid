@@ -816,6 +816,7 @@ _KIND_LABELS = {
     "airlift": "Airlift",
     "liquid_screen": "Liquid Screen",
     "membrane_cage": "Membrane Cage",
+    "air_diffuser": "Air Diffuser Grid",
     "block": "Process Block",
     "blower": "Blower",
     "boiler": "Boiler",

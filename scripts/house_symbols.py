@@ -18,6 +18,7 @@ KINDS = {
     'house.pump.rotary_lobe': ('pump', 'rotary_lobe', {'suction': 'W', 'discharge': 'E'}),
     'house.mbr.membrane_cage': ('membrane_cage', 'default', {'feed': 'W', 'mixed_liquor': 'E', 'permeate': 'N', 'air': 'S'}),
     'house.mbr.airlift': ('airlift', 'default', {'liquid_in': 'S', 'air_in': 'W', 'discharge': 'E'}),
+    'house.air.diffuser_grid': ('air_diffuser', 'default', {'air_in': 'W', 'dispersed_air': 'E'}),
 }
 
 

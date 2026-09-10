@@ -22,6 +22,7 @@ ALIASES = {
     'house.pump.rotary_lobe': ('pump', 'rotary_lobe'),
     'house.mbr.membrane_cage': ('membrane_cage', 'default'),
     'house.mbr.airlift': ('airlift', 'default'),
+    'house.air.diffuser_grid': ('air_diffuser', 'default'),
 }
 
 

@@ -41,6 +41,7 @@ __all__ = [
     "Product",
     "Pump",
     "MembraneCage",
+    "AirDiffuser",
     "LiquidScreen",
     "Airlift",
     "Compressor",
@@ -1467,6 +1468,17 @@ class Airlift(Unit):
     PORTS = [("liquid_in", "inlet", "process"), ("air_in", "inlet", "process"),
              ("discharge", "outlet", "process")]
     PLACES = {"liquid_in": "S", "air_in": "W", "discharge": "E"}
+
+
+class AirDiffuser(Unit):
+    """Submerged diffuser grid; outlet denotes gas delivered into its host basin.
+
+    Header strokes and bubbles are schematic, not a quantity or rating. The
+    process template supplies the receiving basin and the engineering data.
+    """
+    kind = "air_diffuser"
+    PORTS = [("air_in", "inlet", "process"), ("dispersed_air", "outlet", "process")]
+    PLACES = {"air_in": "W", "dispersed_air": "E"}
 
 
 class Pump(Unit):

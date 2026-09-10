@@ -17,30 +17,54 @@ class HouseArtwork:
     minimum_height_mm: float
     anchors: tuple[tuple[str, float, float], ...]
     drawing: str
+    version: str = "1"
+    reference_document: str = ""
+    reference_sha256: str = ""
+    reference_pages: tuple[int, ...] = ()
 
     @property
     def stencil(self):
         connections = "".join(
             f'<constraint name="{name}" x="{x}" y="{y}" perimeter="0"/>' for name, x, y in self.anchors
         )
-        return f'<shape name="HouseMbrCandidate" w="{self.width}" h="{self.height}" aspect="fixed" strokewidth="inherit"><connections>{connections}</connections><foreground>{self.drawing}</foreground></shape>'
+        return f'<shape name="HouseProcessCandidate" w="{self.width}" h="{self.height}" aspect="fixed" strokewidth="inherit"><connections>{connections}</connections><foreground>{self.drawing}</foreground></shape>'
 
 
 ARTWORK = {
     "house.mbr.membrane_cage": HouseArtwork(
-        "Submerged membrane cage; fiber strokes do not specify module count",
+        "Submerged membrane cage; crossed frame and feet follow Nanded, no module count implied",
         90,
         120,
         30,
         40,
         (("N", 0.5, 0), ("S", 0.5, 1), ("W", 0, 0.5), ("E", 1, 0.5)),
-        '<rect x="10" y="15" w="70" h="90"/><stroke/>'
-        '<path><move x="45" y="0"/><line x="45" y="15"/><move x="15" y="25"/><line x="75" y="25"/></path><stroke/>'
+        '<rect x="10" y="15" w="70" h="83"/><stroke/>'
+        '<path><move x="10" y="15"/><line x="80" y="98"/><move x="80" y="15"/><line x="10" y="98"/>'
+        '<move x="45" y="0"/><line x="45" y="15"/>'
+        '<move x="0" y="60"/><line x="10" y="60"/><move x="80" y="60"/><line x="90" y="60"/>'
+        '<move x="18" y="98"/><line x="18" y="110"/><move x="72" y="98"/><line x="72" y="110"/>'
+        '<move x="12" y="110"/><line x="24" y="110"/><move x="66" y="110"/><line x="78" y="110"/>'
+        '<move x="45" y="120"/><line x="45" y="104"/><move x="27" y="104"/><line x="63" y="104"/></path><stroke/>',
+        version="2",
+        reference_document="Nanded 20000-1-1001 r6.pdf",
+        reference_sha256="353c4e188f02b79423a1d59c53a93dd1cfa29b18b5e8e28938610dda2fb919be",
+        reference_pages=(10, 11, 12),
+    ),
+    "house.air.diffuser_grid": HouseArtwork(
+        "Submerged air diffuser grid; header, risers and bubbles, no diffuser count or rating implied",
+        120, 60, 40, 20,
+        (("W", 0, 0.8), ("E", 1, 0.8)),
+        '<path><move x="0" y="48"/><line x="120" y="48"/></path><stroke/>'
         + "".join(
-            f'<path><move x="{x}" y="25"/><line x="{x}" y="82"/><quad x1="{x + 4}" y1="102" x2="{x + 8}" y2="82"/><line x="{x + 8}" y="25"/></path><stroke/>'
-            for x in (20, 34, 48, 62)
-        )
-        + '<path><move x="45" y="120"/><line x="45" y="105"/><move x="0" y="60"/><line x="10" y="60"/><move x="80" y="60"/><line x="90" y="60"/></path><stroke/>',
+            f'<path><move x="{x}" y="48"/><line x="{x}" y="36"/>'
+            f'<move x="{x-8}" y="36"/><line x="{x+8}" y="36"/></path><stroke/>'
+            f'<ellipse x="{x-6}" y="23" w="3" h="3"/><stroke/>'
+            f'<ellipse x="{x+3}" y="13" w="3" h="3"/><stroke/>'
+            for x in (18, 39, 60, 81, 102)
+        ),
+        reference_document="Nanded 20000-1-1001 r6.pdf",
+        reference_sha256="353c4e188f02b79423a1d59c53a93dd1cfa29b18b5e8e28938610dda2fb919be",
+        reference_pages=(8, 9),
     ),
     "house.pump.rotary_lobe": HouseArtwork(
         "Rotary-lobe pump; schematic rotors, no vendor geometry claim",
