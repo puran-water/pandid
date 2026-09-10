@@ -71,6 +71,50 @@ def test_line_number_search_budget_requires_positive_integer(value):
         fs.layout_options.validate()
 
 
+def test_house_line_number_uses_clear_external_paper_when_every_nearby_band_is_taken():
+    from pandid.render.svg import stream_numbers, _meets, stream_polyline
+    fs=apply(Flowsheet('External caption'))
+    source=fs.add(Feed('Feed')).pin(x=100,y=100)
+    target=fs.add(Product('Product')).pin(x=600,y=100)
+    line=fs.connect(source.outlet,target.inlet);line.display_label='100-L-001 / DN80 / SPEC'
+    fs.layout();fs.route()
+    y=stream_polyline(line)[0][1]
+    occupied=(-10000,y-10000,10000,y+10000)
+    number=stream_numbers(fs,[occupied],None,'vertical')[0]
+    assert not _meets(number.box,occupied)
+    assert number.leader is not None and number.crossed==()
+
+
+def test_nameplate_row_tracks_displaced_captions_in_both_writers(monkeypatch):
+    import pandid.render.drawio as drawio
+    import pandid.render.svg as svg
+    original=svg.stream_numbers
+    displacement=[0]
+    def numbers(*args,**kw):
+        items=original(*args,**kw)
+        n=items[0];dy=displacement[0]
+        def move(box):return None if box is None else (box[0],box[1]+dy,box[2],box[3]+dy)
+        items[0]=n._replace(y=n.y+dy,box=move(n.box),words=move(n.words))
+        return items
+    monkeypatch.setattr(drawio,'stream_numbers',numbers)
+    monkeypatch.setattr(svg,'stream_numbers',numbers)
+    fs=example();fs.streams[0].display_label='100-L-001 / DN80 / LONG LINE SPECIFICATION'
+    fs.equipment_data={'101-P-01':{'tags':'101-P-01','rows':['TYPE: Pump','DUTY: Example']}}
+    native_rows=[];svg_rows=[]
+    for dy in (0,300):
+        displacement[0]=dy
+        doc=ET.fromstring(fs.to_drawio(page_size='A1'))
+        row=doc.find(".//mxCell[@id='np2']/mxGeometry")
+        pump=doc.find(".//mxCell[@id='u2']/mxGeometry")
+        native_rows.append(float(row.get('y'))-float(pump.get('y')))
+        image=ET.fromstring(fs.to_svg(page_size='A1'))
+        heading=next(t for t in image.iter('{http://www.w3.org/2000/svg}text')
+                     if ''.join(t.itertext())=='101-P-01' and t.get('font-weight')=='bold')
+        svg_rows.append(float(heading.get('y')))
+    assert native_rows[1] > native_rows[0]+100
+    assert svg_rows[1] > svg_rows[0]+100
+
+
 def basin_example():
     f=apply(Flowsheet('Aeration'))
     b=f.add(ConcreteBasin('101-T-01',inputs=2)); a=f.add(AirDiffuser('101-DF-01'))

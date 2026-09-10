@@ -702,19 +702,9 @@ def test_the_sheet_draws_a_bare_label_s_leader_over_its_halo():
 # What a label paints out
 # ---------------------------------------------------------------------------
 
-#: The sheet carrying a label whose run has nowhere to put a plate, and that
-#: label. One per sheet, the same one at all three shapes, and its plate is
-#: kept off ``250-CWS-312-CS``.
-#:
-#: This was ``13_mineral_dewatering``/``S-403``, whose 14-unit segment could
-#: not slide a 43-unit plate clear of either run crossing it. It stopped being
-#: plateless at the diamond and the circle when a number inside those two
-#: stopped turning with its line: upright, the plate on a vertical run is short
-#: *along* the run rather than tall down it, and S-403's found room. That is
-#: the change working, and it left this case needing a sheet where the knot is
-#: tight enough to survive it.
-PLATELESS_SHEET = "18_fixed_bed_recycle"
-PLATELESS = "350-LG-314-CS"
+# The plate-refusal checks below use the pinned ``no_clear_paper`` grid.
+# The former fixed-bed gallery fixture now finds clear paper after routing
+# improvements; a deliberately crowded, pinned fixture keeps this gate useful.
 
 
 def foreign(fs, name) -> list:
@@ -895,16 +885,16 @@ def test_a_hop_belongs_to_the_run_that_draws_it_and_to_no_other():
 
 @pytest.mark.parametrize("shape", SHAPES)
 def test_a_label_with_nowhere_clear_for_its_plate_lays_none(shape):
-    """The check from the side that can fail, and the case the corpus draws.
+    """The check from the side that can fail, with forced congestion.
 
     Without it the sweep above passes on a corpus where every plate happens to
     find clear paper, and says nothing about what happens when none does.
     """
-    fs, kwargs = gallery.flowsheet(PLATELESS_SHEET)
+    fs = no_clear_paper()
     fs.stream_labels.enclosure = shape
-    svg = fs.to_svg(**kwargs)
-    placed = numbers(fs, **kwargs)
-    assert [n.name for n in placed if n.words is None] == [PLATELESS]
+    svg = fs.to_svg(check=False)
+    placed = numbers(fs, check=False)
+    assert any(n.words is None for n in placed), "the pinned grid must force a plate off"
 
     for number in placed:
         w, h = halo(number.name)
@@ -931,17 +921,19 @@ def test_the_author_is_told_when_the_number_itself_is_written_across_a_run(shape
     ``label-over-line``, which names the runs it is written across so the
     author knows which two to space apart.
     """
-    fs, kwargs = gallery.flowsheet(PLATELESS_SHEET)
+    fs = no_clear_paper()
     fs.stream_labels.enclosure = shape
-    fs.to_svg(**kwargs)
+    placed = numbers(fs, check=False)
+    bare = {n.name: n for n in placed if n.words is None}
+    assert bare, "the pinned grid must force a plate off"
     said = {i.message.split("'s ")[0]: i.message for i in findings(fs, {"label-over-line"})}
-    assert set(said) == {PLATELESS}, "only the plateless label is written across"
-    assert "is written across" in said[PLATELESS]
-    # The runs it names are the ones drawn through it, and no others.
-    crossed = next(n.crossed for n in numbers(fs, **kwargs) if n.name == PLATELESS)
-    assert crossed
-    for run in crossed:
-        assert run in said[PLATELESS]
+    assert set(said) == set(bare), "only plateless labels are written across"
+    # Every warning identifies the actual foreign runs under its number.
+    for name, number in bare.items():
+        assert "is written across" in said[name]
+        assert number.crossed
+        for run in number.crossed:
+            assert run in said[name]
     # ...and the shape's own finding no longer says any of it twice.
     for issue in findings(fs, {"enclosure-over-line"}):
         assert "written on clear paper" not in issue.message
@@ -1111,8 +1103,8 @@ def test_a_jump_direction_nobody_draws_is_refused(draw, spelling):
 
 @pytest.mark.parametrize("spelling", list(JUMP_DIRECTIONS))
 def test_both_spellings_the_sheet_draws_are_taken(spelling):
-    """And the check is not simply refusing everything: each of the two names
-    draws a sheet, and they draw *different* ones -- the hop changes hands.
+    """Every supported crossing convention draws real arcs. Fixed directions
+    change which run hops; automatic mode follows the stream drawing order.
 
     ``CROWDED`` is no use here: it has no crossing on it at all, so it would
     pass this with no hop drawn either way.
@@ -1121,7 +1113,16 @@ def test_both_spellings_the_sheet_draws_are_taken(spelling):
     drawn = fs.to_svg(jump_direction=spelling, **kwargs)
     assert drawn
     hops = stream_hops(fs, spelling)
-    assert hops and all(h.vertical is (spelling == "vertical") for h in hops)
+    assert hops
+    if spelling == "auto":
+        # Automatic draw-order crossings can hop either orientation. Every
+        # selected arc still belongs to a real crossing in that orientation.
+        assert {h.vertical for h in hops} == {False, True}
+        possible = {h for direction in ("vertical", "horizontal")
+                    for h in stream_hops(fs, direction)}
+        assert all(h in possible for h in hops)
+    else:
+        assert all(h.vertical is (spelling == "vertical") for h in hops)
 
 
 # ---------------------------------------------------------------------------
@@ -1472,12 +1473,12 @@ def test_the_export_lays_down_no_plate_where_the_sheet_lays_none():
     deletes the run the ``.svg`` was careful to leave whole, and the two files
     stop being one drawing.
     """
-    fs, kwargs = gallery.flowsheet(PLATELESS_SHEET)
+    fs = no_clear_paper()
     fs.stream_labels.enclosure = "diamond"
-    bare = {n.name for n in numbers(fs, **kwargs) if n.words is None}
-    assert bare == {PLATELESS}
+    bare = {n.name for n in numbers(fs, check=False) if n.words is None}
+    assert bare, "the pinned grid must force a plate off"
     checked = 0
-    for cell in cells(fs, **kwargs):
+    for cell in ET.fromstring(fs.to_drawio(check=False)).iter("mxCell"):
         if (cell.get("id") or "").endswith("-box"):
             checked += 1
             has = "labelBackgroundColor" in style(cell)

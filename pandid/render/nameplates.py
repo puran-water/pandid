@@ -85,6 +85,23 @@ class DataBlock:
     h: float
 
 
+def label_boxes(tags, numbers):
+    """Occupied text/leader extents for fitting and the common data row."""
+    boxes = (list(tags.plates) if tags is not None else []) + [number.box for number in numbers]
+    for number in numbers:
+        if number.leader:
+            a,b=number.leader
+            boxes.append((min(a[0],b[0]),min(a[1],b[1]),max(a[0],b[0]),max(a[1],b[1])))
+    return boxes
+
+
+def extend_bounds(inner, boxes):
+    if not boxes:
+        return inner
+    return (min(inner[0],*(b[0] for b in boxes)),min(inner[1],*(b[1] for b in boxes)),
+            max(inner[2],*(b[2] for b in boxes)),max(inner[3],*(b[3] for b in boxes)))
+
+
 def plan(fs, inner):
     records = validate(fs.equipment_data, {u.name for u in fs.units})
     if not records:

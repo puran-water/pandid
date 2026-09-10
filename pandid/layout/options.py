@@ -17,6 +17,7 @@ class LayoutOptions:
     aligned_boundaries: bool = False
     instrument_clearance: float = 0.0
     stream_label_bands: int = 7
+    strict_label_clearance: bool = False
 
     def validate(self):
         if type(self.control_passes) is not int or self.control_passes < 1:
@@ -25,9 +26,9 @@ class LayoutOptions:
             raise ValueError("layout_options.stream_label_bands must be a positive integer")
         for field in fields(self):
             value = getattr(self, field.name)
-            if field.name in {'parallel_trains', 'aligned_boundaries'}:
+            if field.name in {'parallel_trains', 'aligned_boundaries', 'strict_label_clearance'}:
                 if type(value) is not bool:
-                    raise ValueError('layout_options.parallel_trains must be boolean')
+                    raise ValueError(f'layout_options.{field.name} must be boolean')
                 continue
             if field.name in {'control_grid', 'instrument_clearance'} and value == 0 and type(value) is not bool:
                 continue

@@ -1923,6 +1923,26 @@ def stream_numbers(fs, placed: list, joints: "str | None",
         # either side of the run: the search chooses between anchors, it
         # never fails to find one.
         assert spot is not None and damage is not None
+        if fs.layout_options.strict_label_clearance and shape == "none" and any(damage[:3]):
+            # A bounded nearby search may offer only crowded positions. A
+            # house process caption must remain readable, so reserve clear
+            # paper outside the occupied region and tie it back to its run.
+            protected = symbols + placed + [line.box for line in ink]
+            x0=min(b[0] for b in protected);y0=min(b[1] for b in protected)
+            x1=max(b[2] for b in protected);y1=max(b[3] for b in protected)
+            candidates=[]
+            for step in (0,-1,1,-2,2):
+                candidates += [(x0-bw/2-8,cy+step*(bh+8)),(x1+bw/2+8,cy+step*(bh+8)),
+                               (cx+step*(bw+8),y0-bh/2-8),(cx+step*(bw+8),y1+bh/2+8)]
+            for ux,uy in sorted(candidates,key=lambda p: math.hypot(p[0]-cx,p[1]-cy)):
+                box=(ux-bw/2,uy-bh/2,ux+bw/2,uy+bh/2)
+                if any(_meets(box,b) for b in protected):
+                    continue
+                leader,cut=_leader(box,seg,protected,keep)
+                spot,damage=(ux,uy),(0,0,0,cut)
+                break
+            else:
+                raise ValueError('LINE_LABEL_CLEARANCE_REQUIRED: '+name)
         tx, ty = spot
         halo = (tx - bw / 2, ty - bh / 2, tx + bw / 2, ty + bh / 2)
         # The one opaque plate the label lays down -- the reserved box
@@ -4229,6 +4249,15 @@ class SvgRenderer:
         if table_sheet:
             return self._table_sheet(fs, sheet, border)
 
+        number_plan = None
+        text_boxes = []
+        if fs.layout_options.strict_label_clearance:
+            from pandid.render.drawio import _tag_pass
+            from pandid.render.nameplates import label_boxes
+            tags = _tag_pass(fs,self.registry,joints,jump_direction)
+            number_plan = stream_numbers(fs,list(tags.plates),joints,jump_direction)
+            text_boxes = label_boxes(tags,number_plan)
+
         # 1. Diagram bounding box: union of every unit's drawn box and
         #    every route waypoint. Furniture goes *around* this region.
         dx0 = dy0 = float("inf")
@@ -4252,7 +4281,8 @@ class SvgRenderer:
 
         from pandid.drawing_regions import bounds as region_bounds
         dx0, dy0, dx1, dy1 = region_bounds(fs, (dx0, dy0, dx1, dy1))
-        from pandid.render.nameplates import plan as nameplate_plan
+        from pandid.render.nameplates import plan as nameplate_plan, extend_bounds
+        dx0, dy0, dx1, dy1 = extend_bounds((dx0,dy0,dx1,dy1),text_boxes)
         nameplates, (dx0, dy0, dx1, dy1) = nameplate_plan(fs, (dx0, dy0, dx1, dy1))
 
         # 2. The stream table, measured. Shared with the draw.io
@@ -4350,7 +4380,7 @@ class SvgRenderer:
         drawing.extend(self._draw_units(fs, unit_labels, balloons, ink, joints,
                                         quadrants))
         drawing.extend(self._draw_streams(fs, jump_direction, unit_labels, arrows,
-                                          plates, joints, crossing_style))
+                                          plates, joints, crossing_style, number_plan))
         # Instrumentation goes on over the lines: an impulse line runs
         # from the tap to the balloon, and the balloon's opaque body
         # then knocks out both it and any process line an in-line
@@ -5238,7 +5268,7 @@ class SvgRenderer:
         return arrows and wears_arrowhead(s, self.registry)
 
     def _draw_streams(self, fs, jump_direction, unit_labels, arrows=True,
-                      plates=None, joints=None, crossing_style="arc"):
+                      plates=None, joints=None, crossing_style="arc", number_plan=None):
         """Draw every run, and the numbers written on and beside them.
 
         ``crossing_style`` is the mark a crossing of two unconnected
@@ -5437,7 +5467,10 @@ class SvgRenderer:
         ]
 
         shape = enclosure_shape(fs)
-        numbers = stream_numbers(fs, placed, joints, jump_direction)
+        numbers = stream_numbers(fs, placed, joints, jump_direction) if number_plan is None else number_plan
+        if number_plan is not None:
+            from pandid.render.nameplates import label_boxes
+            placed += label_boxes(None,numbers)
         self._findings += label_findings(fs, shape, numbers, jump_direction)
         fills = fillable_enclosures(fs, shape, numbers, jump_direction)
         for number, fill in zip(numbers, fills):

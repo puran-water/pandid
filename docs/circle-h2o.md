@@ -162,3 +162,10 @@ The fixed process profile searches 24 nearby stream-label bands (generic
 default: seven) to keep long line numbers clear at the common printed size.
 `layout_options.stream_label_bands` is a positive integer. The search budget
 does not change typography or permit the A1 fit to shrink a crowded drawing.
+
+The process profile also enables `layout_options.strict_label_clearance`.
+Bare line numbers that cannot clear equipment and other text in those bands use
+clear external paper with a leader. The planned text and leader extents are part
+of the diagram bounds before fitting and before the common nameplate row is
+placed. Both writers consume the same caption plan; data blocks cannot cover a
+displaced line number.

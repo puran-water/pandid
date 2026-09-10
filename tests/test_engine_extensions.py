@@ -203,7 +203,8 @@ def test_fixed_nozzle_overlap_is_removed_without_moving_nozzles_or_manual_routes
     lower = stream([(0, 50), (100, 50), (100, 70), (120, 70)])
     manual = list(upper.route.waypoints)
     endpoints = lower.route.waypoints[0], lower.route.waypoints[-1]
-    fs = SimpleNamespace(units=[], streams=[upper, lower])
+    fs = SimpleNamespace(units=[], streams=[upper, lower],
+                         containments={},layout_options=SimpleNamespace(instrument_clearance=0))
     _shorten_conflicting_terminal_runs(fs, 6)
     assert upper.route.waypoints == manual
     assert (lower.route.waypoints[0], lower.route.waypoints[-1]) == endpoints
@@ -220,7 +221,8 @@ def test_unheaded_source_can_shorten_below_arrow_length_to_clear_a_header_branch
     from pandid.routing.separation import _shorten_conflicting_terminal_runs
     first = SimpleNamespace(route=Route(waypoints=[(0,0),(76,0),(76,80),(160,80)]))
     held = SimpleNamespace(route=Route(waypoints=[(20,40),(20,0),(95,0),(95,-40)],manual=True))
-    fs = SimpleNamespace(units=[],streams=[first,held],_drawn_as='pfd')
+    fs = SimpleNamespace(units=[],streams=[first,held],_drawn_as='pfd',
+                         containments={},layout_options=SimpleNamespace(instrument_clearance=0))
     _shorten_conflicting_terminal_runs(fs,14)
     assert first.route.waypoints == [(0,0),(6,0),(6,80),(160,80)]
     assert held.route.waypoints == [(20,40),(20,0),(95,0),(95,-40)]
@@ -274,7 +276,8 @@ def test_terminal_repair_looks_through_a_collinear_exit_projection():
     from pandid.routing.separation import _shorten_conflicting_terminal_runs
     first = SimpleNamespace(route=Route(waypoints=[(600,60),(695,60),(695,219.5),(720,219.5)],manual=True))
     other = SimpleNamespace(route=Route(waypoints=[(600,219.5),(625,219.5),(701,219.5),(701,239.5),(720,239.5)]))
-    fs = SimpleNamespace(units=[], streams=[first, other])
+    fs = SimpleNamespace(units=[], streams=[first, other],
+                         containments={},layout_options=SimpleNamespace(instrument_clearance=0))
     _shorten_conflicting_terminal_runs(fs, 6)
     assert other.route.waypoints == [(600,219.5),(689,219.5),(689,239.5),(720,239.5)]
     assert first.route.waypoints[-2:] == [(695,219.5),(720,219.5)]

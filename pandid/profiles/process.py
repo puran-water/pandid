@@ -19,6 +19,7 @@ def apply(fs):
     fs.layout_options.band_width = 2200
     fs.layout_options.instrument_clearance = 4
     fs.layout_options.stream_label_bands = 24
+    fs.layout_options.strict_label_clearance = True
     return fs
 
 

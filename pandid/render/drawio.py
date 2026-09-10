@@ -1670,6 +1670,11 @@ class DrawioRenderer:
         if table_sheet:
             return self._table_sheet(fs, sheet, border)
 
+        joints = sheet_connections(diagram, connections)
+        tags = _tag_pass(fs, self.registry, joints, jump_direction)
+        number_plan = stream_numbers(fs,list(tags.plates),joints,jump_direction)
+        from pandid.render.nameplates import label_boxes
+        text_boxes = label_boxes(tags,number_plan) if fs.layout_options.strict_label_clearance else []
         body: list[str] = []
         # Sheet furniture first: a later cell draws over an earlier one,
         # and the boxes are behind the drawing on the sheet. The border
@@ -1677,7 +1682,7 @@ class DrawioRenderer:
         # splices it in at.
         # `bool()` and not the value: the table sheet returned above, so
         # what is left here is the table on the diagram or no table.
-        furniture, frame, fit = self._furniture(fs, sheet, bool(show_stream_table))
+        furniture, frame, fit = self._furniture(fs, sheet, bool(show_stream_table), text_boxes=text_boxes)
         body.extend(self._border(frame, border))
         body.extend(furniture)
         from pandid.drawing_regions import drawio as draw_regions
@@ -1697,14 +1702,12 @@ class DrawioRenderer:
         # sheet's equipment-tag pass, run once: it settles where every
         # tag lands *and* hands the line-number search the plates it has
         # to step clear of. See :class:`_Tags`.
-        joints = sheet_connections(diagram, connections)
-        tags = _tag_pass(fs, self.registry, joints, jump_direction)
         balloons: list[str] = []
         for i, u in enumerate(fs.units):
             (balloons if u.kind == "instrument" else body).extend(
                 self._vertex(u, i, fit, tags))
         body.extend(self._edges(fs, arrows, fit, tags, jump_direction, joints,
-                                crossing_style))
+                                crossing_style, number_plan))
         # Instrumentation goes on over the lines, as it does on the
         # sheet: the tap runs from the plant to the balloon and the
         # balloon's opaque body then knocks out both it and any process
@@ -1720,7 +1723,7 @@ class DrawioRenderer:
             body.extend(_quadrant_cell(f"q{n}", code, fit))
 
         from pandid.render.nameplates import plan
-        data, _ = plan(fs, self._drawing_box(fs, equipment_data=False))
+        data, _ = plan(fs, self._drawing_box(fs, equipment_data=False, text_boxes=text_boxes))
         for block in data:
             # The exporter uses fitted coordinates. A group transformation
             # keeps native textbox metrics, padding and line spacing in step.
@@ -2652,7 +2655,7 @@ class DrawioRenderer:
     def _edges(self, fs, arrows: bool, fit: "_Fit", tags: "_Tags",
                direction: str = "vertical",
                joints: "str | None" = None,
-               crossing_style: str = "gap") -> list[str]:
+               crossing_style: str = "gap", number_plan=None) -> list[str]:
         """Every stream, as a draw.io edge between the two ports it
         joins.
 
@@ -2683,7 +2686,7 @@ class DrawioRenderer:
         # the equipment tags the sheet seeds it with, so the search is
         # offered the same paper. See :func:`_number_geometry` and
         # :class:`_Tags`.
-        placed = stream_numbers(fs, list(tags.plates), joints, direction)
+        placed = stream_numbers(fs, list(tags.plates), joints, direction) if number_plan is None else number_plan
         numbers = {number.name: number for number in placed}
         shape = enclosure_shape(fs)
         # The same list the sheet reports, from the same placement: both
@@ -2978,7 +2981,7 @@ class DrawioRenderer:
     # -------------------------------------------------- furniture
 
     @staticmethod
-    def _drawing_box(fs, *, equipment_data=True) -> "tuple[float, float, float, float]":
+    def _drawing_box(fs, *, equipment_data=True, text_boxes=()) -> "tuple[float, float, float, float]":
         """The drawing's own bounding box, which is what the furniture
         docks around.
 
@@ -3008,6 +3011,8 @@ class DrawioRenderer:
                     x1, y1 = max(x1, px), max(y1, py)
         from pandid.drawing_regions import bounds as region_bounds
         inner = region_bounds(fs, (x0, y0, x1, y1))
+        from pandid.render.nameplates import extend_bounds
+        inner = extend_bounds(inner,text_boxes)
         if equipment_data:
             from pandid.render.nameplates import plan
             return plan(fs, inner)[1]
@@ -3059,7 +3064,7 @@ class DrawioRenderer:
         _ox, _oy, ow, oh = F.sheet_rect(*frame)
         return (ow + 2 * F.OUTER_MARGIN, oh + 2 * F.OUTER_MARGIN)
 
-    def _furniture(self, fs, sheet: "_Sheet | None" = None, show_stream_table: bool = False):
+    def _furniture(self, fs, sheet: "_Sheet | None" = None, show_stream_table: bool = False, *, text_boxes=()):
         """Title block, annotations, table boxes and the stream table,
         docked where the sheet docks them and ruled as the tables they
         are.
@@ -3122,7 +3127,7 @@ class DrawioRenderer:
         if table is not None:
             items.append((table, "bottom-left", table.w, table.h))
 
-        inner = self._drawing_box(fs)
+        inner = self._drawing_box(fs,text_boxes=text_boxes)
         if sheet is None:
             placed, frame, free = F.dock(items, inner)
         else:
