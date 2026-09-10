@@ -135,5 +135,8 @@ def route_obstacles(fs, stream):
             boxes.extend(wall_boxes(unit))
         else:
             x0,y0,x1,y1=unit_box(unit,unit.frame)
+            if unit.kind == 'instrument' and unit not in {stream.source.owner, stream.dest.owner}:
+                pad=getattr(fs.layout_options, 'instrument_clearance', 0)
+                x0,y0,x1,y1=x0-pad,y0-pad,x1+pad,y1+pad
             boxes.append(Rect(x0,x1,y0,y1))
     return boxes+[Rect(c.x,c.x+c.w,c.y,c.y+c.h) for c in captions(fs)]

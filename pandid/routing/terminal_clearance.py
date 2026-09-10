@@ -41,7 +41,7 @@ def protect(fs):
     for stream in fs.streams:
         if not stream.route or stream.route.manual or not wears_arrowhead(stream,default_registry):
             continue
-        if fs.containments:
+        if fs.containments or getattr(fs.layout_options, 'instrument_clearance', 0):
             from pandid.containment import route_obstacles
             boxes = route_obstacles(fs, stream)
         points = stream_polyline(stream)

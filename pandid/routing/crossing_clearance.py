@@ -46,7 +46,7 @@ def repair(fs, *, radius=5, max_passes=8):
             if not old_overlaps and None not in affected and key not in affected:
                 continue
             stream = fs.streams[key]
-            if fs.containments:
+            if fs.containments or getattr(fs.layout_options, 'instrument_clearance', 0):
                 from pandid.containment import route_obstacles
                 boxes = route_obstacles(fs, stream)
             if stream.route.manual:

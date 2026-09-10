@@ -17,6 +17,7 @@ def apply(fs):
     fs.stream_labels.font_size = 14
     fs.layout_options.aligned_boundaries = True
     fs.layout_options.band_width = 2200
+    fs.layout_options.instrument_clearance = 4
     return fs
 
 

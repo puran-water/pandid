@@ -13,11 +13,13 @@ from pandid.routing.visibility import Rect
 
 def repair(fs, *, max_passes=8):
     lines = {i: list(s.route.waypoints) for i, s in enumerate(fs.streams) if s.route}
+    clearance = getattr(fs.layout_options, 'instrument_clearance', 0)
     bodies = {
-        u: Rect(x0, x1, y0, y1)
+        u: Rect(x0-pad, x1+pad, y0-pad, y1+pad)
         for u in fs.units
         if u.frame is not None
         for x0, y0, x1, y1 in [unit_box(u, u.frame)]
+        for pad in [clearance if u.kind == 'instrument' else 0]
     }
 
     def hits(key, points):

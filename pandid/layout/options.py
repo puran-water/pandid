@@ -15,6 +15,7 @@ class LayoutOptions:
     control_grid: float = 0.0
     parallel_trains: bool = False
     aligned_boundaries: bool = False
+    instrument_clearance: float = 0.0
 
     def validate(self):
         if type(self.control_passes) is not int or self.control_passes < 1:
@@ -25,7 +26,7 @@ class LayoutOptions:
                 if type(value) is not bool:
                     raise ValueError('layout_options.parallel_trains must be boolean')
                 continue
-            if field.name == 'control_grid' and value == 0 and type(value) is not bool:
+            if field.name in {'control_grid', 'instrument_clearance'} and value == 0 and type(value) is not bool:
                 continue
             if type(value) not in {int, float} or not math.isfinite(value) or value <= 0:
                 raise ValueError(f"layout_options.{field.name} must be positive and finite")

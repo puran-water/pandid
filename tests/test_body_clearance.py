@@ -33,6 +33,25 @@ def test_authored_route_is_preserved_even_when_the_author_must_resolve_a_collisi
     assert stream.route.waypoints == before
 
 
+def test_instrument_clearance_prevents_a_pipe_touching_a_signal_terminal():
+    fs, stream = fixture()
+    # Outside the mathematical box but within the printed stroke: draw.io
+    # cut a gap at this terminal, although no pipe crossed the signal there.
+    fs.units[2].frame.x = 100.02
+    before = list(stream.route.waypoints)
+    repair(fs)
+    assert stream.route.waypoints == before
+    fs.layout_options.instrument_clearance = 4
+    repair(fs)
+    assert stream.route.waypoints[0] == before[0]
+    assert stream.route.waypoints[-1] == before[-1]
+    assert stream.route.waypoints[1][0] < fs.units[2].frame.x - 4
+    from pandid.containment import route_obstacles
+    box = route_obstacles(fs, stream)[2]
+    assert box.x_min == fs.units[2].frame.x - 4
+    assert not any(box.intersects_segment(*a,*b) for a,b in zip(stream.route.waypoints,stream.route.waypoints[1:]))
+
+
 def test_narrow_clear_corridor_is_used_when_full_spacing_would_overlap_another_line():
     fs, stream = fixture()
     stream.dest.owner.frame.x = 120

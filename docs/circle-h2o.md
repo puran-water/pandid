@@ -134,6 +134,12 @@ lettering. `profiles.process.inspect_drawio()` checks repeated printed sizes and
 boundary columns across a process/legend set. Legacy general Flowsheet callers
 retain automatic fitting unless they explicitly select a fixed `drawing_scale`.
 
+The profile reserves four drawing units around unrelated instrument balloons
+through `layout_options.instrument_clearance`. Route repair preserves this
+clearance so a pipe cannot touch a signal terminal after track separation.
+Declared connections still reach their own instrument ports. The generic layout
+option defaults to zero for historical layouts.
+
 Use `ConcreteBasin`, `MembraneCage`, `AirDiffuser`, `BasinAgitator` and
 `SubmersibleMixer` as separately named units. Call `fs.contain(internal, basin)`
 after adding both units. The basin encloses the declared internals; each keeps

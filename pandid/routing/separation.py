@@ -395,7 +395,7 @@ def _shorten_conflicting_terminal_runs(fs, spacing):
         accepted = False
         for left,i,right,j in sorted(before):
             for at, index, peer, peer_index in ((left,i,right,j), (right,j,left,i)):
-                if fs.containments:
+                if fs.containments or getattr(fs.layout_options, 'instrument_clearance', 0):
                     from pandid.containment import route_obstacles
                     boxes = route_obstacles(fs, streams[at])
                 points = paths[at]
