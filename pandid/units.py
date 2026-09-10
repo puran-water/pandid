@@ -8400,11 +8400,14 @@ class Junction(Unit):
     LAYOUT_CONFIDENCE = 0
 
     def __init__(self, name, inputs=1, outputs=2, variant="default", width=None, height=None,
-                 description="", reference="", label_pos=None):
+                 description="", reference="", label_pos=None, header=False):
         if any(type(n) is not int or n < 0 for n in (inputs, outputs)) or inputs + outputs < 2:
             raise ValueError("A junction needs at least two nonnegative integer port counts")
         if variant != "default":
             raise ValueError("Junction has only the pipe connection variant")
+        if type(header) is not bool:
+            raise ValueError('Junction header must be boolean')
+        self.header=header
         super().__init__(name, variant=variant, width=width, height=height,
                          description=description, reference=reference, label_pos=label_pos)
         self.inlets = tuple(self._add_port(f"in_{i+1}", "inlet", "process") for i in range(inputs))
@@ -8417,7 +8420,7 @@ class Junction(Unit):
 
     @property
     def is_header(self):
-        return max(len(self.inlets), len(self.outlets)) >= 3 or len(self.ports) > 4
+        return self.header or getattr(self, "_parallel_header", False) or max(len(self.inlets), len(self.outlets)) >= 3 or len(self.ports) > 4
 
     def symbol(self):
         from pandid.render.symbols import Symbol

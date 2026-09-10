@@ -56,7 +56,9 @@ def _unit(row, incoming, outgoing):
     if symbol == 'process.junction':
         if not incoming and not outgoing:
             return Junction(key)
-        return Junction(key, inputs=max(1, len(incoming)), outputs=max(1, len(outgoing)))
+        return Junction(key, inputs=max(1, len(incoming)), outputs=max(1, len(outgoing)),
+                        header=row.get('attributes',{}).get('semantic-class')=='PipeHeader'
+                               and max(len(incoming),len(outgoing))>1)
     kind, variant = symbol_type(symbol)
     cls = _resolve_kind(kind, row['key'])
     kwargs = {'variant': variant}
@@ -162,7 +164,7 @@ def from_template(name, nodes, edges, *, metadata, print_scale=2.7, pins=None):
             raise ValueError('Grouped appearance port fan has contradictory flow directions')
         port=units[key].ports[port_name]
         fan_key='projection-'+str(uuid5(NAMESPACE_URL,str(row['id'])+':'+port_name))
-        fan=Junction(fan_key,inputs=1 if direction==0 else len(paths),outputs=len(paths) if direction==0 else 1)
+        fan=Junction(fan_key,inputs=1 if direction==0 else len(paths),outputs=len(paths) if direction==0 else 1,header=True)
         fs.add(fan)
         attrs={'puran-kind':'projection-junction','projection-for':str(row['id']),'projection-port':port_name}
         fs.drawio_metadata['units'][fan.name]={'id':fan_key,'attributes':attrs}

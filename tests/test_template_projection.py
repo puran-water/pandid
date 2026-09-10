@@ -54,3 +54,40 @@ def test_nameplate_alignment_shares_crowding_without_rightward_drift():
     assert all(b >= a + 220 for a, b in zip(xs, xs[1:]))
     assert xs[-1] < 540  # Former greedy layout: 100, 320, 540.
     assert _aligned_positions([50, 400], [100, 100], 0) == [50, 400]
+
+
+def test_parallel_two_pump_headers_have_distinct_nozzles_and_repeatable_layout():
+    from pandid import Flowsheet, Junction, Pump, Feed, Product
+    from pandid.portgeom import port_point
+    fs=Flowsheet('Parallel duty')
+    fs.layout_options.parallel_trains=True
+    source=fs.add(Junction('suction',inputs=1,outputs=2))
+    target=fs.add(Junction('delivery',inputs=2,outputs=1))
+    feed=fs.add(Feed('feed'));product=fs.add(Product('product'))
+    fs.connect(feed.outlet,source.inlets[0]);fs.connect(target.outlets[0],product.inlet)
+    for i in range(2):
+        pump=fs.add(Pump('pump-'+str(i)))
+        fs.connect(source.outlets[i],pump.suction)
+        fs.connect(pump.discharge,target.inlets[i])
+    fs.layout()
+    assert source.is_header and target.is_header
+    assert port_point(source,source.frame,source.outlets[0].name)[1] != port_point(source,source.frame,source.outlets[1].name)[1]
+    before=[u.frame for u in fs.units]
+    fs.layout()
+    assert [u.frame for u in fs.units]==before
+
+
+def test_explicit_header_does_not_change_default_tee():
+    from pandid import Junction
+    assert not Junction('tee').is_header
+    header=Junction('manifold',header=True)
+    assert header.is_header
+    assert header.symbol().ports['out_1'][1] != header.symbol().ports['out_2'][1]
+
+
+def test_explicit_header_survives_data_roundtrip():
+    from pandid import Flowsheet, Junction
+    fs=Flowsheet('Header data')
+    fs.add(Junction('header',header=True))
+    copied=Flowsheet.from_dict(fs.to_dict())
+    assert copied.units[0].header and copied.units[0].is_header

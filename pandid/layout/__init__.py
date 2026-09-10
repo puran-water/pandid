@@ -96,6 +96,9 @@ class ConstraintLayoutEngine:
         from pandid.layout.faces import select_faces
         from pandid.layout.place import assign_positions
 
+        if fs.layout_options.parallel_trains:
+            from pandid.layout.parallel_trains import prepare
+            prepare(fs)
         _seed_slots(fs)
         break_cycles(fs)
         assign_positions(fs)

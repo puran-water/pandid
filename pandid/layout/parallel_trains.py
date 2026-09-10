@@ -2,8 +2,7 @@
 from dataclasses import replace
 
 
-def align(fs):
-    from pandid.portgeom import port_point, unit_box
+def _groups(fs):
     process = [s for s in fs.streams if s.kind == 'material']
     incoming = {u: [s for s in process if s.dest.owner is u] for u in fs.units}
     outgoing = {u: [s for s in process if s.source.owner is u] for u in fs.units}
@@ -32,13 +31,27 @@ def align(fs):
         if (len(signatures) != 1 or not any(u.kind == 'pump' for u in group)
                 or any(u.pin_ is not None for u in group)):
             continue
+        yield source, ends[0], paths, group, incoming, outgoing
+
+
+def prepare(fs):
+    """Declare expanded headers before sizes and port claims are solved."""
+    for unit in fs.units:
+        if unit.kind == "junction":unit._parallel_header=False
+    for source,target,*_ in _groups(fs):
+        source._parallel_header=target._parallel_header=True
+
+
+def align(fs):
+    from pandid.portgeom import port_point, unit_box
+    for source,target,paths,group,incoming,outgoing in _groups(fs):
         spacing = max(140., max(u.frame.h for path in paths for u, _ in path) + 100.)
         top = max(spacing / 2 + 30, min(u.frame.cy for path in paths for u, _ in path))
         for i, path in enumerate(paths):
             for unit, inlet in path:
                 _, old_y = port_point(unit, unit.frame, inlet)
                 unit.frame = replace(unit.frame, y=unit.frame.y + top + i*spacing - old_y)
-        for header in (source, ends[0]):
+        for header in (source, target):
             header.frame = replace(header.frame, y=top-spacing/2, h=spacing*len(paths))
         # A drain or other side branch can occupy the newly expanded train
         # rows. Move its connected component below, preserving its relative

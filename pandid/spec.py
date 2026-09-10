@@ -431,6 +431,7 @@ _KIND_TEXT = {
 _KIND_FACES = {
     "inputs": ("Block", "Tank", "Vessel", "Junction"),
     "outputs": ("Block", "Tank", "Vessel", "Junction"),
+    "header": ("Junction",),
 }
 # The order along a face. Separate from the two above because it is not
 # a constructor argument: ``Block.order_on``/``_MultiPortVessel.order_on``
@@ -1672,6 +1673,7 @@ def _write_unit(unit: Unit) -> dict[str, Any]:
             entry["font_size"] = unit.font_size
     elif isinstance(unit, Junction):
         entry.update(inputs=len(unit.inlets), outputs=len(unit.outlets))
+        if unit.header:entry['header']=True
     elif isinstance(unit, (unit_types.Tank, unit_types.Vessel)):
         # The same two keys, over the other mechanism that carries them
         # (see ``pandid.units._MultiPortVessel``): the default face is
