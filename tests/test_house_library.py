@@ -20,6 +20,7 @@ def test_importable_library_has_exact_engine_artwork_and_named_anchors(tmp_path)
         art = ARTWORK[row['title']]
         obj = ET.fromstring(row['xml']).find('root/object')
         style = obj.find('mxCell').get('style')
+        assert f'aspect={art.aspect};' in style
         encoded = style.split('shape=stencil(', 1)[1].split(')', 1)[0]
         stencil = zlib.decompress(base64.b64decode(encoded), -15).decode()
         assert stencil == art.stencil

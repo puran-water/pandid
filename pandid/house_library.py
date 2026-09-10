@@ -31,7 +31,7 @@ def library_xml() -> bytes:
             "reference-sha256": art.reference_sha256,
         })
         cell = ET.SubElement(obj, "mxCell", vertex="1", parent="1",
-                             style=f"shape=stencil({shape});aspect=fixed;fillColor=none;strokeColor=#111111;strokeWidth=2;")
+                             style=f"shape=stencil({shape});aspect={art.aspect};fillColor=none;strokeColor=#111111;strokeWidth=2;")
         ET.SubElement(cell, "mxGeometry", width=str(art.width), height=str(art.height), **{"as": "geometry"})
         entries.append({"xml": ET.tostring(model, encoding="unicode"),
                         "w": art.width, "h": art.height, "title": key})
