@@ -10,6 +10,14 @@ labels. `profiles.templates.from_template` maps reviewed semantic symbols and
 named port aliases to typed units; unmapped symbols and ports fail explicitly.
 `profiles.legend.pages` uses the same units and streams for discipline legends.
 
+Grouped template appearances may retain member paths from different headers.
+`from_template` supplies a connected pipe fan at their shared drawing nozzle,
+preserving every supplied path identity. The extra junction and stem are marked
+as presentation geometry, with no equipment identity. An ordinary equipment
+nozzle still refuses duplicate connections. Material and energy connections use
+distinct declared vessel nozzles; the water aliases on a cooling tower select
+its water ports rather than its air or makeup ports.
+
 An ordered `lanes=[{'id': ..., 'title': ...}]` argument to `block_diagram`
 selects the process roll-up profile. Blocks carry `lane`, numeric `order`, and
 optional logical `column`/`row`. The engine reserves explicit slots, wraps

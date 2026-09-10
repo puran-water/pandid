@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import inspect
 import re
+from collections import defaultdict
+from uuid import NAMESPACE_URL, uuid5
 
 from pandid import Block, Feed, Flowsheet, Instrument, Junction, Product
 from pandid.render.symbols import default_registry
@@ -76,6 +78,8 @@ def _port(unit, name, direction, kind, slots, index):
             return unit.ports[name]
         raise ValueError(f'PANDID_SIGNAL_PORT_UNMAPPED: {unit.name}/{name}')
     aliases = {'membrane': 'suction', 'permeate': 'discharge'} if unit.kind == 'pump' else {}
+    if unit.kind == 'cooling_tower':
+        aliases.update(inlet='water_in', outlet='water_out')
     port = aliases.get(name, name)
     if port in unit.ports and unit.ports[port].direction == direction:
         return unit.ports[port]
@@ -124,19 +128,55 @@ def from_template(name, nodes, edges, *, metadata, print_scale=2.7, pins=None):
         fs.drawio_metadata['units'][unit.name] = {'id': row['id'], 'attributes': row['attributes']}
         if key in (pins or {}):
             unit.pin(**pins[key])
-    streams = {}
+    # Resolve ports before connecting. A grouped PFD appearance can receive
+    # several distinct member paths at one nominal nozzle. Give that appearance
+    # an explicit pipe fan; do not connect two streams to one physical port or
+    # silently delete a member path. Fans are presentation-only metadata.
+    endpoints, uses = {}, defaultdict(list)
     for edge in edges:
-        source, target = units[edge['source']], units[edge['target']]
         kind = edge['kind']
         ends = []
-        for side, unit, name, direction in [('out', source, edge['source_port'], 'outlet'),
-                                           ('in', target, edge['target_port'], 'inlet')]:
+        for side, unit, name, direction in [('out', units[edge['source']], edge['source_port'], 'outlet'),
+                                           ('in', units[edge['target']], edge['target_port'], 'inlet')]:
             key = edge['source'] if side == 'out' else edge['target']
-            slots = [e for e in ports[key][side] if e['kind'] == kind]
+            slots = [e for e in ports[key][side] if (e['kind'] in {'material', 'energy'}
+                     if kind in {'material', 'energy'} else e['kind'] == kind)]
             ends.append(_port(unit, name, direction, kind, slots, slots.index(edge)))
+            uses[(key,ends[-1].name)].append((edge,len(ends)-1))
+        endpoints[edge['key']]=ends
+    by_key={row['key']:row for row in nodes}
+    for (key,port_name), paths in uses.items():
+        if len(paths)<2:
+            continue
+        row=by_key[key]
+        if not row['attributes'].get('equipment-group'):
+            raise ValueError(f'PANDID_DUPLICATE_PROCESS_PORT: {key}/{port_name}; declare distinct ports or a junction')
+        kinds={edge['kind'] for edge,_ in paths}
+        if len(kinds)!=1 or not kinds <= {'material','energy'}:
+            raise ValueError('Grouped appearance port fans require one material or energy kind')
+        direction=paths[0][1]
+        if any(side!=direction for _,side in paths):
+            raise ValueError('Grouped appearance port fan has contradictory flow directions')
+        port=units[key].ports[port_name]
+        fan_key='projection-'+str(uuid5(NAMESPACE_URL,str(row['id'])+':'+port_name))
+        fan=Junction(fan_key,inputs=1 if direction==0 else len(paths),outputs=len(paths) if direction==0 else 1)
+        fs.add(fan)
+        attrs={'puran-kind':'projection-junction','projection-for':str(row['id']),'projection-port':port_name}
+        fs.drawio_metadata['units'][fan.name]={'id':fan_key,'attributes':attrs}
+        common_kind=next(iter(kinds))
+        common=fs.connect(port,fan.inlets[0],name=fan_key+'-stem',kind=common_kind) if direction==0 else fs.connect(fan.outlets[0],port,name=fan_key+'-stem',kind=common_kind)
+        common.display_label=''
+        common.flow_class='secondary' if all(edge.get('flow_class')=='secondary' for edge,_ in paths) else 'main'
+        fs.drawio_metadata['streams'][common.name]={'id':fan_key+'-stem','attributes':{
+            **attrs,'puran-kind':'projection-connection','member-paths':[edge['key'] for edge,_ in paths]}}
+        for index,(edge,side) in enumerate(paths):
+            endpoints[edge['key']][side]=(fan.outlets if direction==0 else fan.inlets)[index]
+    streams = {}
+    for edge in edges:
+        kind=edge['kind']
         # An empty displayed label does not erase stream identity. Metadata
         # retains its semantic key; only the drawing label is suppressed.
-        stream = fs.connect(*ends, name=edge['key'], kind=kind)
+        stream = fs.connect(*endpoints[edge['key']], name=edge['key'], kind=kind)
         streams[edge['key']] = stream
         stream.flow_class = edge.get('flow_class') or 'main'
         stream.display_label = edge.get('label', '')
