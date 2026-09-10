@@ -52,9 +52,10 @@ def accessible(fs, stream):
 def wall_boxes(unit):
     from pandid.routing.visibility import Rect
     f=unit.frame
-    wall=6
+    wall=6*f.w/400
+    floor=6*f.h/300
     return [Rect(f.x,f.x+wall,f.y,f.y+f.h), Rect(f.x+f.w-wall,f.x+f.w,f.y,f.y+f.h),
-            Rect(f.x,f.x+f.w,f.y+f.h-wall,f.y+f.h)]
+            Rect(f.x,f.x+f.w,f.y+f.h-floor,f.y+f.h)]
 
 
 def layout(fs, engine):

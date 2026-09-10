@@ -55,9 +55,10 @@ def basin_example():
     return f,b,a,s
 
 
-def test_basin_contains_diffuser_and_air_enters_through_open_top():
+@pytest.mark.parametrize('dimensions', [(400,300), (700,450)])
+def test_basin_contains_diffuser_and_air_enters_through_open_top(dimensions):
     from pandid.containment import wall_boxes
-    fs,b,a,internal=basin_example();fs.layout();fs.route()
+    fs,b,a,internal=basin_example();b.width,b.height=dimensions;fs.layout();fs.route()
     x,y,r,bottom=unit_box(a,a.frame)
     assert b.frame.x < x < r < b.frame.x_max
     assert b.frame.y < y < bottom < b.frame.y_max
@@ -79,9 +80,49 @@ def test_containment_roundtrip_and_rejection_of_external_internal_connection():
     assert restored.containments=={a.name:b.name}
     assert restored.streams[-1].representation=='internal'
     restored.to_drawio(page_size='A1')
+    # Both writers must handle semantic internal transfers without a pipe.
+    restored.to_svg(page_size='A1')
     fs.streams[0].representation='internal'
     with pytest.raises(ValueError,match='INTERNAL_CONNECTION_OUTSIDE_BASIN'):
         fs.layout()
+
+
+@pytest.mark.parametrize('damage', ['balloon', 'flag', 'text', 'alignment', 'lineweight'])
+def test_set_audit_rejects_one_page_with_different_drafting(damage):
+    from pandid.profiles.process import inspect_drawio
+    root=ET.Element('mxfile')
+    for extra in (False,True):
+        fs=example(extra)
+        fs.drawio_metadata={'page_id': str(extra), 'units': {
+            u.name: {'id': u.name, 'attributes': {'puran-kind':'entity',
+                'symbol-key': 'boundary.reference' if u.kind in {'feed','product'} else
+                    'instrument.field' if u.kind=='instrument' else 'pump.centrifugal'}}
+            for u in fs.units}, 'streams': {
+                s.name: {'id': s.name, 'attributes': {'puran-kind': 'connection',
+                    'connection-kind': 'material', 'flow-class': 'main'}} for s in fs.streams}}
+        # A second feed proves that one off-column flag is rejected.
+        if damage=='alignment':
+            f=fs.add(Feed('air',width=190,height=85));f.reference_code='C'
+            fs.drawio_metadata['units']['air']={'id':'air','attributes':{
+                'puran-kind':'entity','symbol-key':'boundary.reference'}}
+            pump=fs.add(Pump('202-P-01'))
+            product=fs.add(Product('waste',width=190,height=85))
+            fs.connect(f.outlet,pump.suction).display_label=''
+            fs.connect(pump.discharge,product.inlet).display_label=''
+        root.extend(ET.fromstring(fs.to_drawio(page_size='A1')).findall('diagram'))
+    assert inspect_drawio(root)['samples']['symbol:instrument.field']['appearances']==2
+    page=root.findall('diagram')[1]
+    uid='S1' if damage=='lineweight' else '101-PI-01' if damage in {'balloon','text'} else 'feed'
+    cell=page.find(f".//object[@id='{uid}']/mxCell")
+    if damage in {'text','lineweight'}:
+        key='fontSize' if damage=='text' else 'strokeWidth'
+        values=style(cell);values[key]=str(float(values[key])+1)
+        cell.set('style',';'.join(k+'='+v for k,v in values.items())+';')
+    else:
+        geo=cell.find('mxGeometry');key='x' if damage=='alignment' else 'width'
+        geo.set(key,str(float(geo.get(key))+1))
+    with pytest.raises(ValueError,match='INCONSISTENT_PRINTED_SIZE|BOUNDARY_COLUMNS_MISALIGNED'):
+        inspect_drawio(root)
 
 
 def test_only_declared_host_is_accessible_to_diffuser_air_line():

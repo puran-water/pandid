@@ -66,6 +66,10 @@ def inspect_drawio(document):
             style=dict(v.split('=',1) for v in cell.get('style','').split(';') if '=' in v)
             geo=cell.find('mxGeometry')
             symbol=obj.get('symbol-key','')
+            if kind in {'connection','legend-line'}:
+                line_kind=obj.get('connection-kind','material')
+                line_class=obj.get('flow-class','main') if line_kind=='material' else line_kind
+                record('lineweight:'+line_class,[style.get('strokeWidth',1)],page.get('id'),uid)
             if kind in {'entity','legend-symbol'} and symbol in {'instrument.field','instrument.control-room','controller.plc','boundary.reference'}:
                 record('symbol:'+symbol, [geo.get('width',0),geo.get('height',0)],page.get('id'),uid)
             text=obj.get('label',cell.get('value',''))
@@ -74,12 +78,16 @@ def inspect_drawio(document):
                 owner=by_id.get(obj.get('for-cell'),(None,None))[0]
                 if owner is not None and owner.get('puran-kind')=='equipment-data':
                     category='equipment-data-body'
+                elif owner is not None and owner.get('puran-kind')=='connection':
+                    category='line-label'
                 if kind in {'equipment-data','equipment-data-heading'}:
                     category=kind
                 elif kind in {'connection','legend-line'}:
                     category='line-label'
-                elif symbol.startswith('instrument.') and kind in {'entity','legend-symbol'}:
+                elif (symbol.startswith('instrument.') or symbol=='controller.plc') and kind in {'entity','legend-symbol'}:
                     category='instrument-inscription'
+                elif kind=='entity' and symbol not in {'boundary','boundary.reference','process.junction'}:
+                    category='equipment-tag'
                 elif uid.endswith('-code') or uid.endswith('-description'):
                     category='connector-'+uid.rsplit('-',1)[1]
                 if category:

@@ -163,6 +163,7 @@ def pages(entries, *, metadata_factory, title='SYMBOLS AND CONVENTIONS'):
                 line.flow_class = 'secondary' if entry['key'] == 'secondary' else 'main'
                 line.display_label = ''
                 fs.drawio_metadata['streams'][key] = {'id': entry['id'],
-                    'attributes': {'puran-kind': 'legend-symbol', 'legend-key': entry['key']}}
+                    'attributes': {'puran-kind': 'legend-line', 'legend-key': entry['key'],
+                        'connection-kind': kind, 'flow-class': line.flow_class}}
         result.append(fs)
     return result

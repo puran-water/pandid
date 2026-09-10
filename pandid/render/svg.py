@@ -4385,7 +4385,8 @@ class SvgRenderer:
             assert plates is not None
             drawing[:0] = _debug.overlay(
                 fs, (dx0, dy0, dx1, dy1), grid,
-                _fit_scale(dx1 - dx0, dy1 - dy0, free) if free is not None else 1.0,
+                (fs.drawing_scale if fs.drawing_scale is not None else
+                 _fit_scale(dx1 - dx0, dy1 - dy0, free)) if free is not None else 1.0,
                 plates=plates, ink=[line.box for line in ink])
 
         if free is None:
@@ -4399,12 +4400,9 @@ class SvgRenderer:
 
     def _fit(self, dx0, dy0, dx1, dy1, free, fixed_scale=None) -> str:
         """Transform centring the drawing in *free*, scaled to fit."""
-        fx, fy, fw, fh = free
-        dw, dh = dx1 - dx0, dy1 - dy0
         from pandid.render.drawio import _fitted
         s, x, y = _fitted((dx0,dy0,dx1,dy1), free, fixed_scale)
-        return (f"translate({_num(fx + (fw - s * dw) / 2 - s * dx0)}, "
-                f"{_num(fy + (fh - s * dh) / 2 - s * dy0)}) scale({s:.6g})")
+        return f"translate({_num(x)}, {_num(y)}) scale({s:.6g})"
 
     # --- furniture ----------------------------------------------------
 
@@ -5312,6 +5310,8 @@ class SvgRenderer:
 
         lines = ['  <g id="streams">']
         for n, (s, points) in enumerate(stream_geoms):
+            if s.representation == 'internal':
+                continue
             paint = s.color or "black"
             # The same call ``_defs`` defines the marker under: one
             # function, so the reference and the definition are one

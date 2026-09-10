@@ -188,6 +188,11 @@ def test_a_symbol_with_no_stencil_is_an_approximation_that_was_written_down(entr
     rectangle produces and a very different claim about it.
     """
     kind, variant, sym = entry
+    if kind == "junction":
+        # The house fork draws a connected dot or a typed multiport header
+        # directly; neither is an approximate rectangle.
+        assert '<circle' in sym.svg and 'fill="black"' in sym.svg
+        return
     if sym.drawio_shape:
         return
     base = variant.split(" [")[0]
@@ -2845,6 +2850,11 @@ def test_the_pen_the_export_states_is_the_pen_the_library_draws_with():
 
     checked = 0
     for (kind, variant), sym in sorted(default_registry._symbols.items()):
+        if kind == "junction":
+            # The connected dot is a solid fill, with no authored outline pen.
+            assert not authored_pens(sym)
+            assert '<circle' in sym.svg and 'fill="black"' in sym.svg
+            continue
         # The outline is the heaviest pen; a symbol's fine detail is
         # deliberately lighter and draw.io has one weight for the whole stencil.
         pen = max(authored_pens(sym))
