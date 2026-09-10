@@ -157,3 +157,8 @@ pipes remain normal routed streams. The typed spec round-trips `containments`,
 `representation` and `drawing_scale`; the `basin-internals` discovery example
 shows the API. House artwork remains a candidate catalogue, pending engineering
 qualification rather than a claim of complete ISA compliance.
+
+The fixed process profile searches 24 nearby stream-label bands (generic
+default: seven) to keep long line numbers clear at the common printed size.
+`layout_options.stream_label_bands` is a positive integer. The search budget
+does not change typography or permit the A1 fit to shrink a crowded drawing.

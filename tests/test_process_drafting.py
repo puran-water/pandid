@@ -45,6 +45,32 @@ def test_fixed_drafting_refuses_capacity_instead_of_shrinking():
         fs.to_drawio(page_size='A1')
 
 
+def test_house_line_number_search_can_leave_a_crowded_corridor():
+    from pandid.render.svg import stream_numbers, _meets, stream_polyline
+    fs=Flowsheet('Line number clearance')
+    source=fs.add(Feed('Feed')).pin(x=100,y=100)
+    target=fs.add(Product('Product')).pin(x=600,y=100)
+    stream=fs.connect(source.outlet,target.inlet)
+    stream.display_label='100-L-001 / DN80 / SPEC'
+    fs.stream_labels.font_size=14
+    fs.layout();fs.route()
+    points=stream_polyline(stream);y=points[0][1]
+    reservation=(-10000,y-200,10000,y+200)
+    crowded=stream_numbers(fs,[reservation],None,'vertical')[0]
+    assert _meets(crowded.box,reservation)
+    apply(fs)
+    clear=stream_numbers(fs,[reservation],None,'vertical')[0]
+    assert not _meets(clear.box,reservation)
+    assert clear.text==crowded.text
+
+
+@pytest.mark.parametrize('value',[0,-1,1.5,True])
+def test_line_number_search_budget_requires_positive_integer(value):
+    fs=Flowsheet('Invalid search budget');fs.layout_options.stream_label_bands=value
+    with pytest.raises(ValueError,match='stream_label_bands'):
+        fs.layout_options.validate()
+
+
 def basin_example():
     f=apply(Flowsheet('Aeration'))
     b=f.add(ConcreteBasin('101-T-01',inputs=2)); a=f.add(AirDiffuser('101-DF-01'))

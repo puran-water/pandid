@@ -855,7 +855,7 @@ def _step_aside(item, room: float, ink=(), others=()):
 
 
 def _label_anchors(cx: float, cy: float, span: float, hw: float, hh: float,
-                   vertical: bool, on_run: bool, plate: float):
+                   vertical: bool, on_run: bool, plate: float, bands: int = _LABEL_BANDS):
     """Where an ``hw`` x ``hh`` label may go on a run, best first.
 
     Yields ``(x, y, off)``: the anchor, and the perpendicular stand-off
@@ -909,7 +909,7 @@ def _label_anchors(cx: float, cy: float, span: float, hw: float, hh: float,
             yield x, y, 0.0
     if on_run:
         return
-    for out in range(_LABEL_BANDS):
+    for out in range(bands):
         off = hh / 2 + _LABEL_GAP + out * hh
         for side in (-1.0, 1.0):
             ax = cx + side * off if vertical else cx
@@ -1784,6 +1784,7 @@ def stream_numbers(fs, placed: list, joints: "str | None",
     shape = enclosure_shape(fs)
     fs.stream_labels.validate()
     text_scale = fs.stream_labels.font_size / NUMBER_TYPE
+    bands = fs.layout_options.stream_label_bands
     halo_char, halo_pad, halo_deep = (v * text_scale for v in (_HALO_CHAR, _HALO_PAD, _HALO_DEEP))
     widest = max((len(display_names[name]) * halo_char + halo_pad
                   for _s, name, _c, _k in label_items), default=0.0)
@@ -1831,7 +1832,7 @@ def stream_numbers(fs, placed: list, joints: "str | None",
         # outermost band. Seeds outside it are dropped before the search
         # rather than re-tested at every step of it.
         along = (span + hw) / 2 + max(bw, bh) / 2
-        across = hh / 2 + _LABEL_GAP + _LABEL_BANDS * hh + max(bw, bh) / 2
+        across = hh / 2 + _LABEL_GAP + bands * hh + max(bw, bh) / 2
         rx, ry = (across, along) if vertical else (along, across)
         window = (cx - rx, cy - ry, cx + rx, cy + ry)
 
@@ -1887,7 +1888,7 @@ def stream_numbers(fs, placed: list, joints: "str | None",
         damage: "tuple[int, int, int, int] | None" = None
         leader: "tuple | None" = None
         for ux, uy, _off in _label_anchors(cx, cy, span, hw, hh, vertical,
-                                           shape != "none", tw):
+                                           shape != "none", tw, bands):
             box = (ux - bw / 2, uy - bh / 2, ux + bw / 2, uy + bh / 2)
             paper = (box if shape == "none" else
                      (ux - lw / 2, uy - lh / 2, ux + lw / 2, uy + lh / 2))
