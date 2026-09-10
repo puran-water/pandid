@@ -359,3 +359,5 @@ class DefaultRouter:
         if fs.layout_options.stream_spacing >= 10:
             from pandid.routing.terminal_clearance import protect
             protect(fs)
+            from pandid.routing.crossing_clearance import repair
+            repair(fs)
