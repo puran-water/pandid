@@ -55,7 +55,7 @@ def _place_free(fs: "Flowsheet") -> bool:
     """Put each hostless balloon beside what it is wired to."""
     from pandid.geometry import Frame
     from pandid.layout.stages import is_control
-    from pandid.portgeom import resolve_size
+    from pandid.portgeom import resolve_size, unit_box
 
     pending = [u for u in fs.units if is_control(u) and getattr(u, "host", None) is None]
     if not pending:
@@ -68,8 +68,12 @@ def _place_free(fs: "Flowsheet") -> bool:
         # other's positions indefinitely even though the process is frozen.
         for u in pending:
             u.frame = None
-    taken = [u.frame for u in fs.units
-             if u.frame is not None and u not in set(pending)]
+    # Boundary flags extend west of their internal frame. Reserve the actual
+    # drawn box, as the overlap validator and router do, before placing a
+    # controller beside one.
+    taken = [Frame(x=x0,y=y0,w=x1-x0,h=y1-y0)
+             for u in fs.units if u.frame is not None and u not in set(pending)
+             for x0,y0,x1,y1 in [unit_box(u,u.frame)]]
     moved = False
     # Resolved in the order the sheet holds them, and a balloon wired
     # only to balloons still waiting is placed against whatever *is*

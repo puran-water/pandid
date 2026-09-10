@@ -437,11 +437,15 @@ FRAME_RULE = 2.0
 ZONE_TICK = 0.75
 
 
+def annotation_title_font(ann):
+    return getattr(ann, 'title_font_size', None) or ann.font_size + 1
+
+
 def _ann_layout(ann):
     """Compute the column widths and row metrics for an Annotation."""
     size = ann.font_size
     row_h = size + 7
-    title_h = size + 12 if ann.title else 0
+    title_h = annotation_title_font(ann) + 11 if ann.title else 0
     ncol = max((len(r) for r in ann.rows if isinstance(r, (tuple, list))), default=1)
     col_w = [0.0] * ncol
     for r in ann.rows:
@@ -459,7 +463,7 @@ def measure_annotation(ann) -> tuple[float, float]:
     size, row_h, title_h, col_w = _ann_layout(ann)
     pad, gap = 9.0, 12.0
     body_w = _total(col_w) + gap * (len(col_w) - 1)
-    inner = max(body_w, text_width(ann.title, size + 1, bold=True))
+    inner = max(body_w, text_width(ann.title, annotation_title_font(ann), bold=True))
     w = ann.width if ann.width is not None else inner + 2 * pad
     h = title_h + len(ann.rows) * row_h + 8
     return w, h
@@ -469,7 +473,7 @@ def _overflowing_text(ann, size: float, body_w: float) -> str:
     """The one string a too-narrow box is best described by: its title
     where that is what overruns, otherwise the row that does.
     """
-    if text_width(ann.title, size + 1, bold=True) > body_w:
+    if text_width(ann.title, annotation_title_font(ann), bold=True) > body_w:
         return ann.title
 
     def flat(r):
@@ -493,7 +497,7 @@ def draw_annotation(ann, x: float, y: float, *,
     w, h = measure_annotation(ann)
     if report is not None and ann.width is not None:
         body_w = _total(col_w) + gap * (len(col_w) - 1)
-        inner = max(body_w, text_width(ann.title, size + 1, bold=True))
+        inner = max(body_w, text_width(ann.title, annotation_title_font(ann), bold=True))
         if ann.width < inner + 2 * pad:
             over = _overflowing_text(ann, size, body_w)
             # The box's own ``width`` is the room and the width it would
@@ -505,7 +509,7 @@ def draw_annotation(ann, x: float, y: float, *,
          f'fill="white" stroke="black" stroke-width="{_BOX_RULE:g}"/>']
     if ann.title:
         left = ann.title_align == "left"
-        L.append(_text(x + (pad if left else w / 2), y + title_h - 6, ann.title, size + 1,
+        L.append(_text(x + (pad if left else w / 2), y + title_h - 6, ann.title, annotation_title_font(ann),
                        anchor="start" if left else "middle", bold=True))
         L.append(f'<line x1="{x:.1f}" y1="{y + title_h:.1f}" x2="{x + w:.1f}" '
                  f'y2="{y + title_h:.1f}" stroke="black" '

@@ -365,11 +365,16 @@ class Annotation:
     font_size: float = 11.0
     line_samples: list[dict] = field(default_factory=list)
     title_align: str = "center"
+    title_font_size: float | None = None
 
     def __post_init__(self):
         self.align = _resolve_align(self.align, "top-right")
         if self.title_align not in {"left", "center"}:
             raise ValueError("annotation title_align must be left or center")
+        if self.title_font_size is not None:
+            import math
+            if type(self.title_font_size) not in {int,float} or not math.isfinite(self.title_font_size) or self.title_font_size <= 0:
+                raise ValueError('annotation title_font_size must be positive and finite')
         if self.line_samples:
             if len(self.line_samples) != len(self.rows):
                 raise ValueError("line_samples must provide one sample per legend row")

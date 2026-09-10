@@ -115,3 +115,18 @@ def test_subpixel_automatic_terminal_jog_is_squared_without_moving_nozzles():
     assert s.route.waypoints[0]==start and s.route.waypoints[-1]==end
     assert all(a[0]==b[0] or a[1]==b[1] for a,b in zip(s.route.waypoints,s.route.waypoints[1:]))
     assert len(s.route.waypoints)==3
+
+
+def test_nameplate_heading_is_measured_separately_from_its_data():
+    from pandid import Annotation
+    fs=Flowsheet('Nameplate heading')
+    fs.add(Block('P-01'))
+    fs.equipment_data={'P-01':{'tags':'250-P-01 / 250-P-02 / 250-P-03','rows':['CAPACITY: 53 m3/h'],
+                              'font_size':14,'heading_font_size':20}}
+    fs.annotations.append(Annotation(title='Review',rows=['Data supplied'],title_font_size=18))
+    clone=from_dict(to_dict(fs))
+    assert to_dict(clone)==to_dict(fs)
+    xml=ET.fromstring(clone.to_drawio())
+    heading=next(c for c in xml.iter('mxCell') if c.get('id')=='np0-t')
+    assert 'font-size:20px' in heading.get('value','') or 'fontSize=20' in heading.get('style','')
+    with pytest.raises(ValueError,match='title_font_size'):Annotation(title_font_size=float('nan'))

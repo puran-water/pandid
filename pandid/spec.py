@@ -1286,7 +1286,7 @@ def _read_title_block(entry: Any, where: str) -> TitleBlock:
 
 
 _ANNOTATION_KEYS = {
-    "annotation": {"type", "title", "rows", "align", "position", "margin", "width", "font_size", "line_samples", "title_align"},
+    "annotation": {"type", "title", "rows", "align", "position", "margin", "width", "font_size", "line_samples", "title_align", "title_font_size"},
     "table": {"type", "title", "headers", "rows", "align", "position", "margin", "font_size",
               "col_align"},
     "equipment_list": {"type", "title", "align", "position", "margin", "width", "include"},
@@ -1376,6 +1376,8 @@ def _read_annotation(fs: Flowsheet, entry: Any, where: str) -> Annotation | Tabl
         kwargs["rows"] = _read_rows(data.get("rows", []), f"{where}.rows")
         if "title_align" in data:
             kwargs["title_align"] = _text(data["title_align"], f"{where}.title_align")
+        if "title_font_size" in data:
+            kwargs['title_font_size'] = _number(data['title_font_size'], f'{where}.title_font_size')
         if "line_samples" in data:
             kwargs["line_samples"] = [dict(_mapping(v, f"{where}.line_samples"))
                                       for v in _sequence(data["line_samples"], f"{where}.line_samples")]
@@ -1899,6 +1901,8 @@ def _write_annotation(box: Annotation | TableBox) -> dict[str, Any]:
         entry["rows"] = [row if isinstance(row, str) else list(row) for row in box.rows]
         if box.title_align != "center":
             entry["title_align"] = box.title_align
+        if box.title_font_size is not None:
+            entry['title_font_size'] = box.title_font_size
         if box.line_samples:
             entry["line_samples"] = [dict(sample) for sample in box.line_samples]
     entry["align"] = box.align

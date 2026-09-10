@@ -55,6 +55,9 @@ fitting to physical paper. Both SVG and draw.io consume the same geometry.
 `equipment_data` provides individual left-aligned equipment nameplates with
 all tags in their heading and supplied rows below. Boxes share an above/below
 horizontal; overflow expands the required bounds rather than dropping fields.
+The equipment tag heading has its own `heading_font_size` (default 20 drawing
+units); the data retain their independent body size. Native PDF publication
+measures the final physical lettering, including the 5 mm house heading floor.
 Boundary `reference_code` creates a divided flag with code, service and reference.
 Its editable children belong to the boundary symbol.
 

@@ -3264,7 +3264,7 @@ class DrawioRenderer:
                           # the rectangle the sheet strokes around a
                           # legend. It was unstated, and draw.io's
                           # default 1 drew it two thirds as heavy.
-                          keys=(_ANNOTATION_KEYS + f"fontSize={size + 1:g};"
+                          keys=(_ANNOTATION_KEYS + f"fontSize={F.annotation_title_font(obj):g};"
                                 + f"strokeWidth={F._BOX_RULE:g};"),
                           col_keys=[f"align=left;spacingLeft=4;{'fontStyle=1;' if b else ''}"
                                     for b in heavy])
@@ -3286,7 +3286,8 @@ class DrawioRenderer:
         _s, _row_h, title_h, _col_w = F._ann_layout(obj) if rows or title else (
             size, 0.0, 0.0, [])
         return _text_box(cid, title, [str(r) for r in rows], x, y, w, h, size,
-                         title_h, title_align=getattr(obj, "title_align", "center"))
+                         title_h, title_align=getattr(obj, "title_align", "center"),
+                         title_font=F.annotation_title_font(obj))
 
     def _title_strip(self, cid: str, block, x, y, w, h, name: str, date: str,
                      scale: str) -> list[str]:
@@ -4241,7 +4242,7 @@ def _stream_table(cid: str, table, x, y) -> list[str]:
 
 
 def _text_box(cid: str, title: str, rows, x, y, w, h, font: float = 11.0,
-              title_h: float = 0.0, title_align: str = "center") -> list[str]:
+              title_h: float = 0.0, title_align: str = "center", title_font: float | None = None) -> list[str]:
     """A box of free-form lines, for furniture that is not a grid.
 
     A note list written as sentences has one column, and ruling one
@@ -4273,7 +4274,7 @@ def _text_box(cid: str, title: str, rows, x, y, w, h, font: float = 11.0,
         # own rule; the band is `_ann_layout`'s so the rule under it
         # lands where the sheet rules it.
         out += _strip_label(f"{cid}-t", ("text", x + (9 if title_align == "left" else w / 2), y + title_h - 6,
-                                         title, font + 1, "start" if title_align == "left" else "middle", True, "black"))
+                                         title, title_font or font + 1, "start" if title_align == "left" else "middle", True, "black"))
         out += _segment(f"{cid}-r", x, y + title_h, x + w, y + title_h,
                         _INK, F._BOX_UNDERLINE)
     # The body, in the sheet's own gutter: `draw_annotation` sets a row
