@@ -92,6 +92,12 @@ unheaded source branches can shorten to clear a neighbouring header takeoff.
 After track separation, a bounded body-clearance pass can shift automatic
 interior tracks away from equipment, preserving nozzles and authored waypoints.
 It accepts only fewer body intersections without increasing parallel overlaps.
+When the full track spacing cannot clear a narrow corridor, it can reduce that
+clearance to half spacing or four drawing units. Terminal approaches follow the
+actual nozzle normal, including when an earlier separation pass overshot a goal.
+The template profile uses 20-unit column gaps; measured label and instrument
+halos still reserve their own space. Sheet capacity and native ink checks remain
+the publication caller's gates.
 
 Regenerate symbols with `python scripts/vendor_symbols.py` and
 `python scripts/house_symbols.py`. Regenerate examples with

@@ -33,6 +33,21 @@ def test_authored_route_is_preserved_even_when_the_author_must_resolve_a_collisi
     assert stream.route.waypoints == before
 
 
+def test_narrow_clear_corridor_is_used_when_full_spacing_would_overlap_another_line():
+    fs, stream = fixture()
+    stream.dest.owner.frame.x = 120
+    stream.route.waypoints[-1] = (120, 100)
+    source = fs.add(Feed("other-air"))
+    target = fs.add(Product("other-tank"))
+    source.frame = Frame(x=-50, y=-40, w=50, h=20)
+    target.frame = Frame(x=200, y=120, w=50, h=20)
+    peer = fs.connect(source.outlet, target.inlet)
+    peer.route = Route(waypoints=[(0, -30), (81, -30), (81, 130), (200, 130)], manual=True)
+    repair(fs)
+    assert stream.route.waypoints == [(0, 0), (88, 0), (88, 100), (120, 100)]
+    assert peer.route.waypoints == [(0, -30), (81, -30), (81, 130), (200, 130)]
+
+
 def test_wide_boundary_flag_keeps_a_corridor_beyond_the_previous_column():
     from pandid import Valve
     from pandid.layout import _seed_slots
@@ -47,3 +62,12 @@ def test_wide_boundary_flag_keeps_a_corridor_beyond_the_previous_column():
     feed._slot.w = 190
     assign_coordinates(fs)
     assert unit_box(feed, feed.frame)[0] - unit_box(valve, valve.frame)[2] >= 40
+
+
+def test_repair_can_correct_a_separated_track_that_overshot_its_destination():
+    fs, stream = fixture()
+    fs.units[2].frame.x = 123
+    stream.dest.owner.frame.x = 120
+    stream.route.waypoints = [(0, 0), (129, 0), (129, 100), (120, 100)]
+    repair(fs)
+    assert stream.route.waypoints == [(0, 0), (109, 0), (109, 100), (120, 100)]
