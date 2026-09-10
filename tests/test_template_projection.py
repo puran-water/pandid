@@ -91,3 +91,24 @@ def test_explicit_header_survives_data_roundtrip():
     fs.add(Junction('header',header=True))
     copied=Flowsheet.from_dict(fs.to_dict())
     assert copied.units[0].header and copied.units[0].is_header
+
+
+def test_free_output_balloon_aligns_exactly_with_fractional_actuator_axis():
+    from pandid import Flowsheet, Instrument, ControlValve
+    from pandid.portgeom import port_point
+    fs=Flowsheet('Actuator axis')
+    fs.layout_options.control_grid=1
+    valve=fs.add(ControlValve('valve'))
+    valve.pin(x=100.13,y=200.23)
+    command=fs.add(Instrument('350-XV-01'))
+    fs.connect(command.sig_out,valve.actuator,kind='pneumatic')
+    fs.layout();fs.route()
+    axis=port_point(valve,valve.frame,'actuator')[0]
+    # Collision avoidance may choose another lattice column; its origin is
+    # still the exact nozzle axis, not a rounded stencil centre.
+    assert (command.frame.cx-axis)/25 == pytest.approx(round((command.frame.cx-axis)/25))
+    line=fs.streams[0].route.waypoints
+    assert all(abs(a[0]-b[0])<1e-8 or abs(a[0]-b[0])>1 for a,b in zip(line,line[1:]))
+    command.pin(x=42.37,y=20)
+    fs.layout()
+    assert command.frame.x==42.37

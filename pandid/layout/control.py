@@ -133,6 +133,15 @@ def _spot(fs: "Flowsheet", inst: "Unit", w: float, h: float,
     if fs.layout_options.control_grid:
         grid = fs.layout_options.control_grid
         want = tuple(round(v/grid)*grid for v in want)
+    # A native actuator nozzle need not lie at the centre of its stencil.
+    # Keep a single actuator output on that exact axis. Rounding a 0.2-unit
+    # dogleg to the drafting grid lets draw.io simplify it into a diagonal.
+    # The free-space search and explicit pins still take precedence.
+    actuator = _actuator_axis(inst)
+    if actuator is not None:
+        axis, coordinate = actuator
+        want = tuple(coordinate - (w if axis == 0 else h) / 2 if i == axis else v
+                     for i, v in enumerate(want))
     if pin is None:
         return _nearest_free(want[0], want[1], w, h, taken, True, True)
 
@@ -141,6 +150,30 @@ def _spot(fs: "Flowsheet", inst: "Unit", w: float, h: float,
     y = pin.y if pin.y is not None else _lane(rows, pin.row, ROW_GAP)
     return _nearest_free(want[0] if x is None else x, want[1] if y is None else y,
                          w, h, taken, x is None, y is None)
+
+
+def _actuator_axis(inst: "Unit") -> tuple[int, float] | None:
+    """An unambiguous physical actuator axis, independent of the control grid."""
+    from pandid.portgeom import port_point, port_faces
+
+    peers = []
+    for port in inst.ports.values():
+        stream = port.stream
+        if stream is not None:
+            peers.append(stream.dest if stream.source.owner is inst else stream.source)
+    if len(peers) != 1 or peers[0].name != "actuator":
+        return None
+    peer = peers[0]
+    if peer.owner is None or peer.owner.frame is None:
+        return None
+    frame = peer.owner.frame
+    point = port_point(peer.owner, frame, peer.name)
+    face = frame.port_faces.get(peer.name) or port_faces(peer.owner, peer.name, frame)[0]
+    if face in {"N", "S"}:
+        return 0, point[0]
+    if face in {"E", "W"}:
+        return 1, point[1]
+    return None
 
 
 def _lane(grid: dict[int, tuple[float, float]], index: int | None,
