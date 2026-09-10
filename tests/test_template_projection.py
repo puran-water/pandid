@@ -46,3 +46,11 @@ def test_cooling_tower_generic_inlet_maps_to_water_nozzle():
     fs=from_template('Cooling',nodes,[edge('feed','a','tower'),edge('product','tower','b')],metadata={})
     assert fs.streams[0].dest.name=='water_in'
     assert fs.streams[1].source.name=='water_out'
+
+
+def test_nameplate_alignment_shares_crowding_without_rightward_drift():
+    from pandid.render.nameplates import _aligned_positions
+    xs = _aligned_positions([100, 200, 500], [200, 200, 200], 0)
+    assert all(b >= a + 220 for a, b in zip(xs, xs[1:]))
+    assert xs[-1] < 540  # Former greedy layout: 100, 320, 540.
+    assert _aligned_positions([50, 400], [100, 100], 0) == [50, 400]

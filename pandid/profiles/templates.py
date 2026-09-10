@@ -102,6 +102,9 @@ def from_template(name, nodes, edges, *, metadata, print_scale=2.7, pins=None):
     """
     fs = Flowsheet(name)
     fs.print_scale = print_scale
+    # The process profile uses compact columns; labels and instrument halos
+    # still reserve their measured space before routing.
+    fs.layout_options.column_gap = 60
     fs.layout_options.stream_spacing = 14
     fs.layout_options.control_passes = 16
     fs.layout_options.control_grid = 1

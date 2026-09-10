@@ -50,6 +50,27 @@ def _wrapped(text, width, font):
     return result
 
 
+def _aligned_positions(desired, widths, left, gap=20):
+    """Least-squares alignment without the former one-way rightward drift.
+
+    Subtract cumulative box widths, then use pooled adjacent violators to
+    solve the ordered coordinates. All boxes stay on one horizontal and near
+    their equipment; a wide early heading cannot push every later box east.
+    """
+    offsets, pools, offset = [], [], 0
+    for index, (x, width) in enumerate(zip(desired, widths)):
+        offsets.append(offset)
+        pools.append([index, index+1, x-offset, 1])
+        while len(pools)>1 and pools[-2][2]/pools[-2][3] > pools[-1][2]/pools[-1][3]:
+            b=pools.pop();a=pools.pop()
+            pools.append([a[0],b[1],a[2]+b[2],a[3]+b[3]])
+        offset += width+gap
+    result=[0.0]*len(desired)
+    for start,end,total,count in pools:
+        for index in range(start,end):result[index]=max(left,total/count)+offsets[index]
+    return result
+
+
 @dataclass(frozen=True)
 class DataBlock:
     unit_index: int
@@ -65,7 +86,6 @@ def plan(fs, inner):
     if not records:
         return [], inner
     blocks = []
-    next_x = inner[0]
     for index, unit in sorted(enumerate(fs.units), key=lambda pair: (pair[1].frame.x, pair[0])):
         if unit.name not in records:
             continue
@@ -77,9 +97,10 @@ def plan(fs, inner):
         annotation = Annotation(title=row['tags'], rows=lines, width=width, font_size=font,
                                 title_align="left", title_font_size=heading)
         w, h = measure_annotation(annotation)
-        x = max(unit.frame.x, next_x)
-        next_x = x + w + 20
+        x = unit.frame.x
         blocks.append(DataBlock(index, annotation, x, 0, w, h))
+    positions=_aligned_positions([b.x for b in blocks],[b.w for b in blocks],inner[0])
+    blocks=[DataBlock(b.unit_index,b.annotation,x,0,b.w,b.h) for b,x in zip(blocks,positions)]
     height = max(b.h for b in blocks)
     y = inner[3] + 65 if next(iter(records.values())).get('side', 'below') == 'below' else inner[1] - height - 65
     blocks = [DataBlock(b.unit_index, b.annotation, b.x, y, b.w, b.h) for b in blocks]
