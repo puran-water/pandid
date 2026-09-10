@@ -67,8 +67,15 @@ def repair(fs, *, radius=5, max_passes=8):
                            sum(box.intersects_segment(*a,*b) for (a,b),_ in changed) for box in boxes):
                         continue
                     trial={**lines,key:proposed}
-                    remaining=crossing_order(trial,radius)[1]
                     overlap = _overlaps(trial, spacing)
+                    # Most dense-sheet candidates cannot improve either metric.
+                    # Reject them before rebuilding the global crossing order;
+                    # this keeps the same candidates and tie-breaking score.
+                    if (overlap > old_overlaps + 1e-6
+                            or _overlaps(trial) > old_exact_overlaps + 1e-6
+                            or (not lost and overlap >= old_overlaps - 1e-6)):
+                        continue
+                    remaining=crossing_order(trial,radius)[1]
                     # Horizontal and vertical separation are computed from the
                     # same original routes. Moving horizontal tracks can make
                     # two formerly disjoint vertical spans overlap afterwards.
@@ -76,8 +83,7 @@ def repair(fs, *, radius=5, max_passes=8):
                     # so retain the requested parallel spacing after repair.
                     # Resolve that residual overlap as well as crossing gaps;
                     # neither metric may get worse to improve the other.
-                    if (len(remaining) > len(lost) or overlap > old_overlaps + 1e-6
-                            or _overlaps(trial) > old_exact_overlaps + 1e-6
+                    if (len(remaining) > len(lost)
                             or (len(remaining) == len(lost) and overlap >= old_overlaps - 1e-6)):
                         continue
                     score=(overlap,len(remaining),abs(shift),key,j,shift)
