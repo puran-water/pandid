@@ -77,3 +77,22 @@ Regenerate symbols with `python scripts/vendor_symbols.py` and
 `python scripts/house_symbols.py`. Regenerate examples with
 `python scripts/drawio_samples.py`. Run `python -m pytest tests` in a development
 installation; the focused custody/branding contract is `test_engine_extensions.py`.
+
+## Agent discovery
+
+`pandid.discovery` reads the same constructor and symbol registries as the spec
+loader. It returns paginated summaries, one unit's real named ports (including
+parameter-dependent header ports and valve actuators), and small executable specs.
+No second catalogue or MCP dependency is maintained inside the engine.
+
+```bash
+python -m pandid.discovery catalog --query magnetic
+python -m pandid.discovery unit Valve --variant butterfly_pneumatic
+python -m pandid.discovery unit Junction --parameters '{"inputs":1,"outputs":3}'
+python -m pandid.discovery example magnetic-control-loop
+```
+
+The Python entrypoints are `catalog`, `describe_unit` and `example`. Examples
+carry `synthetic: true`; constructor availability and valid routing do not qualify
+an engineering design. PuranOS exposes these through its existing engineering MCP
+alongside the canonical-source and template-publication workflows.
