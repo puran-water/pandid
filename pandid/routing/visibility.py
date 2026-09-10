@@ -129,6 +129,13 @@ class VisibilityGraph:
         self.obstacles: List[Rect] = []
         x_set: Set[float] = set()
         y_set: Set[float] = set()
+        from pandid.drawing_regions import captions
+        for caption in captions(fs):
+            if not caption.text:
+                continue
+            self.obstacles.append(Rect(caption.x, caption.x + caption.w, caption.y, caption.y + caption.h))
+            x_set.update((caption.x - margin, caption.x + caption.w + margin))
+            y_set.update((caption.y - margin, caption.y + caption.h + margin))
 
         # Port anchors, their outward directions, and the escape node each one
         # stands off to: the single geometry authority the router reads from.

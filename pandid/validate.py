@@ -485,7 +485,7 @@ def model_issues(fs: "Flowsheet", *, tabulates: bool = True) -> list["Issue"]:
                         if default_registry.variants(getattr(units, name).kind)})
     unknown: set[str] = set()
     for u in fs.units:
-        if default_registry.variants(u.kind) or u.kind in unknown:
+        if default_registry.variants(u.kind) or u.kind in unknown or 'sym_generic' not in default_registry.for_unit(u).svg:
             continue
         unknown.add(u.kind)
         # The registry's own answer for this kind, measured rather than
@@ -1069,7 +1069,7 @@ def geometry_issues(fs: "Flowsheet", *, arrows: bool = True) -> list["Issue"]:
     if not fs.route_converged:
         warnings.append(Issue(
             "warning", "route-not-settled",
-            f"attached instruments were still moving after {MAX_PLACEMENT_PASSES} "
+            f"attached instruments were still moving after {fs.layout_options.control_passes} "
             "routing passes; a balloon may sit slightly off the line it taps. "
             "Pin the balloon-carrying lines with via() to settle it"))
 

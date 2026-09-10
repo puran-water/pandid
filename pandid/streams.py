@@ -158,6 +158,7 @@ class Stream:
     route: Route | None = None
     color: str | None = None
     dasharray: str | None = None
+    flow_class: str = "main"
     # How this line's two joints are made up, overriding the sheet's
     # `connections` for this run alone. One name for both ends, or a
     # (source, dest) pair in connection order. None inherits, which lets
@@ -214,6 +215,8 @@ class Stream:
     _CHECKED = {"color": check_color, "dasharray": check_dasharray}
 
     def __setattr__(self, name: str, value) -> None:
+        if name == "flow_class" and value not in {"main", "secondary"}:
+            raise ValueError("flow_class must be main or secondary")
         if name == "display_label" and value is not None and not isinstance(value, str):
             raise ValueError("stream display_label must be text or None")
         check = self._CHECKED.get(name)

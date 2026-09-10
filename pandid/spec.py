@@ -299,6 +299,8 @@ _CLASSES: dict[str, type[Unit]] = {
     name: getattr(unit_types, name) for name in unit_types.__all__ if name != "Unit"
 }
 _CLASSES.update({name: getattr(device_types, name) for name in device_types.__all__})
+Junction = unit_types.Junction
+_CLASSES["Junction"] = Junction
 
 # A spec is hand-written, so accept every name the reader might
 # reasonably use: the class name from the README (``HeatExchanger``),
@@ -338,7 +340,7 @@ def _resolve_kind(value: Any, where: str) -> type[Unit]:
 # --------------------------------------------------------------
 
 _TOP_KEYS = {
-    "drawio_metadata", "equipment_data",
+    "drawio_metadata", "equipment_data", "regions", "captions",
     "print_scale",
     "layout_options",
     "name", "stream_naming_scheme", "stream_number_start",
@@ -382,7 +384,7 @@ _QUADRANT_KEYS = {"safety": "a", "variable": "b", "high": "c", "low": "d"}
 _LOOP_KEYS = {"variable", "number"}
 _STREAM_KEYS = {
     "from", "to", "kind", "name", "draw_as_recycle", "properties", "tabulate", "via",
-    "color", "dasharray", "ends", "display_label",
+    "color", "dasharray", "ends", "display_label", "flow_class",
     *LINE_NUMBER_FIELDS,
 }
 _COMPONENT_KEYS = {"name", "formula"}
@@ -400,6 +402,7 @@ _VARIABLE_PORTS = {
 # width and height, so naming either on anything else asks for a size
 # nothing draws.
 _KIND_SIZES = {
+    "font_size": ("Block",),
     "length": ("Conveyor",),
     "diameter": ("Conveyor",),
 }
@@ -426,8 +429,8 @@ _KIND_TEXT = {
 # artwork drawn in advance with nothing to count, so where its nozzles
 # are is a fact about the drawing alone.
 _KIND_FACES = {
-    "inputs": ("Block", "Tank", "Vessel"),
-    "outputs": ("Block", "Tank", "Vessel"),
+    "inputs": ("Block", "Tank", "Vessel", "Junction"),
+    "outputs": ("Block", "Tank", "Vessel", "Junction"),
 }
 # The order along a face. Separate from the two above because it is not
 # a constructor argument: ``Block.order_on``/``_MultiPortVessel.order_on``
@@ -560,6 +563,8 @@ def from_dict(spec: Mapping[str, Any]) -> Flowsheet:
     if "equipment_data" in data:
         from pandid.render.nameplates import validate as validate_equipment_data
         fs.equipment_data = dict(validate_equipment_data(data["equipment_data"]))
+    from pandid.drawing_regions import read as read_regions
+    read_regions(fs, data)
     if "drawio_metadata" in data:
         from pandid.drawio_metadata import validate_bindings
         fs.drawio_metadata = validate_bindings(data["drawio_metadata"])
@@ -627,6 +632,8 @@ def _read_unit(fs: Flowsheet, entry: Any, where: str) -> Unit:
     _check_keys(data, allowed, where)
 
     kwargs: dict[str, Any] = {}
+    if issubclass(cls, unit_types.Block) and 'label_pos' in data:
+        kwargs['label_pos'] = _text(data['label_pos'], f'{where}.label_pos')
     for key in ("variant", "description", "reference"):
         if key in data:
             kwargs[key] = _text(data[key], f"{where}.{key}")
@@ -1049,7 +1056,7 @@ def _read_stream(fs: Flowsheet, entry: Any, where: str) -> Stream:
     except ValueError as e:
         raise _fail_from(e, where) from None
 
-    for key in ("color", "dasharray"):
+    for key in ("color", "dasharray", "flow_class"):
         if key in data:
             setattr(stream, key, _text(data[key], f"{where}.{key}"))
     if "display_label" in data:
@@ -1471,6 +1478,8 @@ def to_dict(fs: Flowsheet) -> dict:
         spec["title_block"] = _write_title_block(fs.title_block)
     if fs.annotations:
         spec["annotations"] = [_write_annotation(a) for a in fs.annotations]
+    from pandid.drawing_regions import write as write_regions
+    spec.update(write_regions(fs))
     if fs.equipment_data:
         from pandid.render.nameplates import validate as validate_equipment_data
         spec["equipment_data"] = dict(validate_equipment_data(fs.equipment_data, {u.name for u in fs.units}))
@@ -1657,6 +1666,10 @@ def _write_unit(unit: Unit) -> dict[str, Any]:
     _write_composition(unit, entry)
     if isinstance(unit, unit_types.Block):
         _write_connection_faces(unit, entry, unit.DEFAULT_INPUT_FACE, unit.DEFAULT_OUTPUT_FACE)
+        if unit.font_size != 12:
+            entry["font_size"] = unit.font_size
+    elif isinstance(unit, Junction):
+        entry.update(inputs=len(unit.inlets), outputs=len(unit.outlets))
     elif isinstance(unit, (unit_types.Tank, unit_types.Vessel)):
         # The same two keys, over the other mechanism that carries them
         # (see ``pandid.units._MultiPortVessel``): the default face is
@@ -1809,7 +1822,7 @@ def _write_stream(stream: Stream) -> dict[str, Any]:
         # topology.
         if value is not None and not (key == "sequence" and value == stream._auto_sequence):
             entry[key] = value
-    for key in ("color", "dasharray"):
+    for key in ("color", "dasharray", "flow_class"):
         if getattr(stream, key) is not None:
             entry[key] = getattr(stream, key)
     if stream.display_label is not None:

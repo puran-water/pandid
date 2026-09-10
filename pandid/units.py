@@ -63,6 +63,7 @@ __all__ = [
     "Mixer",
     "Splitter",
     "Tee",
+    "Junction",
     "Reducer",
     "Fitting",
     "Ejector",
@@ -7994,7 +7995,14 @@ class Block(Unit):
         label_pos: str | None = None,
         description: str = "",
         reference: str = "",
+        font_size: float = 12,
     ):
+        import math
+        if isinstance(font_size, bool) or not isinstance(font_size, (int, float)) or not math.isfinite(font_size) or font_size <= 0:
+            raise ValueError("Block font_size must be positive and finite")
+        if font_size != 12 and label_pos not in {None, "center"}:
+            raise ValueError("Custom Block lettering requires label_pos='center'")
+        self.font_size = font_size
         in_faces = _block_faces(inputs, self.DEFAULT_INPUT_FACE, name, "inputs")
         out_faces = _block_faces(outputs, self.DEFAULT_OUTPUT_FACE, name, "outputs")
         if not in_faces and not out_faces:
@@ -8385,3 +8393,53 @@ class Block(Unit):
             drawn, axis = (w, "width") if upright == turned else (h, "height")
             if drawn < along - 1e-9:
                 raise block_box_too_small(self.name, face, count, axis, drawn, along, turned=turned)
+
+
+class Junction(Unit):
+    kind = "junction"
+    LAYOUT_CONFIDENCE = 0
+
+    def __init__(self, name, inputs=1, outputs=2, variant="default", width=None, height=None,
+                 description="", reference="", label_pos=None):
+        if any(type(n) is not int or n < 0 for n in (inputs, outputs)) or inputs + outputs < 2:
+            raise ValueError("A junction needs at least two nonnegative integer port counts")
+        if variant != "default":
+            raise ValueError("Junction has only the pipe connection variant")
+        super().__init__(name, variant=variant, width=width, height=height,
+                         description=description, reference=reference, label_pos=label_pos)
+        self.inlets = tuple(self._add_port(f"in_{i+1}", "inlet", "process") for i in range(inputs))
+        self.outlets = tuple(self._add_port(f"out_{i+1}", "outlet", "process") for i in range(outputs))
+
+    @property
+    def tag(self):
+        # Header identities remain in source bindings, never in a triangle.
+        return ""
+
+    @property
+    def is_header(self):
+        return max(len(self.inlets), len(self.outlets)) >= 3 or len(self.ports) > 4
+
+    def symbol(self):
+        from pandid.render.symbols import Symbol
+        members = self.inlets + self.outlets
+        if not self.is_header:
+            positions = {"W": (0, 2), "E": (4, 2), "N": (2, 0), "S": (2, 4)}
+            used, ports = set(), {}
+            for family, preference in ((self.inlets, "WNSE"), (self.outlets, "ESNW")):
+                for port in family:
+                    face = next(f for f in preference if f not in used)
+                    used.add(face)
+                    ports[port.name] = positions[face]
+            return Symbol(svg='<g id="sym_junction"><circle cx="2" cy="2" r="2" fill="black"/></g>',
+                          width=4, height=4, ports=ports, bare_run=True,
+                          label_pos="center", id_suffix=f"_{len(self.inlets)}_{len(self.outlets)}")
+        height = 30 * max(len(self.inlets), len(self.outlets))
+        ports, legs = {}, []
+        for family, x in ((self.inlets, 0), (self.outlets, 4)):
+            for i, port in enumerate(family):
+                y = height * (i + .5) / len(family)
+                ports[port.name] = (x, y)
+                legs.append(f'<path d="M {x} {y:g} H 2"/>')
+        return Symbol(svg=f'<g id="sym_junction" stroke="black" stroke-width="2"><path d="M 2 0 V {height:g}"/>{"".join(legs)}</g>',
+                      width=4, height=height, ports=ports, bare_run=True,
+                      label_pos="center", id_suffix=f"_{len(self.inlets)}_{len(self.outlets)}")

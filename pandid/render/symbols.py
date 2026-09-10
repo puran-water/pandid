@@ -4395,6 +4395,8 @@ class SymbolRegistry:
         an internal has no normal position to show.
         """
         variant = getattr(unit, "variant", "default")
+        if unit.kind in {"junction", "legend_anchor"}:
+            return unit.symbol()
         sym = self.get(unit.kind, variant)
         build = _built_to_size(unit.kind, variant)
         if build is not None:
@@ -4455,6 +4457,8 @@ class SymbolRegistry:
         return Symbol(svg=svg, width=60, height=60)
 
     def _register_defaults(self):
+        self.register("junction", Symbol(svg='<g id="sym_junction"><circle cx="2" cy="2" r="2" fill="black"/></g>',
+            width=4, height=4, ports={'in_1':(0,2),'out_1':(4,2),'out_2':(2,4)}, bare_run=True))
         # Feed / Product: rendered dynamically in svg.py, these are
         # fallbacks
         self.register("feed", Symbol(

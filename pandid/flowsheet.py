@@ -495,6 +495,8 @@ class Flowsheet:
         # Opaque engineering custody, carried without supplying layout facts.
         self.drawio_metadata: dict = {}
         self.equipment_data: dict = {}
+        self.regions: list = []
+        self.captions: list = []
         # Uniform physical enlargement, including the native title strip.
         self.print_scale: float = 1.0
         from pandid.layout.options import LayoutOptions
@@ -1899,8 +1901,13 @@ class Flowsheet:
         # always ends on a route, converged or not, so no signal line is
         # left pointing at where a balloon used to be.
         self.route_converged = False
-        for _ in range(MAX_PLACEMENT_PASSES):
+        for _ in range(self.layout_options.control_passes):
             if not place_control(self):
+                # place_control can commit a small final movement and report
+                # convergence within its tolerance. Route against those exact
+                # frozen frames so native endpoints never inherit stale legs.
+                if any(u.kind == "instrument" for u in self.units):
+                    router.route(self)
                 self.route_converged = True
                 break
             router.route(self)

@@ -100,6 +100,9 @@ class ConstraintLayoutEngine:
         break_cycles(fs)
         assign_positions(fs)
         assign_coordinates(fs)
+        if fs.layout_options.parallel_trains:
+            from pandid.layout.parallel_trains import align
+            align(fs)
         # Choose the faces, and place again where that moved a balloon.
         # The loop ends on a selection made against boxes nothing has
         # moved since, so the sheet it hands on is a function of the

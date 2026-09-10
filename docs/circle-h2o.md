@@ -10,6 +10,37 @@ labels. `profiles.templates.from_template` maps reviewed semantic symbols and
 named port aliases to typed units; unmapped symbols and ports fail explicitly.
 `profiles.legend.pages` uses the same units and streams for discipline legends.
 
+An ordered `lanes=[{'id': ..., 'title': ...}]` argument to `block_diagram`
+selects the process roll-up profile. Blocks carry `lane`, numeric `order`, and
+optional logical `column`/`row`. The engine reserves explicit slots, wraps
+labels, uses a common block size, and draws transparent lane bands with stable
+identities. These are layout hints; source block and stream identities survive.
+
+Use `jump_direction='auto', crossing_style='gap'` for native drawing sets.
+The engine chooses a realizable edge order and gives either crossing line its
+gap, preserving room for bends and terminal arrows. Fixed vertical/horizontal
+hop preferences can impose contradictory drawing orders on repeated crossings.
+An impossible automatic crossing clearance fails rather than emitting flat
+crossings. Native-export validation must also check actual gap ink.
+
+`Junction(inputs=..., outputs=...)` represents connected piping, with a dot for
+a tee and a vertical pipe header for multiple parallel takeoffs. It has real
+named ports and no triangle or visible equipment tag. Mixer and Splitter retain
+their upstream process-unit meaning; the house `process.junction` mapping uses
+Junction. `layout_options.parallel_trains` aligns equivalent pump/valve trains
+between common headers without changing connectivity or overriding pins.
+`control_grid` selects deterministic staged control placement; a zero value
+retains upstream placement. The house profile uses a one-pixel grid.
+
+`Stream.flow_class='secondary'` selects the lighter process-line weight; the
+default is `main`. Medium and engineering connection identity are independent.
+`Region` and `Caption` in `pandid.drawing_regions` add editable grouped panels,
+lane headings and adjacent explanatory text, and round-trip through the spec.
+Legends group the admitted catalogue by equipment, valves/actuators, piping,
+instrumentation, line/signal media, tagging, nameplates and abbreviations. They
+are one multi-sheet document per discipline, following the Nanded reference
+arrangement. They do not assert that unreviewed symbols are qualified.
+
 `Flowsheet.drawio_metadata` carries opaque source and stable appearance IDs
 through serialization. draw.io user objects hold these values; cell endpoints
 and child ownership follow remapped IDs. No engineering UUID is inferred from

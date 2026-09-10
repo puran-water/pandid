@@ -227,7 +227,8 @@ def _nozzle_keepouts(fs: "Flowsheet") -> list[Box]:
 
     out: list[Box] = []
     for u in fs.units:
-        if u.frame is None or is_attached(u):
+        if (u.frame is None or is_attached(u) or
+                (fs.layout_options.control_grid and u.kind == 'instrument' and u.pin_ is None)):
             continue
         for name, port in u.ports.items():
             if port.stream is None:
@@ -361,7 +362,8 @@ def place_attached(fs: "Flowsheet") -> bool:
     # sweep, and reading that back is what would make this pass depend
     # on the one before it -- and each balloon joins as it is placed.
     obstacles = [unit_box(u, u.frame) for u in fs.units
-                 if u.frame is not None and not is_attached(u)]
+                 if u.frame is not None and not is_attached(u)
+                 and not (fs.layout_options.control_grid and u.kind == 'instrument' and u.pin_ is None)]
     keepouts = _nozzle_keepouts(fs)
     # Balloons chain (an interlock hung under a controller hung off a
     # transmitter), so resolve a host before whatever hangs on it,

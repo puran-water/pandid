@@ -61,6 +61,13 @@ def _place_free(fs: "Flowsheet") -> bool:
     if not pending:
         return False
 
+    prior = {u: u.frame for u in pending}
+    if fs.layout_options.control_grid:
+        # Resolve declaration order against this pass's settled geometry.
+        # Reading the previous pass's free peers makes cycles chase each
+        # other's positions indefinitely even though the process is frozen.
+        for u in pending:
+            u.frame = None
     taken = [u.frame for u in fs.units
              if u.frame is not None and u not in set(pending)]
     moved = False
@@ -72,7 +79,7 @@ def _place_free(fs: "Flowsheet") -> bool:
     for inst in pending:
         w, h = resolve_size(inst)
         x, y = _spot(fs, inst, w, h, taken)
-        old = inst.frame
+        old = prior[inst]
         if old is None or abs(old.x - x) > 0.01 or abs(old.y - y) > 0.01:
             moved = True
         pin = inst.pin_
@@ -116,7 +123,12 @@ def _spot(fs: "Flowsheet", inst: "Unit", w: float, h: float,
     """
     pin = inst.pin_
     centre = _centroid(fs, inst)
+    # A finite drafting grid gives a wired controller group an exact fixed
+    # point; averaging fractional positions otherwise approaches one forever.
     want = (centre[0] - w / 2.0, centre[1] - h / 2.0)
+    if fs.layout_options.control_grid:
+        grid = fs.layout_options.control_grid
+        want = tuple(round(v/grid)*grid for v in want)
     if pin is None:
         return _nearest_free(want[0], want[1], w, h, taken, True, True)
 

@@ -253,7 +253,7 @@ def _class_weight(sym) -> LineWeight:
     return LineWeight.DETAIL if sym.trim else LineWeight.EQUIPMENT
 
 
-def _stream_rung(signal: bool) -> LineWeight:
+def _stream_rung(signal: bool, secondary: bool = False) -> LineWeight:
     """The rung a run is drawn on.
 
     ISO 10628-1 §5.3.1 a) for a material run and c) for a control or
@@ -271,7 +271,7 @@ def _stream_rung(signal: bool) -> LineWeight:
     §5.3.1 b), so it is one branch here and :attr:`~.weights
     .LineWeight.EQUIPMENT`, with no new rung and nothing else to move.
     """
-    return LineWeight.DETAIL if signal else LineWeight.MAIN_FLOW
+    return LineWeight.DETAIL if signal or secondary else LineWeight.MAIN_FLOW
 
 
 def _ink_pad(rung: LineWeight) -> float:
@@ -695,7 +695,7 @@ def _ink(fs, direction: str) -> "list[_Ink]":
         # is what a main flow line already stood off at, and it is the
         # same division :data:`_PLATE_CLEARANCE` makes around a symbol
         # -- half a pen of ink, then a clearance with its own name.
-        pad = _ink_pad(_stream_rung(s.kind in _SIGNAL_KINDS))
+        pad = _ink_pad(_stream_rung(s.kind in _SIGNAL_KINDS, s.flow_class == "secondary"))
         points = stream_path(s)
         for a, b in zip(points, points[1:]):
             add(a, b, pad, "pipe", s.name or "")
@@ -713,7 +713,7 @@ def _ink(fs, direction: str) -> "list[_Ink]":
     # same way its straight length is: the arc is drawn at that weight.
     for hop in stream_hops(fs, direction):
         run = fs.streams[hop.stream]
-        pad = _ink_pad(_stream_rung(run.kind in _SIGNAL_KINDS))
+        pad = _ink_pad(_stream_rung(run.kind in _SIGNAL_KINDS, run.flow_class == "secondary"))
         x0, y0, x1, y1 = hop_box(hop, pad)
         out.append(_Ink(x0, y0, x1, y1, "v" if hop.vertical else "h",
                         hop.x if hop.vertical else hop.y, "hop", hop.line))
@@ -1014,11 +1014,18 @@ def unmarked_crossings(fs, jump_direction: str = "vertical",
                 segments.append((stream, "v", min(y1, y2), max(y1, y2), x1))
 
     marks = "v" if jump_direction == "vertical" else "h"
+    ranks = {id(s): n for n, s in enumerate(fs.streams)}
+    if jump_direction == "auto":
+        from pandid.render.crossings import crossing_order
+        order, _ = crossing_order({id(s):stream_polyline(s) for s in fs.streams}, HOP_R)
+        ranks = {key:n for n,key in enumerate(order)}
     out = []
     for stream, axis, lo, hi, at in segments:
-        if axis != marks:
+        if jump_direction != "auto" and axis != marks:
             continue
         for other, o_axis, o_lo, o_hi, o_at in segments:
+            if stream is other or (jump_direction == "auto" and ranks[id(other)] >= ranks[id(stream)]):
+                continue
             if o_axis == axis or not (o_lo < at < o_hi) or not (lo < o_at < hi):
                 continue
             if lo + HOP_R < o_at < hi - HOP_R:
@@ -1274,6 +1281,36 @@ class _Hop(NamedTuple):
     line: str
 
 
+def _ordered_hops(geoms):
+    """Gap the later stream, irrespective of direction, as native draw.io does."""
+    result = []
+    earlier = []
+    from pandid.render.crossings import crossing_order
+    order, lost = crossing_order({n:p for n, (s,p) in enumerate(geoms)}, HOP_R)
+    if lost:
+        raise ValueError(f"CROSSING_CLEARANCE_REQUIRED: {sorted(lost, key=str)}")
+    for n in order:
+        stream, points = geoms[n]
+        own = list(zip(points, points[1:]))
+        for i, ((x1, y1), (x2, y2)) in enumerate(own):
+            vertical = x1 == x2
+            cuts = set()
+            for (a, b), (c, d) in earlier:
+                if vertical and b == d and min(a, c) < x1 < max(a, c):
+                    if min(y1, y2) + HOP_R < b < max(y1, y2) - HOP_R:
+                        cuts.add(b)
+                elif y1 == y2 and a == c and min(b, d) < y1 < max(b, d):
+                    if min(x1, x2) + HOP_R < a < max(x1, x2) - HOP_R:
+                        cuts.add(a)
+            backwards = y1 > y2 if vertical else x1 > x2
+            side = (1 if y1 < y2 else -1) if vertical else (-1 if x1 < x2 else 1)
+            for at in sorted(cuts, reverse=backwards):
+                result.append(_Hop(x1 if vertical else at, at if vertical else y1,
+                                   vertical, side, n, i, stream.name or ""))
+        earlier.extend(own)
+    return result
+
+
 def stream_hops(fs, direction: str) -> "list[_Hop]":
     """Every line jump the sheet draws, in the order it draws them.
 
@@ -1329,6 +1366,8 @@ def stream_hops(fs, direction: str) -> "list[_Hop]":
     """
     check_jump_direction(direction)
     geoms = [(s, stream_polyline(s)) for s in fs.streams]
+    if direction == "auto":
+        return _ordered_hops(geoms)
     horizontals: list[tuple[float, float, float]] = []
     verticals: list[tuple[float, float, float]] = []
     for _s, points in geoms:
@@ -3482,7 +3521,7 @@ def check_connections(value) -> None:
 
 
 #: Which of two crossing lines is the one that hops the other.
-JUMP_DIRECTIONS = ("vertical", "horizontal")
+JUMP_DIRECTIONS = ("vertical", "horizontal", "auto")
 
 
 def check_jump_direction(value) -> None:
@@ -4202,6 +4241,8 @@ class SvgRenderer:
             dx0 = dy0 = 0.0
             dx1, dy1 = nominal.width, nominal.height
 
+        from pandid.drawing_regions import bounds as region_bounds
+        dx0, dy0, dx1, dy1 = region_bounds(fs, (dx0, dy0, dx1, dy1))
         from pandid.render.nameplates import plan as nameplate_plan
         nameplates, (dx0, dy0, dx1, dy1) = nameplate_plan(fs, (dx0, dy0, dx1, dy1))
 
@@ -4285,6 +4326,8 @@ class SvgRenderer:
         # Drawn with the equipment tags at the end, on the same halo.
         quadrants = quadrant_labels(fs, jump_direction)
         drawing: list[str] = []
+        from pandid.drawing_regions import svg as draw_regions
+        drawing.extend(draw_regions(fs))
         for block in nameplates:
             drawing.extend(F.draw_annotation(block.annotation, block.x, block.y, report=report))
         # Every opaque white plate the sheet lays down, collected only
@@ -4738,6 +4781,13 @@ class SvgRenderer:
                 # issued sheet writes nothing against a junction.
                 tag_box = None
                 if u.tag:
+                    if u.kind == "block" and getattr(u, "font_size", 12) != 12:
+                        font = u.font_size
+                        texts = u.tag.splitlines()
+                        for n, text in enumerate(texts):
+                            ty = cy + (n - (len(texts) - 1) / 2) * font * 1.2 + font * .35
+                            out.append(f'<text x="{cx:g}" y="{ty:g}" text-anchor="middle" font-family="sans-serif" font-size="{font:g}">{escaped(text)}</text>')
+                        continue
                     item = self._tag_item(u, f, x, y, u_width, u_height, safe_name,
                                           ink, symbols)
                     tag_box = _unit_label_box(item)
@@ -5297,7 +5347,7 @@ class SvgRenderer:
             marker = f' marker-end="url(#{marker_id})"' if self._tipped(s, arrows) else ""
             # A signal is drawn at half the weight of the pipe it
             # reads, per ISO 15519-2 Annex A.1.02/A.1.03 against A.1.01.
-            width = _stream_rung(is_signal).width
+            width = _stream_rung(is_signal, s.flow_class == "secondary").width
             lines.append(
                 f'    <path d="{d_str}" fill="none" '
                 f'stroke="{color}" stroke-width="{width:g}"{dash}{marker} />'

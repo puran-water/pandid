@@ -318,7 +318,7 @@ per process, overwritten by each `show()` and swept on the way out.
 | `show_stream_table` | `False` (the default), `True`, `"sheet"` | `True` draws the stream property table under the drawing (one column per stream that has properties, plus every feed and product); `"sheet"` draws the table as a sheet of its own instead, with no diagram on it. See [Stream properties and the table](#stream-properties-and-the-table) |
 | `check` | `bool` | validate; errors raise, warnings collect. The model-only checks run before the sheet is laid out, the geometric ones after — see [When the checks run](#when-the-checks-run) |
 | `page_size` | `None`, `"A4"`, `"A3"`, `"A2"`, `"A1"`, `"A0"` | `None` (the default) sizes the sheet to the drawing; a name draws a sheet of exactly that size |
-| `jump_direction` | `"vertical"`, `"horizontal"` | which of two crossing lines carries the crossing mark. Anything else raises `ValueError`, whether or not this sheet has a crossing to mark |
+| `jump_direction` | `"vertical"`, `"horizontal"`, `"auto"` | which crossing line carries the mark. `auto` chooses a realizable native edge order with crossing clearance; see [fork profile](circle-h2o.md). Other values raise `ValueError` |
 | `crossing_style` | `"arc"` (the default), `"gap"`, `"plain"` | what that mark is. See [Crossing lines](#crossing-lines). Anything else raises `ValueError` |
 | `debug` | `False` (the default), `True`, a number | draws the [coordinate overlay](#the-coordinate-overlay). `True` uses a 50-unit grid; a number sets the spacing |
 

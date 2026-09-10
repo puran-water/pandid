@@ -9,7 +9,7 @@ from __future__ import annotations
 import inspect
 import re
 
-from pandid import Block, Feed, Flowsheet, Instrument, Mixer, Product, Splitter
+from pandid import Block, Feed, Flowsheet, Instrument, Junction, Product
 from pandid.render.symbols import default_registry
 from pandid.spec import _resolve_kind
 
@@ -52,11 +52,9 @@ def _unit(row, incoming, outgoing):
     if symbol in {'block', 'process.package', 'control.device'}:
         return Block(key, inputs=max(1, len(incoming)), outputs=max(1, len(outgoing)), label_pos='center')
     if symbol == 'process.junction':
-        if len(incoming) <= 1:
-            return Splitter(key, n_outlets=max(1, len(outgoing)))
-        if len(outgoing) <= 1:
-            return Mixer(key, n_inlets=max(1, len(incoming)))
-        raise ValueError('PANDID_JUNCTION_NEEDS_EXPLICIT_MANIFOLD: ' + key)
+        if not incoming and not outgoing:
+            return Junction(key)
+        return Junction(key, inputs=max(1, len(incoming)), outputs=max(1, len(outgoing)))
     kind, variant = symbol_type(symbol)
     cls = _resolve_kind(kind, row['key'])
     kwargs = {'variant': variant}
@@ -100,6 +98,10 @@ def from_template(name, nodes, edges, *, metadata, print_scale=2.7, pins=None):
     """
     fs = Flowsheet(name)
     fs.print_scale = print_scale
+    fs.layout_options.stream_spacing = 14
+    fs.layout_options.control_passes = 16
+    fs.layout_options.control_grid = 1
+    fs.layout_options.parallel_trains = True
     fs.stream_labels.enclosure = 'none'
     fs.drawio_metadata = {'units': {}, 'streams': {}, **metadata}
     ports = {row['key']: {'in': [], 'out': []} for row in nodes}
@@ -122,6 +124,7 @@ def from_template(name, nodes, edges, *, metadata, print_scale=2.7, pins=None):
         fs.drawio_metadata['units'][unit.name] = {'id': row['id'], 'attributes': row['attributes']}
         if key in (pins or {}):
             unit.pin(**pins[key])
+    streams = {}
     for edge in edges:
         source, target = units[edge['source']], units[edge['target']]
         kind = edge['kind']
@@ -134,9 +137,16 @@ def from_template(name, nodes, edges, *, metadata, print_scale=2.7, pins=None):
         # An empty displayed label does not erase stream identity. Metadata
         # retains its semantic key; only the drawing label is suppressed.
         stream = fs.connect(*ends, name=edge['key'], kind=kind)
+        streams[edge['key']] = stream
+        stream.flow_class = edge.get('flow_class') or 'main'
         stream.display_label = edge.get('label', '')
         fs.drawio_metadata['streams'][stream.name] = {'id': edge['id'],
                                                      'attributes': edge['attributes']}
         if edge.get('via'):
             stream.via(edge['via'])
+    for row in nodes:
+        if row.get('attachment'):
+            attachment = row['attachment']
+            target = (units if attachment['kind'] == 'unit' else streams)[attachment['target']]
+            units[row['key']].attach(target, at=attachment.get('at'), offset=attachment.get('offset', 60))
     return fs

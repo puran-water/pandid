@@ -419,6 +419,15 @@ No sheet in the shipped corpus reaches it. What does is a sheet whose
     pins that the emitted order satisfies every crossing it kept.
     """
     keys = list(polylines)
+    if direction == "auto" and style in _JUMP_STYLES:
+        # A schematic crossing states non-connectivity, not pipe elevation.
+        # The later native edge carries the gap on either orientation.
+        # Unlike an orientation constraint this has no cyclic ordering case.
+        from pandid.render.crossings import crossing_order
+        order, lost = crossing_order(polylines, HOP_R)
+        if lost:
+            raise ValueError(f"CROSSING_CLEARANCE_REQUIRED: {sorted(lost, key=str)}")
+        return order, set(keys), set()
     if style not in _JUMP_STYLES or direction not in ("vertical", "horizontal"):
         return keys, set(), set()
     # The two families of segment, by the edge that owns each.
@@ -1668,6 +1677,8 @@ class DrawioRenderer:
         furniture, frame, fit = self._furniture(fs, sheet, bool(show_stream_table))
         body.extend(self._border(frame, border))
         body.extend(furniture)
+        from pandid.drawing_regions import drawio as draw_regions
+        body.extend(draw_regions(fs, fit))
         # Then equipment, then the runs between it, then the balloons --
         # which is the SVG renderer's own order, and it is that order
         # for the same reason: a balloon's opaque body knocks out the
@@ -1885,6 +1896,8 @@ class DrawioRenderer:
         (:meth:`_overlay_cells`). One whose body was drawn here falls
         through to the table like any other hand-drawn symbol.
         """
+        if u.kind in {"junction", "legend_anchor"}:
+            return _Approximation(None, "", stroke=_NO_STROKE)
         if sym.drawio_shape or sym.drawio_body_shape:
             return None
         return _APPROXIMATIONS.get((u.kind, getattr(u, "variant", "default")))
@@ -1969,6 +1982,9 @@ class DrawioRenderer:
                   f"{fit.length(_svg._class_weight(sym).width):g}")
         if u.kind in ("feed", "product"):
             return self._flag_shape(u, fit)
+        if u.kind == "junction":
+            shape = ["shape=line", "direction=south", "anchorPointDirection=0", "legacyAnchorPoints=1"] if u.is_header else ["shape=ellipse", f"fillColor={_INK}"]
+            return shape + [f"strokeColor={_INK}", weight, "perimeter=none", "outlineConnect=0"]
         # A composition names no stencil of its own -- that is what stops
         # a body's reference being reused for a body-plus-parts drawing,
         # which would export a stirred tank as a bare vessel. What it does
@@ -2166,11 +2182,12 @@ class DrawioRenderer:
         # Native HTML can overflow a narrow symbol, while Desktop's fallback
         # image clips to the label box. Give side tags their measured width so
         # SVG fallback and PDF carry the same complete inscription.
-        width = max((F.text_width(line, _TAG_TYPE) for line in lines), default=0) + 12
+        font = getattr(u, 'font_size', _TAG_TYPE)
+        width = max((F.text_width(line, font) for line in lines), default=0) + 12
         label_width = [f"labelWidth={fit.length(width):g}"] if side != 'center' else []
         return "<br>".join(_html_text(line) for line in lines), _LABEL_SIDE.get(
             side, _LABEL_SIDE["top"]
-        ) + [_drawn_type(_TAG_TYPE, fit), *label_width], (fit.length(dx), fit.length(dy))
+        ) + [_drawn_type(font, fit), *label_width], (fit.length(dx), fit.length(dy))
 
     @staticmethod
     def _cell_box(u) -> "tuple[float, float, float, float]":
@@ -2593,7 +2610,7 @@ class DrawioRenderer:
         distinction :func:`pandid.portgeom.resolve_port` keeps between a
         port's point and its routing anchor.
         """
-        if u.kind == "tee":
+        if u.kind == "tee" or (u.kind == "junction" and not u.is_header):
             # A junction, not a nozzle. On the sheet the meeting is
             # drawn by the tee's own twelve-unit mark and the pipes stop
             # at the box edge; draw.io has no built-in that draws that
@@ -2607,6 +2624,9 @@ class DrawioRenderer:
             # with the centre on the axis of all three.
             x0, y0, x1, y1 = self._cell_box(u)
             return self._fraction(u, sym, ((x0 + x1) / 2, (y0 + y1) / 2))
+        if u.kind == "junction":
+            x, y = self._fraction(u, sym, port_point(u, u.frame, port_name))
+            return .5, y
         return self._fraction(u, sym, port_point(u, u.frame, port_name))
 
     @staticmethod
@@ -2707,14 +2727,14 @@ class DrawioRenderer:
                 # ISO 10628-1 §5.3.1 a) for a material run and c) for a
                 # control or data line, the same two rungs
                 # ``SvgRenderer._draw_streams`` picks between.
-                f"strokeWidth={fit.length(_stream_rung(signal).width):g}",
+                f"strokeWidth={fit.length(_stream_rung(signal, s.flow_class == 'secondary').width):g}",
             ]
             # The semicircle this run hops the runs it crosses with,
             # where the direction selects it. Sized off the edge's own
             # pen, since draw.io's jumpSize is stated net of it; see
             # :func:`_jump_size`.
             if n in hops:
-                weight = fit.length(_stream_rung(signal).width)
+                weight = fit.length(_stream_rung(signal, s.flow_class == 'secondary').width)
                 # One ``jumpSize`` for either mark: ``mxShape`` reads
                 # the half-extent off it before it branches on the
                 # style, so the arc and the gap span the same run --
@@ -2965,7 +2985,8 @@ class DrawioRenderer:
         dock to place wrong.
         """
         if not fs.units:
-            return (0.0, 0.0, 0.0, 0.0)
+            from pandid.drawing_regions import bounds
+            return bounds(fs, (0.0, 0.0, 0.0, 0.0))
         x0 = y0 = float("inf")
         x1 = y1 = float("-inf")
         for u in fs.units:
@@ -2977,7 +2998,8 @@ class DrawioRenderer:
                 for px, py in s.route.waypoints:
                     x0, y0 = min(x0, px), min(y0, py)
                     x1, y1 = max(x1, px), max(y1, py)
-        inner = (x0, y0, x1, y1)
+        from pandid.drawing_regions import bounds as region_bounds
+        inner = region_bounds(fs, (x0, y0, x1, y1))
         if equipment_data:
             from pandid.render.nameplates import plan
             return plan(fs, inner)[1]

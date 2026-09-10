@@ -21,15 +21,16 @@ STREAM_INK = {
 
 def block_diagram(name: str, blocks: list[dict], streams: list[dict], *,
                   title_block, page_id: str, graph_attributes: dict,
-                  print_scale: float = 2.7) -> Flowsheet:
+                  print_scale: float = 2.7, lanes=None) -> Flowsheet:
     """Build canonical blocks, retaining numbers, names and every stream.
 
-    Lane numbers are optional row constraints. Absolute positions and the old
-    lane-grid/router output are deliberately not inputs to this adapter.
+    Ordered lane membership is semantic input. Uniform block sizing, grid
+    placement, nozzle faces and the visible lane bands are engine decisions.
     """
     fs = Flowsheet(name)
     fs.title_block = title_block
     fs.print_scale = print_scale
+    fs.layout_options.stream_spacing = 14
     fs.layout_options.column_gap = 80.0
     fs.layout_options.row_gap = 70.0
     fs.layout_options.band_gap = 85.0
@@ -46,6 +47,12 @@ def block_diagram(name: str, blocks: list[dict], streams: list[dict], *,
         ends[row["source"]]["out"].append(row["key"])
         ends[row["target"]]["in"].append(row["key"])
     units = {}
+    lane_plan = None
+    if lanes:
+        from pandid.layout.block_lanes import plan
+        lane_plan = plan(blocks, streams, lanes)
+        pins, fs.regions, faces, labels, width, height = lane_plan
+        fs.stream_labels.font_size = 22
     bindings = {"page_id": page_id, "graph": graph_attributes, "units": {}, "streams": {},
                 "cells": {
                     "f0": {"id": "circle-h2o-title-block", "attributes": {
@@ -59,13 +66,18 @@ def block_diagram(name: str, blocks: list[dict], streams: list[dict], *,
                 }}
     for key, row in records.items():
         incoming, outgoing = ends[key]["in"], ends[key]["out"]
-        block = Block(key, inputs=len(incoming), outputs=len(outgoing), label_pos="center")
+        block = Block(key, inputs=faces[key]['in'] if lane_plan else len(incoming),
+                      outputs=faces[key]['out'] if lane_plan else len(outgoing), label_pos="center",
+                      width=width if lane_plan else None, height=height if lane_plan else None,
+                      font_size=22 if lane_plan else 12)
         lines = []
         for line in row["label"].splitlines():
             lines.extend(textwrap.wrap(line, width=23, break_long_words=False,
                                        break_on_hyphens=False) or [""])
-        block.display_label = "\n".join(lines)
-        if row.get("lane_index") is not None:
+        block.display_label = labels[key] if lane_plan else "\n".join(lines)
+        if lane_plan:
+            block.pin(**pins[key])
+        elif row.get("lane_index") is not None:
             block.pin(row=row["lane_index"])
         units[key] = fs.add(block)
         bindings["units"][key] = {"id": row["id"], "attributes": row["attributes"]}
@@ -88,4 +100,9 @@ def block_diagram(name: str, blocks: list[dict], streams: list[dict], *,
         rows=[("", ", ".join(sorted(names)).replace("_", " ")) for names in treatments.values()],
         line_samples=[{"color": color, "dasharray": pattern, "arrow": True} for color, pattern in treatments]))
     fs.drawio_metadata = bindings
+    for region in fs.regions:
+        bindings['cells']['region-' + region.key] = {'id': 'bfd-' + region.key,
+            'attributes': {'puran-kind': 'bfd-lane', 'puran-lane': region.key.removeprefix('lane-')}}
+        bindings['cells']['region-' + region.key + '-heading'] = {'id': 'bfd-' + region.key + '-heading',
+            'attributes': {'puran-kind': 'bfd-lane-heading', 'puran-lane': region.key.removeprefix('lane-')}}
     return fs

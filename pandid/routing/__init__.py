@@ -235,7 +235,7 @@ class DefaultRouter:
             """
             nonlocal crossing_index
             routed.append(stream)
-            preview = preview_separated_waypoints(routed)
+            preview = preview_separated_waypoints(routed, spacing=fs.layout_options.stream_spacing)
             crossing_index = CrossingIndex()
             for s in routed:
                 assert s.route is not None  # every entry in ``routed`` was just given one
@@ -353,4 +353,9 @@ class DefaultRouter:
 
         # Apply parallel segment separation pass
         from pandid.routing.separation import separate_streams
-        separate_streams(fs)
+        separate_streams(fs, spacing=fs.layout_options.stream_spacing)
+        from pandid.routing.terminal_clearance import square_micro_jogs
+        square_micro_jogs(fs)
+        if fs.layout_options.stream_spacing >= 10:
+            from pandid.routing.terminal_clearance import protect
+            protect(fs)
