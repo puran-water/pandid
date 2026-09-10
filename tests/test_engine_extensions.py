@@ -214,6 +214,18 @@ def test_fixed_nozzle_overlap_is_removed_without_moving_nozzles_or_manual_routes
     assert lower.route.waypoints == settled
 
 
+def test_unheaded_source_can_shorten_below_arrow_length_to_clear_a_header_branch():
+    from types import SimpleNamespace
+    from pandid.geometry import Route
+    from pandid.routing.separation import _shorten_conflicting_terminal_runs
+    first = SimpleNamespace(route=Route(waypoints=[(0,0),(76,0),(76,80),(160,80)]))
+    held = SimpleNamespace(route=Route(waypoints=[(20,40),(20,0),(95,0),(95,-40)],manual=True))
+    fs = SimpleNamespace(units=[],streams=[first,held],_drawn_as='pfd')
+    _shorten_conflicting_terminal_runs(fs,14)
+    assert first.route.waypoints == [(0,0),(6,0),(6,80),(160,80)]
+    assert held.route.waypoints == [(20,40),(20,0),(95,0),(95,-40)]
+
+
 def test_nameplate_rules_fit_with_their_text_and_keep_left_aligned_tags():
     fs = simple()
     fs.equipment_data = {'250-P-01': {'tags':'250-P-01', 'rows':['Pump','53 m³/h'], 'width': 240}}

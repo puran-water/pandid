@@ -63,7 +63,7 @@ fitting to physical paper. Both SVG and draw.io consume the same geometry.
 `equipment_data` provides individual left-aligned equipment nameplates with
 all tags in their heading and supplied rows below. Boxes share an above/below
 horizontal; overflow expands the required bounds rather than dropping fields.
-The equipment tag heading has its own `heading_font_size` (default 20 drawing
+The equipment tag heading has its own `heading_font_size` (default 24 drawing
 units); the data retain their independent body size. Native PDF publication
 measures the final physical lettering, including the 5 mm house heading floor.
 Boundary `reference_code` creates a divided flag with code, service and reference.
@@ -74,12 +74,24 @@ An MBR flow sensor is `Fitting(tag, variant='magnetic')` and
 the FIT balloon, stem and typed controller connections remain separate editable
 appearances of the same instrument. Rotary-lobe pumps, membrane cages and
 airlifts are original house candidates requiring engineering qualification.
+`MembraneCage` revision 2 uses the crossed frame and feet in the Nanded reference;
+`AirDiffuser` uses a submerged air header, risers and bubbles. Both have named
+engineering ports. Their strokes do not specify module or diffuser quantities.
+`python -m pandid.house_library --out <new-file>.xml` exports these same native
+stencils as an importable draw.io library with reference hashes and revisions.
 
 Explicit `.via()` waypoints remain fixed. Terminal overlap repair can shorten
 an automatic run only when it preserves endpoints, removes an overlap and
 introduces no new overlap or equipment intersection. It does not fix conflicts
 between manually pinned paths; the publication caller must refuse unresolved
 findings. Standards-informed features are not certification of a complete sheet.
+
+Wide boundary flags reserve a clear column gap beyond their actual westward
+overhang. Terminal clearance protects arrowheads only at headed destinations;
+unheaded source branches can shorten to clear a neighbouring header takeoff.
+After track separation, a bounded body-clearance pass can shift automatic
+interior tracks away from equipment, preserving nozzles and authored waypoints.
+It accepts only fewer body intersections without increasing parallel overlaps.
 
 Regenerate symbols with `python scripts/vendor_symbols.py` and
 `python scripts/house_symbols.py`. Regenerate examples with

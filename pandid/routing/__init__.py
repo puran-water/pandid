@@ -357,6 +357,8 @@ class DefaultRouter:
         from pandid.routing.terminal_clearance import square_micro_jogs
         square_micro_jogs(fs)
         if fs.layout_options.stream_spacing >= 10:
+            from pandid.routing.body_clearance import repair as clear_bodies
+            clear_bodies(fs)
             from pandid.routing.terminal_clearance import protect
             protect(fs)
             from pandid.routing.crossing_clearance import repair

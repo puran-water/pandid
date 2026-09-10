@@ -338,7 +338,7 @@ def _shorten_conflicting_terminal_runs(fs, spacing):
     from pandid.portgeom import unit_box
     from pandid.routing.visibility import Rect
     from pandid.render.svg import draws_arrowheads
-    minimum_terminal = 24 if draws_arrowheads(getattr(fs, '_drawn_as', None)) else 1
+    from pandid.render.symbols import default_registry, wears_arrowhead
 
     streams = [s for s in fs.streams if s.route and len(s.route.waypoints) >= 2]
     if any(u.frame is None for u in fs.units):
@@ -407,6 +407,13 @@ def _shorten_conflicting_terminal_runs(fs, spacing):
                 if axis is None or abs(points[corner][axis]-points[neighbour][axis]) > .01:
                     continue
                 anchor=points[0] if index == 0 else points[-1]
+                # Only a headed destination needs an arrow-length lead. The
+                # former drawing-wide allowance also protected unheaded source
+                # legs, leaving overlapping header branches in a PFD.
+                headed = index != 0 and draws_arrowheads(getattr(fs, '_drawn_as', None))
+                if headed and hasattr(streams[at], 'dest'):
+                    headed = wears_arrowhead(streams[at], default_registry)
+                minimum_terminal = 24 if headed else 1
                 candidates=(min(p[axis] for p in other)-spacing, max(p[axis] for p in other)+spacing)
                 for track in sorted(candidates, key=lambda c: abs(c-points[corner][axis])):
                     if not min(anchor[axis],points[corner][axis])+.01 < track < max(anchor[axis],points[corner][axis])-.01:

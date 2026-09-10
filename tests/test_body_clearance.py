@@ -1,0 +1,49 @@
+from pandid import Feed, Flowsheet, Instrument, Product
+from pandid.geometry import Frame, Route
+from pandid.routing.body_clearance import repair
+
+
+def fixture(manual=False):
+    fs = Flowsheet("Separated track and balloon")
+    source = fs.add(Feed("air"))
+    target = fs.add(Product("tank"))
+    balloon = fs.add(Instrument("PI-01"))
+    source.frame = Frame(x=-50, y=-10, w=50, h=20)
+    target.frame = Frame(x=200, y=90, w=50, h=20)
+    balloon.frame = Frame(x=95, y=40, w=20, h=20)
+    stream = fs.connect(source.outlet, target.inlet)
+    stream.route = Route(waypoints=[(0, 0), (100, 0), (100, 100), (200, 100)], manual=manual)
+    fs.layout_options.stream_spacing = 14
+    return fs, stream
+
+
+def test_final_track_clears_balloon_without_moving_ports_or_creating_doglegs():
+    fs, stream = fixture()
+    repair(fs)
+    assert stream.route.waypoints == [(0, 0), (81, 0), (81, 100), (200, 100)]
+    before = list(stream.route.waypoints)
+    repair(fs)
+    assert stream.route.waypoints == before
+
+
+def test_authored_route_is_preserved_even_when_the_author_must_resolve_a_collision():
+    fs, stream = fixture(manual=True)
+    before = list(stream.route.waypoints)
+    repair(fs)
+    assert stream.route.waypoints == before
+
+
+def test_wide_boundary_flag_keeps_a_corridor_beyond_the_previous_column():
+    from pandid import Valve
+    from pandid.layout import _seed_slots
+    from pandid.layout.coordinates import assign_coordinates
+    from pandid.portgeom import unit_box
+
+    fs = Flowsheet("Wide continuation flag")
+    valve = fs.add(Valve("HV-01")).pin(col=0, row=0)
+    feed = fs.add(Feed("Reverse-cleaning supply")).pin(col=1, row=0)
+    fs.layout_options.column_gap = 40
+    _seed_slots(fs)
+    feed._slot.w = 190
+    assign_coordinates(fs)
+    assert unit_box(feed, feed.frame)[0] - unit_box(valve, valve.frame)[2] >= 40

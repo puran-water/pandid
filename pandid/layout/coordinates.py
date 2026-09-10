@@ -282,7 +282,7 @@ def _lay_columns(columns: dict[int, _Column], band: list[int],
         for u in held.units:
             behind = wall.get(slot(u).row or 0)
             if behind is not None:
-                x = max(x, behind + _west(u, pads))
+                x = max(x, behind + gap + _west(u, pads))
         if place:
             for u in held.units:
                 if slot(u).x is None:
