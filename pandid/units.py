@@ -1455,6 +1455,11 @@ class LiquidScreen(Unit):
 class MembraneCage(Unit):
     """Submerged membrane cage; its drawing does not prescribe module count."""
 
+    feed: Port
+    mixed_liquor: Port
+    permeate: Port
+    air: Port
+
     kind = "membrane_cage"
     PORTS = [("feed", "inlet", "process"), ("mixed_liquor", "outlet", "process"),
              ("permeate", "outlet", "process"), ("air", "inlet", "process")]
@@ -1463,6 +1468,10 @@ class MembraneCage(Unit):
 
 class Airlift(Unit):
     """Liquid riser driven by a separately connected air supply."""
+
+    liquid_in: Port
+    air_in: Port
+    discharge: Port
 
     kind = "airlift"
     PORTS = [("liquid_in", "inlet", "process"), ("air_in", "inlet", "process"),
@@ -1476,6 +1485,9 @@ class AirDiffuser(Unit):
     Header strokes and bubbles are schematic, not a quantity or rating. The
     process template supplies the receiving basin and the engineering data.
     """
+    air_in: Port
+    dispersed_air: Port
+
     kind = "air_diffuser"
     PORTS = [("air_in", "inlet", "process"), ("dispersed_air", "outlet", "process")]
     PLACES = {"air_in": "W", "dispersed_air": "E"}
@@ -8408,6 +8420,9 @@ class Block(Unit):
 
 
 class Junction(Unit):
+    inlets: tuple[Port, ...]
+    outlets: tuple[Port, ...]
+
     kind = "junction"
     LAYOUT_CONFIDENCE = 0
 

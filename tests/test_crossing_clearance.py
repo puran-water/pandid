@@ -1,11 +1,12 @@
 """A crossing-order cycle from grouped parallel services must remain connected."""
 import copy
+import pytest
 
 from pandid import Feed, Product, Flowsheet
-from pandid.geometry import Route
+from pandid.geometry import Frame, Route
 from pandid.render.crossings import crossing_order
 from pandid.render.svg import stream_polyline
-from pandid.routing.crossing_clearance import repair
+from pandid.routing.crossing_clearance import _overlaps, repair
 
 
 LINES = [
@@ -50,3 +51,36 @@ def test_authored_waypoints_remain_held_instead_of_moving_silently():
     repair(fs)
     assert [s.route.waypoints for s in fs.streams]==LINES
     assert crossing_order(dict(enumerate(LINES)),5)[1]
+
+
+@pytest.mark.parametrize("manual", [False, True])
+@pytest.mark.parametrize("second_track", [100, 100.8])
+def test_residual_parallel_overlap_is_repaired_with_or_without_a_lost_crossing_gap(manual, second_track):
+    fs = Flowsheet("Residual parallel overlap")
+    fs.layout_options.stream_spacing = 14
+    before = {}
+    for i, y in enumerate((0, 40)):
+        source = fs.add(Feed(f"source-{i}"))
+        target = fs.add(Product(f"target-{i}"))
+        source.frame = Frame(x=-50, y=y-10, w=50, h=20)
+        target.frame = Frame(x=200, y=y+90, w=50, h=20)
+        stream = fs.connect(source.outlet, target.inlet)
+        track = second_track if i else 100
+        before[i] = [(0, y), (track, y), (track, y+100), (200, y+100)]
+        stream.route = Route(waypoints=copy.deepcopy(before[i]), manual=manual)
+    assert _overlaps(before, 14) == 60
+    if second_track == 100:
+        assert not crossing_order(before, 5)[1]
+    else:
+        assert crossing_order(before, 5)[1]
+    repair(fs)
+    after = {i: stream_polyline(s) for i, s in enumerate(fs.streams)}
+    if manual:
+        assert after == before
+    else:
+        assert _overlaps(after, 14) == 0
+        assert not crossing_order(after, 5)[1]
+        for i, points in after.items():
+            assert points[0] == before[i][0] and points[-1] == before[i][-1]
+        repair(fs)
+        assert after == {i: stream_polyline(s) for i, s in enumerate(fs.streams)}

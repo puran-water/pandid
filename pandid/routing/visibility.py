@@ -61,6 +61,47 @@ TRAVEL: Dict[str, Tuple[int, float]] = {
 }
 
 
+def clear_escape_projection(
+    anchor: Tuple[float, float],
+    direction: str,
+    projection: Tuple[float, float],
+    obstacles: List[Rect],
+) -> Tuple[float, float]:
+    """Keep an automatic nozzle stand-off in the available clear corridor.
+
+    An unrelated unit can begin before the nominal escape distance. Projecting
+    into that unit removes the start node from the visibility graph, forcing
+    the router to fall back even though a short clear exit lane exists. Use
+    half the nearest forward gap in that case. Obstacles already touching the
+    anchor (its own symbol or label) do not define a forward gap; nor may the
+    shortened projection land inside one of them.
+    """
+    if not any(obstacle.contains(*projection) for obstacle in obstacles):
+        return projection
+    axis, sign = TRAVEL[direction]
+    distance = sign * (projection[axis] - anchor[axis])
+    nearest = distance
+    cross = anchor[1 - axis]
+    for obstacle in obstacles:
+        lo, hi, cross_lo, cross_hi = (
+            (obstacle.x_min, obstacle.x_max, obstacle.y_min, obstacle.y_max)
+            if axis == 0 else
+            (obstacle.y_min, obstacle.y_max, obstacle.x_min, obstacle.x_max)
+        )
+        if cross_lo <= cross <= cross_hi:
+            entry = sign * ((lo if sign > 0 else hi) - anchor[axis])
+            if 1e-6 < entry < nearest:
+                nearest = entry
+    if nearest == distance:
+        return projection
+    result = list(anchor)
+    result[axis] += sign * nearest / 2
+    shortened = (result[0], result[1])
+    if any(obstacle.contains(*shortened) for obstacle in obstacles):
+        return projection
+    return shortened
+
+
 def share_escape_room(
     start: Tuple[float, float],
     start_dir: Optional[str],
@@ -234,6 +275,18 @@ class VisibilityGraph:
                 self.port_projs[(u.name, name)] = (px_proj, py_proj)
                 x_set.add(px_proj)
                 y_set.add(py_proj)
+
+        # All unit and label obstacles must be known before clipping any escape
+        # distance. Add the shortened lane before building the graph; changing
+        # only the router's start point would leave it without graph edges.
+        for key, projection in self.port_projs.items():
+            clear = clear_escape_projection(
+                self.port_anchors[key], self.port_dirs[key], projection,
+                self.obstacles,
+            )
+            self.port_projs[key] = clear
+            x_set.add(clear[0])
+            y_set.add(clear[1])
 
         # Two nozzles closer together than their stand-offs add up to turn on a
         # lane midway between them instead (see ``share_escape_room``), and no
