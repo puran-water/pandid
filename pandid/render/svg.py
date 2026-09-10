@@ -1242,6 +1242,8 @@ def stream_polyline(s) -> "list[tuple[float, float]]":
     """
     from pandid.portgeom import port_point
 
+    if s.representation == "internal":
+        return []
     src_u, dst_u = s.source.owner, s.dest.owner
     start = port_point(src_u, src_u.frame, s.source.name)
     end = port_point(dst_u, dst_u.frame, s.dest.name)
@@ -4389,17 +4391,18 @@ class SvgRenderer:
         if free is None:
             lines.extend(drawing)
         else:  # a fixed sheet: the drawing is fitted into what the furniture leaves
-            lines.append(f'  <g id="drawing" transform="{self._fit(dx0, dy0, dx1, dy1, free)}">')
+            lines.append(f'  <g id="drawing" transform="{self._fit(dx0, dy0, dx1, dy1, free, fs.drawing_scale)}">')
             lines.extend(drawing)
             lines.append('  </g>')
         return _document(fs, sheet,
                          (frame_x, frame_y, canvas_width, canvas_height), lines)
 
-    def _fit(self, dx0, dy0, dx1, dy1, free) -> str:
+    def _fit(self, dx0, dy0, dx1, dy1, free, fixed_scale=None) -> str:
         """Transform centring the drawing in *free*, scaled to fit."""
         fx, fy, fw, fh = free
         dw, dh = dx1 - dx0, dy1 - dy0
-        s = _fit_scale(dw, dh, free)
+        from pandid.render.drawio import _fitted
+        s, x, y = _fitted((dx0,dy0,dx1,dy1), free, fixed_scale)
         return (f"translate({_num(fx + (fw - s * dw) / 2 - s * dx0)}, "
                 f"{_num(fy + (fh - s * dh) / 2 - s * dy0)}) scale({s:.6g})")
 

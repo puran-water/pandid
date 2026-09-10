@@ -122,3 +122,32 @@ The Python entrypoints are `catalog`, `describe_unit` and `example`. Examples
 carry `synthetic: true`; constructor availability and valid routing do not qualify
 an engineering design. PuranOS exposes these through its existing engineering MCP
 alongside the canonical-source and template-publication workflows.
+
+### Fixed process drafting and open basins
+
+`profiles.templates.from_template()` applies `circle-h2o.process-drafting/1`:
+all A1 process sheets use a common drawing scale, so text, instrument balloons,
+reference flags and lineweights are independent of how full a sheet is. The
+native title strip retains its own paper scale. Fixed-scale overflow raises
+`FIXED_SCALE_CAPACITY`; callers must revise the arrangement instead of shrinking
+lettering. `profiles.process.inspect_drawio()` checks repeated printed sizes and
+boundary columns across a process/legend set. Legacy general Flowsheet callers
+retain automatic fitting unless they explicitly select a fixed `drawing_scale`.
+
+Use `ConcreteBasin`, `MembraneCage`, `AirDiffuser`, `BasinAgitator` and
+`SubmersibleMixer` as separately named units. Call `fs.contain(internal, basin)`
+after adding both units. The basin encloses the declared internals; each keeps
+its own identity, tag, ports and nameplate. The layout solver works on the outer
+process graph, then places the internals before routing. A supply serving an
+internal item may enter through that basin's open top; other basins remain
+closed routing obstacles. Native validation still checks pipe/wall crossings.
+
+A `Stream` with `representation="internal"` records bulk-fluid transfer,
+dispersed air or mixing duty inside the same basin. It remains in the data spec
+and as an invisible, endpoint-linked draw.io cell; it is not an external pipe.
+Only explicit containment authorizes this representation. It must not acquire
+pipe sizing, a line label or authored routing waypoints. Ordinary air/permeate
+pipes remain normal routed streams. The typed spec round-trips `containments`,
+`representation` and `drawing_scale`; the `basin-internals` discovery example
+shows the API. House artwork remains a candidate catalogue, pending engineering
+qualification rather than a claim of complete ISA compliance.

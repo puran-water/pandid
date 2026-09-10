@@ -51,7 +51,8 @@ def test_examples_are_executable_and_round_trip(key):
     assert restored.to_dict() == result['spec']
     restored.layout()
     restored.route()
-    assert all(s.route and s.route.waypoints for s in restored.streams)
+    assert all(s.route and s.route.waypoints for s in restored.streams if s.representation == "pipe")
+    assert all(s.route is None for s in restored.streams if s.representation == "internal")
 
 
 def test_cli_discloses_one_unit(capsys):

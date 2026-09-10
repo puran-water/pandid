@@ -16,6 +16,9 @@ from pandid.render.symbols import default_registry
 from pandid.spec import _resolve_kind
 
 ALIASES = {
+    "house.basin.concrete": ("concrete_basin", "default"),
+    "house.mixer.agitator": ("basin_agitator", "default"),
+    "house.mixer.submersible": ("submersible_mixer", "default"),
     'pump.centrifugal': ('pump', 'default'),
     'tank.vertical': ('tank', 'vertical'),
     'valve.gate': ('valve', 'gate'),
@@ -97,7 +100,7 @@ def _port(unit, name, direction, kind, slots, index):
     raise ValueError(f'PANDID_PROCESS_PORT_UNMAPPED: {unit.name}/{name}; available: {[p.name for p in candidates]}')
 
 
-def from_template(name, nodes, edges, *, metadata, print_scale=2.7, pins=None):
+def from_template(name, nodes, edges, *, metadata, print_scale=2.7, pins=None, fixed_drafting=True):
     """Create one flowsheet from already projected engineering appearances.
 
     Each edge is a real semantic path, including paths collapsed by a PFD's
@@ -105,6 +108,9 @@ def from_template(name, nodes, edges, *, metadata, print_scale=2.7, pins=None):
     """
     fs = Flowsheet(name)
     fs.print_scale = print_scale
+    if fixed_drafting:
+        from pandid.profiles.process import apply
+        apply(fs)
     # The process profile uses compact columns; labels and instrument halos
     # still reserve their measured space before routing.
     fs.layout_options.column_gap = 20
@@ -123,6 +129,10 @@ def from_template(name, nodes, edges, *, metadata, print_scale=2.7, pins=None):
         key = row['key']
         material = {side: [e for e in group if e['kind'] in {'material', 'energy'}] for side, group in ports[key].items()}
         unit = _unit(row, material['in'], material['out'])
+        if fixed_drafting:
+            from pandid.profiles.process import UNIT_SIZES
+            if unit.kind in UNIT_SIZES:
+                unit.width, unit.height = UNIT_SIZES[unit.kind]
         if unit.kind != 'instrument':
             unit.display_label = row.get('label', '')
         if row.get('connector'):
@@ -134,6 +144,9 @@ def from_template(name, nodes, edges, *, metadata, print_scale=2.7, pins=None):
         fs.drawio_metadata['units'][unit.name] = {'id': row['id'], 'attributes': row['attributes']}
         if key in (pins or {}):
             unit.pin(**pins[key])
+    for row in nodes:
+        if row.get('contained_by'):
+            fs.contain(units[row['key']], units[row['contained_by']])
     # Resolve ports before connecting. A grouped PFD appearance can receive
     # several distinct member paths at one nominal nozzle. Give that appearance
     # an explicit pipe fan; do not connect two streams to one physical port or
@@ -184,6 +197,7 @@ def from_template(name, nodes, edges, *, metadata, print_scale=2.7, pins=None):
         # retains its semantic key; only the drawing label is suppressed.
         stream = fs.connect(*endpoints[edge['key']], name=edge['key'], kind=kind)
         streams[edge['key']] = stream
+        stream.representation = edge.get('representation', 'pipe')
         stream.flow_class = edge.get('flow_class') or 'main'
         stream.display_label = edge.get('label', '')
         fs.drawio_metadata['streams'][stream.name] = {'id': edge['id'],

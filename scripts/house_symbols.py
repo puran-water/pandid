@@ -15,6 +15,9 @@ from pandid.render.house_artwork import ARTWORK
 from mxgraph_to_svg import convert_shape
 
 KINDS = {
+    "house.basin.concrete": ("concrete_basin", "default", {"inlet": "W", "outlet": "E"}),
+    "house.mixer.agitator": ("basin_agitator", "default", {"shaft": "S"}),
+    "house.mixer.submersible": ("submersible_mixer", "default", {"shaft": "E"}),
     'house.pump.rotary_lobe': ('pump', 'rotary_lobe', {'suction': 'W', 'discharge': 'E'}),
     'house.mbr.membrane_cage': ('membrane_cage', 'default', {'feed': 'W', 'mixed_liquor': 'E', 'permeate': 'N', 'air': 'S'}),
     'house.mbr.airlift': ('airlift', 'default', {'liquid_in': 'S', 'air_in': 'W', 'discharge': 'E'}),

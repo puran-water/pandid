@@ -65,19 +65,21 @@ def pages(entries, *, metadata_factory, title='SYMBOLS AND CONVENTIONS'):
     groups['PROCESS AND SIGNAL LINES'].sort(key=lambda e: (line_order.index(e['key']) if e['key'] in line_order else 99, e['key']))
     columns = []
     for heading, items in groups.items():
-        column, height = [], 38
+        column, height = [], 44
         for entry in items:
             symbol = entry['kind'] in {'symbol', 'line'}
             text = entry['meaning'] if symbol else entry['key'].replace('-', ' ').upper() + ' — ' + entry['meaning']
-            wrapped = _wrap(text, 231 if symbol else 326, 11.5)
-            row_height = max(78 if symbol else 30, len(wrapped) * 14 + 16)
+            wrapped = _wrap(text, 446 if symbol else 646, 14)
+            row_height = max(78 if symbol else 30, len(wrapped) * 17 + 16)
             if entry['key'] in {'boundary', 'boundary.reference'}:
                 row_height = max(row_height, 94)
+            if entry['key'] in {'house.mixer.agitator', 'house.mbr.membrane_cage'}:
+                row_height = max(row_height, 210)
             if entry['key'] == 'stencil.pid.flow_sensors.magnetic':
                 row_height = max(row_height, 130)
-            if height + row_height > 700 and column:
+            if height + row_height > 1300 and column:
                 columns.append((heading, column, height))
-                column, height = [], 38
+                column, height = [], 44
             column.append((entry, wrapped, row_height))
             height += row_height
         if column:
@@ -87,9 +89,9 @@ def pages(entries, *, metadata_factory, title='SYMBOLS AND CONVENTIONS'):
         meta = metadata_factory(len(result) + 1)
         rows, pins, specimens, descriptions, panels = [], {}, [], [], []
         for col, (heading, items, height) in enumerate(columns[start:start+3]):
-            x, y = col * 366, 38
+            x, y = col * 700, 44
             panel_key = f'panel-{start+col}'
-            panels.append(Region(panel_key, x, 0, 350, height, heading, 14))
+            panels.append(Region(panel_key, x, 0, 684, height, heading, 20))
             meta['cells']['region-' + panel_key] = {'id': panel_key,
                 'attributes': {'puran-kind': 'legend-panel', 'legend-category': heading}}
             for entry, wrapped, row_height in items:
@@ -97,9 +99,9 @@ def pages(entries, *, metadata_factory, title='SYMBOLS AND CONVENTIONS'):
                 is_symbol = entry['kind'] in {'symbol', 'line'}
                 reference = entry['key'] in {'boundary', 'boundary.reference'}
                 if reference:
-                    wrapped = _wrap(entry['meaning'], 202, 11.5)
-                descriptions.append(Caption(key, x + (122 if reference else 109 if is_symbol else 12), y + 8,
-                    216 if reference else 231 if is_symbol else 326, row_height - 12, '\n'.join(wrapped), 11.5))
+                    wrapped = _wrap(entry['meaning'], 446, 14)
+                descriptions.append(Caption(key, x + (220 if is_symbol else 12), y + 8,
+                    446 if is_symbol else 646, row_height - 12, '\n'.join(wrapped), 14))
                 meta['cells']['region-' + key] = {'id': entry['id'] + '-caption',
                     'attributes': {'puran-kind': 'legend-entry', 'legend-key': entry['key'], 'meaning': entry['meaning']}}
                 if entry['kind'] == 'symbol':
@@ -115,16 +117,22 @@ def pages(entries, *, metadata_factory, title='SYMBOLS AND CONVENTIONS'):
                 y += row_height
         fs = from_template(title, rows, [], metadata=meta, pins=pins)
         fs.regions, fs.captions = panels, descriptions
+        fs.layout_options.aligned_boundaries = False
         fs.stream_labels.enclosure = 'none'
         for entry, key, x, y, row_height in specimens:
             if entry['kind'] == 'symbol':
                 unit = next(u for u in fs.units if fs.drawio_metadata['units'].get(u.name, {}).get('id') == entry['id'])
                 sym = default_registry.for_unit(unit)
-                scale = min(78 / sym.width, (row_height - 24) / sym.height, 1.25)
+                scale = min(180 / sym.width, (row_height - 24) / sym.height, 1.0)
                 unit.width, unit.height = sym.width * scale, sym.height * scale
+                from pandid.profiles.process import UNIT_SIZES
+                if unit.kind in UNIT_SIZES:
+                    unit.width, unit.height = UNIT_SIZES[unit.kind]
+                if unit.kind == "instrument":
+                    unit.width, unit.height = 44, 44
                 if unit.kind in {'feed', 'product'}:
-                    unit.width, unit.height = 100, 82
-                    unit.pin(x=x + 12 + (100 if unit.kind == 'feed' else 0), y=y + row_height/2)
+                    unit.width, unit.height = 190, 85
+                    unit.pin(x=x + 12 + (140 if unit.kind == 'feed' else 0), y=y + row_height/2)
                     if getattr(unit, 'reference_code', ''):
                         unit.display_label = 'WATER\nTO SH. 2'
                 if unit.kind == 'instrument':

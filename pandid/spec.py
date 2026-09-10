@@ -341,7 +341,7 @@ def _resolve_kind(value: Any, where: str) -> type[Unit]:
 
 _TOP_KEYS = {
     "drawio_metadata", "equipment_data", "regions", "captions",
-    "print_scale",
+    "print_scale", "drawing_scale", "containments",
     "layout_options",
     "name", "stream_naming_scheme", "stream_number_start",
     "line_numbering_scheme", "line_number_start", "loop_number_start",
@@ -384,7 +384,7 @@ _QUADRANT_KEYS = {"safety": "a", "variable": "b", "high": "c", "low": "d"}
 _LOOP_KEYS = {"variable", "number"}
 _STREAM_KEYS = {
     "from", "to", "kind", "name", "draw_as_recycle", "properties", "tabulate", "via",
-    "color", "dasharray", "ends", "display_label", "flow_class",
+    "color", "dasharray", "ends", "display_label", "flow_class", "representation",
     *LINE_NUMBER_FIELDS,
 }
 _COMPONENT_KEYS = {"name", "formula"}
@@ -429,8 +429,8 @@ _KIND_TEXT = {
 # artwork drawn in advance with nothing to count, so where its nozzles
 # are is a fact about the drawing alone.
 _KIND_FACES = {
-    "inputs": ("Block", "Tank", "Vessel", "Junction"),
-    "outputs": ("Block", "Tank", "Vessel", "Junction"),
+    "inputs": ("Block", "Tank", "Vessel", "Junction", "ConcreteBasin"),
+    "outputs": ("Block", "Tank", "Vessel", "Junction", "ConcreteBasin"),
 }
 # The order along a face. Separate from the two above because it is not
 # a constructor argument: ``Block.order_on``/``_MultiPortVessel.order_on``
@@ -572,6 +572,13 @@ def from_dict(spec: Mapping[str, Any]) -> Flowsheet:
         fs.print_scale = _number(data["print_scale"], "print_scale")
         if fs.print_scale <= 0:
             raise SpecError("print_scale must be positive")
+    if "drawing_scale" in data:
+        fs.drawing_scale = _number(data["drawing_scale"], "drawing_scale")
+        if fs.drawing_scale <= 0:
+            raise SpecError("drawing_scale must be positive")
+    if "containments" in data:
+        from pandid.containment import read
+        read(fs, data["containments"])
     if "layout_options" in data:
         from pandid.layout.options import LayoutOptions
         values = _mapping(data["layout_options"], "layout_options")
@@ -1056,7 +1063,7 @@ def _read_stream(fs: Flowsheet, entry: Any, where: str) -> Stream:
     except ValueError as e:
         raise _fail_from(e, where) from None
 
-    for key in ("color", "dasharray", "flow_class"):
+    for key in ("color", "dasharray", "flow_class", "representation"):
         if key in data:
             setattr(stream, key, _text(data[key], f"{where}.{key}"))
     if "display_label" in data:
@@ -1490,6 +1497,12 @@ def to_dict(fs: Flowsheet) -> dict:
         spec["drawio_metadata"] = validate_bindings(fs.drawio_metadata)
     if fs.print_scale != 1.0:
         spec["print_scale"] = fs.print_scale
+    if fs.drawing_scale is not None:
+        spec["drawing_scale"] = fs.drawing_scale
+    if fs.containments:
+        from pandid.containment import validate
+        validate(fs)
+        spec["containments"] = dict(fs.containments)
     fs.layout_options.validate()
     layout = {f.name: getattr(fs.layout_options, f.name)
               for f in dataclass_fields(fs.layout_options)
@@ -1666,7 +1679,10 @@ def _write_unit(unit: Unit) -> dict[str, Any]:
         unit._tag if isinstance(unit, (unit_types.Feed, unit_types.Product)) else unit.name}
     _write_common(unit, entry)
     _write_composition(unit, entry)
-    if isinstance(unit, unit_types.Block):
+    if isinstance(unit, unit_types.ConcreteBasin):
+        entry["inputs"] = len(unit.inlets)
+        entry["outputs"] = len(unit.outlets)
+    elif isinstance(unit, unit_types.Block):
         _write_connection_faces(unit, entry, unit.DEFAULT_INPUT_FACE, unit.DEFAULT_OUTPUT_FACE)
         if unit.font_size != 12:
             entry["font_size"] = unit.font_size
@@ -1825,7 +1841,9 @@ def _write_stream(stream: Stream) -> dict[str, Any]:
         # topology.
         if value is not None and not (key == "sequence" and value == stream._auto_sequence):
             entry[key] = value
-    for key in ("color", "dasharray", "flow_class"):
+    for key in ("color", "dasharray", "flow_class", "representation"):
+        if key == "representation" and stream.representation == "pipe":
+            continue
         if getattr(stream, key) is not None:
             entry[key] = getattr(stream, key)
     if stream.display_label is not None:

@@ -46,13 +46,16 @@ def repair(fs, *, radius=5, max_passes=8):
             if not old_overlaps and None not in affected and key not in affected:
                 continue
             stream = fs.streams[key]
+            if fs.containments:
+                from pandid.containment import route_obstacles
+                boxes = route_obstacles(fs, stream)
             if stream.route.manual:
                 continue
             points = lines[key]
             for j in range(1,len(points)-2):
                 a,b = points[j:j+2]
                 axis = 1 if a[1] == b[1] else 0
-                for shift in (-spacing,spacing,-2*spacing,2*spacing):
+                for shift in (-spacing,spacing,-2*spacing,2*spacing,-3*spacing,3*spacing,-4*spacing,4*spacing):
                     proposed = list(points)
                     for k in (j,j+1):
                         point=list(points[k]);point[axis]+=shift;proposed[k]=tuple(point)

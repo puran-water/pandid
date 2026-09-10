@@ -191,6 +191,7 @@ class DefaultRouter:
 
         _refuse_non_finite_geometry(fs)
         graph = VisibilityGraph(fs, margin=15.0)
+        graphs = {frozenset(): graph}
         edge_penalties: dict[tuple[tuple[float, float], tuple[float, float]], float] = {}
         # Every earlier stream's drawn segments in this loop -- see
         # ``find_path``'s own docstring for ``crossing_index`` and
@@ -243,6 +244,14 @@ class DefaultRouter:
                 _record_route(crossing_index, wp, s.route.manual)
 
         for stream in fs.streams:
+            if stream.representation == "internal":
+                stream.route = None
+                continue
+            from pandid.containment import accessible
+            allowed = accessible(fs, stream)
+            if allowed not in graphs:
+                graphs[allowed] = VisibilityGraph(fs, margin=15.0, accessible=allowed)
+            graph = graphs[allowed]
             if stream.route and stream.route.manual:
                 # A hand-drawn (``.via()``) route is still a line on the
                 # sheet, and one an auto-routed stream later in this order

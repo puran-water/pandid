@@ -41,6 +41,9 @@ def protect(fs):
     for stream in fs.streams:
         if not stream.route or stream.route.manual or not wears_arrowhead(stream,default_registry):
             continue
+        if fs.containments:
+            from pandid.containment import route_obstacles
+            boxes = route_obstacles(fs, stream)
         points = stream_polyline(stream)
         if len(points) < 4:
             continue

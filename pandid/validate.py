@@ -1202,7 +1202,7 @@ def geometry_issues(fs: "Flowsheet", *, arrows: bool = True) -> list["Issue"]:
         # A stream with an unplaced end has no drawn path, so there is
         # no line to measure a crossing, a detour or an elevation
         # against.
-        drawn = [s for s in fs.streams if s.source.owner.frame is not None
+        drawn = [s for s in fs.streams if s.representation != "internal" and s.source.owner.frame is not None
                  and s.dest.owner.frame is not None]
 
         # A block letters its name *inside* its box, so a box too narrow
@@ -1283,6 +1283,9 @@ def geometry_issues(fs: "Flowsheet", *, arrows: bool = True) -> list["Issue"]:
         # Hard: overlapping unit bodies.
         for i in range(len(boxes)):
             for j in range(i + 1, len(boxes)):
+                from pandid.containment import related
+                if related(fs, boxes[i][0], boxes[j][0]):
+                    continue
                 if _overlap(boxes[i][1], boxes[j][1]):
                     errors.append(Issue("error", "unit-overlap",
                                         f"{boxes[i][0].name} and {boxes[j][0].name} overlap"))
@@ -1421,7 +1424,8 @@ def geometry_issues(fs: "Flowsheet", *, arrows: bool = True) -> list["Issue"]:
             for k in range(len(pts) - 1):
                 (x1, y1), (x2, y2) = pts[k], pts[k + 1]
                 for u, box in boxes:
-                    if u is src_u or u is dst_u or getattr(u, "host", None) is s:
+                    from pandid.containment import accessible
+                    if u is src_u or u is dst_u or u.name in accessible(fs, s) or getattr(u, "host", None) is s:
                         continue  # in-line elements own their line
                     if _seg_crosses_box(x1, y1, x2, y2, box):
                         warnings.append(Issue("warning", "route-crosses-unit",

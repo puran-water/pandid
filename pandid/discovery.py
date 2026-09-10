@@ -107,6 +107,7 @@ def describe_unit(name, *, variant=None, parameters=None):
 
 
 EXAMPLES = {
+    "basin-internals": "Open concrete basin enclosing a separately tagged diffuser; fixed physical drafting and aligned flags",
     "magnetic-control-loop": "Inline magnetic primary, stem/FIT, shared FIC and pneumatic valve actuator",
     "parallel-pumps": "Three rotary-lobe pump branches between connected pipe headers",
     "bfd-lanes": "Uniform blocks in two labelled process roll-up lanes",
@@ -118,7 +119,21 @@ def example(key):
     from pandid import Feed, Fitting, Instrument, Junction, Product, Pump, Valve
     if key not in EXAMPLES:
         raise ValueError(f"Unknown example {key!r}; choose one of {sorted(EXAMPLES)}")
-    if key == "bfd-lanes":
+    if key == "basin-internals":
+        from pandid import ConcreteBasin, AirDiffuser
+        from pandid.profiles.process import apply
+        fs = apply(Flowsheet("SYNTHETIC BASIN INTERNALS"))
+        basin=fs.add(ConcreteBasin("101-T-01", inputs=2))
+        diffuser=fs.add(AirDiffuser("101-DF-01"))
+        feed, product=fs.add(Feed("Influent")),fs.add(Product("Effluent"))
+        air=fs.add(Feed("Air"))
+        fs.contain(diffuser, basin)
+        fs.connect(feed.outlet, basin.inlets[0], name="feed")
+        fs.connect(basin.outlets[0], product.inlet, name="product")
+        fs.connect(air.outlet, diffuser.air_in, name="air")
+        bulk=fs.connect(diffuser.dispersed_air, basin.inlets[1], name="dispersal")
+        bulk.representation="internal";bulk.display_label=""
+    elif key == "bfd-lanes":
         from pandid.profiles.circle_h2o import block_diagram
         blocks = [
             {"key": "headworks", "label": "104\nHeadworks Screening", "lane": "pretreatment", "order": 1},

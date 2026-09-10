@@ -80,7 +80,7 @@ def is_process_stream(stream: "Stream") -> bool:
     another.
     """
     src, dst = stream.source.owner, stream.dest.owner
-    return (stream.kind == "material" and src is not None and dst is not None
+    return (stream.representation != "internal" and stream.kind == "material" and src is not None and dst is not None
             and not is_control(src) and not is_control(dst))
 
 

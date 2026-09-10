@@ -22,11 +22,13 @@ def repair(fs, *, max_passes=8):
 
     def hits(key, points):
         stream = fs.streams[key]
+        from pandid.containment import accessible
+        allowed = accessible(fs, stream)
         endpoints = {stream.source.owner, stream.dest.owner}
         return {
             u
             for u, box in bodies.items()
-            if u not in endpoints
+            if u not in endpoints and u.name not in allowed
             and any(box.intersects_segment(*a, *b) for a, b in zip(points, points[1:]))
         }
 

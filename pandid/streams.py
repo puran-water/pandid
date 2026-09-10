@@ -159,6 +159,7 @@ class Stream:
     color: str | None = None
     dasharray: str | None = None
     flow_class: str = "main"
+    representation: str = "pipe"
     # How this line's two joints are made up, overriding the sheet's
     # `connections` for this run alone. One name for both ends, or a
     # (source, dest) pair in connection order. None inherits, which lets

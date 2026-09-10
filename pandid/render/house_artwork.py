@@ -17,6 +17,7 @@ class HouseArtwork:
     minimum_height_mm: float
     anchors: tuple[tuple[str, float, float], ...]
     drawing: str
+    aspect: str = "fixed"
     version: str = "1"
     reference_document: str = ""
     reference_sha256: str = ""
@@ -27,7 +28,7 @@ class HouseArtwork:
         connections = "".join(
             f'<constraint name="{name}" x="{x}" y="{y}" perimeter="0"/>' for name, x, y in self.anchors
         )
-        return f'<shape name="HouseProcessCandidate" w="{self.width}" h="{self.height}" aspect="fixed" strokewidth="inherit"><connections>{connections}</connections><foreground>{self.drawing}</foreground></shape>'
+        return f'<shape name="HouseProcessCandidate" w="{self.width}" h="{self.height}" aspect="{self.aspect}" strokewidth="inherit"><connections>{connections}</connections><foreground>{self.drawing}</foreground></shape>'
 
 
 ARTWORK = {
@@ -90,3 +91,38 @@ ARTWORK = {
         '<ellipse x="43" y="73" w="4" h="4"/><stroke/><ellipse x="41" y="59" w="5" h="5"/><stroke/><ellipse x="45" y="44" w="4" h="4"/><stroke/>',
     ),
 }
+
+
+ARTWORK.update({
+    "house.basin.concrete": HouseArtwork(
+        "Open concrete process basin; enclosed equipment is declared separately, depth is schematic",
+        400, 300, 80, 60,
+        (("W", 0, .2), ("E", 1, .2)),
+        '<path><move x="0" y="0"/><line x="0" y="300"/><line x="400" y="300"/><line x="400" y="0"/>'
+        '<move x="6" y="0"/><line x="6" y="294"/><line x="394" y="294"/><line x="394" y="0"/></path><stroke/>'
+        '<path><move x="40" y="34"/><line x="72" y="34"/><move x="45" y="39"/><line x="67" y="39"/>'
+        '<move x="51" y="44"/><line x="61" y="44"/></path><stroke/>',
+        aspect="variable", reference_document="Nanded 20000-1-1001 r6.pdf",
+        reference_sha256="353c4e188f02b79423a1d59c53a93dd1cfa29b18b5e8e28938610dda2fb919be",
+        reference_pages=(8, 9, 10, 11, 12)),
+    "house.mixer.agitator": HouseArtwork(
+        "Motor, vertical shaft and impeller of a basin agitator; separate equipment identity",
+        64, 180, 16, 45, (("S", .5, 1),),
+        '<ellipse x="17" y="0" w="30" h="30"/><stroke/>'
+        '<path><move x="22" y="22"/><line x="22" y="8"/><line x="32" y="20"/><line x="42" y="8"/>'
+        '<line x="42" y="22"/><move x="32" y="30"/><line x="32" y="180"/>'
+        '<move x="5" y="139"/><line x="59" y="155"/><line x="59" y="163"/><line x="5" y="147"/><close/>'
+        '</path><stroke/>', reference_document="Nanded 20000-1-1001 r6.pdf",
+        reference_sha256="353c4e188f02b79423a1d59c53a93dd1cfa29b18b5e8e28938610dda2fb919be",
+        reference_pages=(6,)),
+    "house.mixer.submersible": HouseArtwork(
+        "Submersible basin mixer with motor and propeller; rotation and rating remain engineering data",
+        100, 70, 30, 21, (("E", 1, .5),),
+        '<rect x="0" y="22" w="36" h="26"/><stroke/>'
+        '<path><move x="36" y="35"/><line x="100" y="35"/></path><stroke/>'
+        '<ellipse x="70" y="1" w="14" h="34"/><stroke/>'
+        '<ellipse x="70" y="35" w="14" h="34"/><stroke/>',
+        reference_document="Nanded 20000-1-1001 r6.pdf",
+        reference_sha256="353c4e188f02b79423a1d59c53a93dd1cfa29b18b5e8e28938610dda2fb919be",
+        reference_pages=(8, 9)),
+})

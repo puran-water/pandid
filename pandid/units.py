@@ -41,6 +41,9 @@ __all__ = [
     "Product",
     "Pump",
     "MembraneCage",
+    "ConcreteBasin",
+    "BasinAgitator",
+    "SubmersibleMixer",
     "AirDiffuser",
     "LiquidScreen",
     "Airlift",
@@ -8473,3 +8476,43 @@ class Junction(Unit):
         return Symbol(svg=f'<g id="sym_junction" stroke="black" stroke-width="2"><path d="M 2 0 V {height:g}"/>{"".join(legs)}</g>',
                       width=4, height=height, ports=ports, bare_run=True,
                       label_pos="center", id_suffix=f"_{len(self.inlets)}_{len(self.outlets)}")
+
+
+class ConcreteBasin(Unit):
+    """Open basin whose separately tagged internals are declared with fs.contain()."""
+    kind = "concrete_basin"
+    LAYOUT_CONFIDENCE = 2
+
+    def __init__(self, name, inputs=1, outputs=1, variant="default", width=None, height=None,
+                 label_pos=None, description="", reference=""):
+        if any(type(n) is not int or n < 1 for n in (inputs, outputs)):
+            raise ValueError("A basin needs positive integer input/output port counts")
+        super().__init__(name, variant, width or 400, height or 300, label_pos, description, reference)
+        self.inlets = tuple(self._add_port(f"in_{i+1}", "inlet", "process") for i in range(inputs))
+        self.outlets = tuple(self._add_port(f"out_{i+1}", "outlet", "process") for i in range(outputs))
+        self.PLACES = {p.name: side for ports, side in ((self.inlets, "W"), (self.outlets, "E")) for p in ports}
+
+    def symbol(self):
+        from dataclasses import replace
+        from pandid.render.symbols import default_registry
+        base = default_registry.get(self.kind, self.variant)
+        ports, faces = {}, {}
+        for group, side in ((self.inlets, "W"), (self.outlets, "E")):
+            for i, port in enumerate(group):
+                point = (0 if side == "W" else base.width, base.height * (.2 + .6*i/max(1,len(group)-1)))
+                ports[port.name] = point
+                faces[port.name] = {side: point}
+        return replace(base, ports=ports, port_faces=faces)
+
+
+class BasinAgitator(Unit):
+    """Motor, shaft and paddle; declare its receiving basin separately."""
+    kind = "basin_agitator"
+    PORTS = [("shaft", "outlet", "energy")]
+    PLACES = {"shaft": "S"}
+
+
+class SubmersibleMixer(Unit):
+    kind = "submersible_mixer"
+    PORTS = [("shaft", "outlet", "energy")]
+    PLACES = {"shaft": "E"}

@@ -408,6 +408,8 @@ class Flowsheet:
         # control valve's. Set here for a whole sheet, overridable per
         # station.
         self.valve_station_tag_scheme = valve_station_tag_scheme
+        self.drawing_scale: float | None = None
+        self.containments: dict[str, str] = {}
         self.auto_faces = auto_faces
         self.units: list = []
         self.streams: list[Stream] = []
@@ -1866,12 +1868,22 @@ class Flowsheet:
         moved the equipment and left the pipe where it was, drawn from
         the new nozzle to the old run and so no longer orthogonal.
         """
+        from pandid.containment import validate
+        validate(self)
         if engine is None:
             from pandid.layout import default_layout_engine
             engine = default_layout_engine
         engine.layout(self)
         self._layout_stale = False
         self._route_stale = True
+
+    def contain(self, equipment, basin):
+        """Declare one separately tagged internal inside an open concrete basin."""
+        from pandid.containment import read
+        if equipment not in self.units or basin not in self.units:
+            raise ValueError("Both containment endpoints must belong to this flowsheet")
+        read(self, {**self.containments, equipment.name: basin.name})
+        return equipment
 
     def route(self, router=None) -> None:
         """Run the router to generate orthogonal stream paths.
@@ -1932,7 +1944,7 @@ class Flowsheet:
         """
         if self._layout_stale or any(u.frame is None for u in self.units):
             self.layout()
-        if self._route_stale or any(s.route is None for s in self.streams):
+        if self._route_stale or any(s.route is None and s.representation != "internal" for s in self.streams):
             self.route()
 
     @staticmethod

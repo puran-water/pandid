@@ -1323,7 +1323,8 @@ def _tag_pass(fs, registry, joints: "str | None", direction: str) -> "_Tags":
         tag_box = None
         if u.tag:
             item = sheet._tag_item(u, f, x, y, w, h, escaped(u.tag),
-                                   ink, symbols)
+                                   ink, [(owner, box) for owner, box in symbols
+                                                 if owner is None or fs.containments.get(u.name) != owner.name])
             tag_box = _unit_label_box(item)
             items.append(item)
             if tag_box is not None:
@@ -2706,6 +2707,11 @@ class DrawioRenderer:
         cells: dict = {}
         boxes: list[str] = []
         for n, s in enumerate(fs.streams):
+            if s.representation == "internal":
+                source = fs.units.index(s.source.owner)
+                target = fs.units.index(s.dest.owner)
+                cells[n] = [f'<mxCell id="s{n}" edge="1" visible="0" parent="1" source="u{source}" target="u{target}" style="edgeStyle=none;strokeColor=none;endArrow=none;"><mxGeometry relative="1" as="geometry"/></mxCell>']
+                continue
             src_u, dst_u = s.source.owner, s.dest.owner
             points = polylines[n]
             ex, ey = self._constraint(src_u, self.registry.for_unit(src_u), s.source.name)
@@ -3135,7 +3141,7 @@ class DrawioRenderer:
         # there is no fitting: the drawing keeps its own coordinates and
         # the frame was grown around it.
         fit = _Fit.identity() if free is None else _Fit(
-            *_fitted(inner, free))
+            *_fitted(inner, free, fs.drawing_scale))
         # What the title strip's own three variable fields fall back to,
         # all three of them the sheet's answer rather than this file's:
         # the drawing name a block with no title takes, today's date
@@ -4312,7 +4318,7 @@ def _text_box(cid: str, title: str, rows, x, y, w, h, font: float = 11.0,
 _ANNOTATION_KEYS = "rowLines=0;columnLines=0;"
 
 
-def _fitted(inner, free) -> "tuple[float, float, float]":
+def _fitted(inner, free, fixed_scale=None) -> "tuple[float, float, float]":
     """The scale and offset that centre the drawing in the region left
     for it.
 
@@ -4327,7 +4333,9 @@ def _fitted(inner, free) -> "tuple[float, float, float]":
     dx0, dy0, dx1, dy1 = inner
     fx, fy, fw, fh = free
     dw, dh = dx1 - dx0, dy1 - dy0
-    s = _fit_scale(dw, dh, free)
+    s = _fit_scale(dw, dh, free) if fixed_scale is None else fixed_scale
+    if fixed_scale is not None and (s * dw > fw + .01 or s * dh > fh + .01):
+        raise ValueError(f"FIXED_SCALE_CAPACITY: drawing needs {s*dw:.1f} x {s*dh:.1f}; available {fw:.1f} x {fh:.1f}; rearrange the sheet without shrinking lettering")
     return (s, fx + (fw - s * dw) / 2 - s * dx0, fy + (fh - s * dh) / 2 - s * dy0)
 
 

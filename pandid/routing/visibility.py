@@ -163,7 +163,7 @@ def share_escape_room(
 
 
 class VisibilityGraph:
-    def __init__(self, fs: "Flowsheet", margin: float = 15.0):
+    def __init__(self, fs: "Flowsheet", margin: float = 15.0, accessible=frozenset()):
         from pandid.layout.attach import is_attached
         from pandid.portgeom import port_anchor
 
@@ -204,7 +204,10 @@ class VisibilityGraph:
             # The exact boundary of the unit is an obstacle. Feed keeps its
             # port-at-(x+50) convention: the drawn box extends left from there.
             if not inline:
-                if u.kind == "feed" and not mirrored:
+                if u.name in accessible:
+                    from pandid.containment import wall_boxes
+                    self.obstacles.extend(wall_boxes(u))
+                elif u.kind == "feed" and not mirrored:
                     self.obstacles.append(
                         Rect(f.x + 50.0 - u_width, f.x + 50.0, f.y, f.y + u_height))
                 else:

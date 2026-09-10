@@ -4395,7 +4395,7 @@ class SymbolRegistry:
         an internal has no normal position to show.
         """
         variant = getattr(unit, "variant", "default")
-        if unit.kind in {"junction", "legend_anchor"}:
+        if unit.kind in {"junction", "legend_anchor", "concrete_basin"}:
             return unit.symbol()
         sym = self.get(unit.kind, variant)
         build = _built_to_size(unit.kind, variant)
