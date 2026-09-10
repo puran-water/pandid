@@ -431,7 +431,6 @@ _KIND_TEXT = {
 _KIND_FACES = {
     "inputs": ("Block", "Tank", "Vessel", "Junction"),
     "outputs": ("Block", "Tank", "Vessel", "Junction"),
-    "header": ("Junction",),
 }
 # The order along a face. Separate from the two above because it is not
 # a constructor argument: ``Block.order_on``/``_MultiPortVessel.order_on``
@@ -444,7 +443,7 @@ _KIND_ORDER = {
 # for a utility service tapped wherever it is wanted rather than for one
 # line leaving the sheet, which is what lets it repeat.
 _KIND_FLAGS = {
-    "header": ("Feed", "Product"),
+    "header": ("Feed", "Product", "Junction"),
 }
 # One stage number per feed, or per draw, keyed the same way. Not a
 # composition keyword: it names no part and has no per-variant default,
