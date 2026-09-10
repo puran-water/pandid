@@ -2649,10 +2649,16 @@ def _unit_label_box(item) -> "tuple[float, float, float, float] | None":
     lx, ly, anchor, baseline, lpos, text = item
     if lpos == "center":
         return None
-    narrow, wide, zero = F.script_counts(text)
-    hw = (len(text) * 6.6 + 8 if not wide and not zero
-          else narrow * 6.6 + wide * 12 + 8)
-    hh = 15.0
+    widths = []
+    lines = text.split("\n")
+    for line in lines:
+        narrow, wide, zero = F.script_counts(line)
+        widths.append(len(line) * 6.6 + 8 if not wide and not zero
+                      else narrow * 6.6 + wide * 12 + 8)
+    hw = max(widths)
+    # A valve's size/spec may occupy a second line. Reserving a one-line
+    # halo let a line number occupy the same ink in Desktop's PDF export.
+    hh = 15.0 + (len(lines) - 1) * 14.4
     rx = lx - hw / 2 if anchor == "middle" else (lx - hw if anchor == "end" else lx)
     ry = ly - hh / 2 if baseline == "middle" else ly - hh + 3
     return (rx, ry, rx + hw, ry + hh)
@@ -4792,6 +4798,8 @@ class SvgRenderer:
                                           ink, symbols)
                     tag_box = _unit_label_box(item)
                     label_items.append(item)
+                    if tag_box is not None:
+                        symbols.append((None, tag_box))
                 # A body that cannot carry the darkening says so in
                 # letters instead; see ISO 15519-1 §11.4.5.
                 if closed_marking(u, self.registry) == "NC":
@@ -5199,13 +5207,14 @@ class SvgRenderer:
                 rx, ry, rx1, ry1 = box
                 out.append(f'    <rect x="{rx:.1f}" y="{ry:.1f}" width="{rx1 - rx:.1f}" '
                            f'height="{ry1 - ry:.1f}" fill="white" />')
-            if "\n" in text and item[4] == "center":
+            if "\n" in text:
                 lines = text.split("\n")
-                first_y = ly - (len(lines) - 1) * 9
+                leading = 18 if item[4] == "center" else 14.4
+                first_y = ly - (len(lines) - 1) * leading / (2 if baseline == "middle" else 1)
                 for index, line in enumerate(lines):
-                    out.append(f'<text x="{lx}" y="{first_y + index * 18}" '
+                    out.append(f'<text x="{lx}" y="{first_y + index * leading}" '
                                f'font-family="sans-serif" font-size="12" '
-                               f'text-anchor="{anchor}" dominant-baseline="middle">{line}</text>')
+                               f'text-anchor="{anchor}" dominant-baseline="{baseline}">{line}</text>')
                 continue
             out.append(f'    <text x="{lx}" y="{ly}" font-family="sans-serif" '
                        f'font-size="12" text-anchor="{anchor}" '

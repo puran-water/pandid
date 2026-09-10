@@ -1326,6 +1326,8 @@ def _tag_pass(fs, registry, joints: "str | None", direction: str) -> "_Tags":
                                    ink, symbols)
             tag_box = _unit_label_box(item)
             items.append(item)
+            if tag_box is not None:
+                symbols.append((None, tag_box))
             # The side, and the step along it, said the way a draw.io
             # style has to say it: `_LABEL_SIDE` states the side and the
             # geometry offset states the step, so the step is measured
@@ -2141,7 +2143,7 @@ class DrawioRenderer:
 
         if getattr(u, "reference_code", ""):
             return "", [], (0.0, 0.0)
-        lines = [u.tag] if u.tag else []
+        lines = u.tag.split("\n") if u.tag else []
         if u.kind in ("feed", "product"):
             reference = getattr(u, "reference", "") or ""
             if reference:
