@@ -54,7 +54,7 @@ def catalog(*, query=None, offset=0, limit=20):
     return _page(rows, offset=offset, limit=limit)
 
 
-def describe_unit(name, *, variant="default", parameters=None):
+def describe_unit(name, *, variant=None, parameters=None):
     """Resolve the requested constructor and return its actual named ports.
 
     Variable port families are instantiated with the supplied counts. The
@@ -78,19 +78,32 @@ def describe_unit(name, *, variant="default", parameters=None):
             default = param.default
             row["default"] = default if isinstance(default, (str, int, float, bool, list, tuple, dict, type(None))) else repr(default)
         declared.append(row)
+    missing = [r['name'] for r in declared if r.get('required') and r['name'] not in values]
+    if missing:
+        return {"key": cls.__name__, "kind": cls.kind, "accepted_variants": _variants(cls),
+                "parameters": declared, "ports": None, "needs_parameters": missing,
+                "basis": "Supply required constructor parameters to resolve actual ports"}
     tag = "250-FIT-01" if cls.kind == "instrument" else "DISCOVERY-UNIT"
-    unit = cls(tag, variant=variant, **values)
-    symbol = default_registry.for_unit(unit)
-    return {"key": cls.__name__, "kind": cls.kind, "variant": unit.variant,
+    unit = cls(tag, **({"variant": variant} if variant is not None else {}), **values)
+    result = {"key": cls.__name__, "kind": cls.kind, "variant": unit.variant,
             "accepted_variants": _variants(cls), "parameters": declared,
             "ports": [{"name": p.name, "direction": p.direction, "role": p.role}
                       for p in unit.ports.values()],
-            "symbol": {"native_shape": symbol.drawio_shape,
-                       "width": symbol.width, "height": symbol.height,
-                       "gravity_fixed": symbol.gravity_fixed,
-                       "faceless_ports": sorted(symbol.faceless_ports)},
             "spec_section": "instruments" if cls.kind == "instrument" else "units",
             "basis": "Synthetic constructor inspection; sizes and counts are not project engineering data"}
+    try:
+        symbol = default_registry.for_unit(unit)
+    except ValueError as exc:
+        if variant is not None:
+            raise
+        # Some generic upstream classes have no default artwork. Disclose that
+        # required choice instead of inventing a default or hiding their ports.
+        return {**result, "symbol": None, "needs_variant": _variants(cls), "reason": str(exc)}
+    result["symbol"] = {"native_shape": symbol.drawio_shape,
+                       "width": symbol.width, "height": symbol.height,
+                       "gravity_fixed": symbol.gravity_fixed,
+                       "faceless_ports": sorted(symbol.faceless_ports)}
+    return result
 
 
 EXAMPLES = {
@@ -164,7 +177,7 @@ def main(argv=None):
     listing.add_argument("--limit", type=int, default=20)
     unit = sub.add_parser("unit")
     unit.add_argument("name")
-    unit.add_argument("--variant", default="default")
+    unit.add_argument("--variant")
     unit.add_argument("--parameters", type=json.loads, default={})
     sample = sub.add_parser("example")
     sample.add_argument("key", choices=sorted(EXAMPLES))

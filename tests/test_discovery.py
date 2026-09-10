@@ -19,6 +19,8 @@ def test_catalog_is_bounded_and_filterable():
 
 
 def test_describe_resolves_actual_variable_and_actuator_ports():
+    assert 'general' in describe_unit('Feeder')['needs_variant']
+    assert describe_unit('Feeder', variant='general')['symbol']
     header = describe_unit('Junction', parameters={'inputs': 1, 'outputs': 3})
     assert len(header['ports']) == 4
     valve = describe_unit('Valve', variant='butterfly_pneumatic')
@@ -28,6 +30,17 @@ def test_describe_resolves_actual_variable_and_actuator_ports():
         describe_unit('Pump', parameters={'invented_argument': True})
     with pytest.raises(ValueError, match='Unknown unit'):
         describe_unit('invented')
+
+
+def test_every_listed_constructor_can_be_discovered():
+    page = catalog(limit=100)
+    rows = page['items']
+    while page['next_offset'] is not None:
+        page = catalog(offset=page['next_offset'], limit=100)
+        rows += page['items']
+    for row in rows:
+        record = describe_unit(row['key'])
+        assert record['ports'] is not None or record['needs_parameters']
 
 
 @pytest.mark.parametrize('key', sorted(EXAMPLES))
