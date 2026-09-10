@@ -264,15 +264,19 @@ def test_a_tight_span_onto_another_lane_costs_only_its_own_jog(gap):
         assert b != OPPOSITE[a], f"run doubles back: {wp}"
 
 
-def test_a_roomy_span_keeps_its_full_stand_off():
+@pytest.mark.parametrize("drop", [0.0, 60.0])
+def test_a_roomy_span_keeps_its_full_stand_off(drop):
     # The relaxation is a ceiling on the stand-off, not a replacement for it. Two
     # valves far enough apart still get the full 25px escape off each nozzle
     # before the run is allowed to turn.
-    fs = _facing_valves(200.0)
+    fs = _facing_valves(200.0, drop=drop)
     (stream,) = fs.streams
     wp = stream.route.waypoints
-    assert wp[1][0] - wp[0][0] == pytest.approx(25.0), f"source stand-off shrank: {wp}"
-    assert wp[-1][0] - wp[-2][0] == pytest.approx(25.0), f"dest stand-off shrank: {wp}"
+    # A straight span may omit redundant collinear waypoints. The contract
+    # requires clear escape distance before a turn, not a vertex at 25 px.
+    assert wp[1][0] - wp[0][0] >= 25.0 - 1e-6, f"source stand-off shrank: {wp}"
+    assert wp[-1][0] - wp[-2][0] >= 25.0 - 1e-6, f"dest stand-off shrank: {wp}"
+    assert _path_length(wp) == pytest.approx(200.0 + drop)
 
 
 @pytest.mark.parametrize("gap", [5, 13, 25, 40, 200])
