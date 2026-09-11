@@ -26,11 +26,11 @@ Three things fall out of that arrangement:
   centring it uniformly where it says ``"fixed"`` -- the same question
   :func:`pandid.portgeom.ink_box` asks of
   :attr:`~pandid.render.symbols.Symbol.stretchable`, since that flag
-  *is* the stencil's own attribute. So the box is the whole of the
+  *is* the stencil's own attribute. For variable artwork the box is the whole of the
   mapping, and the reproportioning ``SCALE`` in
   ``scripts/vendor_symbols.py`` applies to four families is already in
-  the box the layout engine used. This holds only while every referenced
-  stencil is ``variable``, and a test pins that.
+  the box the layout engine used. Fixed house stencils keep their native
+  proportions and use their centred ink rectangle for connection fractions.
 * **Ports.** A draw.io fixed connection point is a fraction of the
   cell's box, which is what :func:`pandid.portgeom.port_point` already
   computes in absolute terms; dividing through is the whole conversion.
@@ -1969,10 +1969,18 @@ class DrawioRenderer:
         approx = self._approximation(u, sym)
         if sym.drawio_flip_h or (approx is not None and approx.flip_h):
             flip_h = not flip_h
+        # The model mirrors in the symbol's own axes before turning it.
+        # Native shape flips use the placed axes, so a quarter turn exchanges
+        # their names. Legacy connection points exchange them back; return
+        # the original pair for _fraction to undo that connection transform.
+        # A tee cell draws nothing and joins every edge at its centre. Its
+        # mirror keys are inert, so keep their established serialization.
+        turned_art = rot in (90, 270) and u.kind != "tee"
+        horizontal, vertical = ("flipV", "flipH") if turned_art else ("flipH", "flipV")
         if flip_h:
-            keys.append("flipH=1")
+            keys.append(f"{horizontal}=1")
         if flip_v:
-            keys.append("flipV=1")
+            keys.append(f"{vertical}=1")
         return keys, flip_h, flip_v
 
     def _shape(self, u, sym, fit: "_Fit") -> list[str]:
@@ -2200,10 +2208,12 @@ class DrawioRenderer:
         """The rectangle draw.io is handed for this unit.
 
         :func:`~pandid.portgeom.unit_box` for everything with artwork
-        that fills its box, which is everything drawn from a stencil:
+        that fills its box:
         draw.io stretches a ``variable`` stencil into the cell exactly
         as :func:`~pandid.portgeom.ink_box` stretches the symbol into
-        the frame, so the box *is* the mapping.
+        the frame, so the box *is* the mapping. Fixed stencils receive the
+        same full box and centre their artwork inside it; :meth:`_fraction`
+        accounts for that inner rectangle when connecting an edge.
 
         An off-page flag is the one thing that is drawn smaller than its
         box. Its pennant fills the box left to right and is inset twelve
@@ -2321,7 +2331,7 @@ class DrawioRenderer:
         :attr:`~pandid.render.symbols.Symbol.stretchable` is a *stencil*
         attribute, and for every vendored reference it is true -- the
         module docstring says the box is then the whole of the mapping,
-        and a test pins that every referenced stencil is ``variable``.
+        and a test compares every reference against its source aspect.
         A **stand-in** has no such attribute to carry: draw.io scales a
         built-in into whatever cell it is given, and there is no way to
         ask an ``ellipse`` to stay a circle.
@@ -2578,6 +2588,17 @@ class DrawioRenderer:
         px, py = point
         x0, y0, x1, y1 = self._cell_box(u)
         w, h = x1 - x0, y1 - y0
+        if not sym.stretchable and (sym.drawio_shape or sym.drawio_body_shape):
+            # mxCellState.getPerimeterBounds uses the fixed stencil's ink
+            # rectangle for connection fractions too. The port already sits
+            # in that rectangle; normalising against the full cell would
+            # apply its letterbox twice and move the edge inside the symbol.
+            from pandid.portgeom import ink_box
+            bw, bh = sym.width, sym.height
+            if int(u.frame.orientation or 0) in (90, 270):
+                bw, bh = bh, bw
+            ox, oy, w, h = ink_box(bw, bh, w, h, False)
+            x0, y0 = x0 + ox, y0 + oy
         fx = (px - x0) / w if w else 0.5
         fy = (py - y0) / h if h else 0.5
         _, flip_h, flip_v = self._placement(u, sym)

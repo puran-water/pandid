@@ -31,14 +31,17 @@ def render():
     for key, (kind, variant, names) in KINDS.items():
         art = ARTWORK[key]
         element = ET.fromstring(art.stencil)
-        svg, w, h, _constraints, _aspect = convert_shape(element, stroke_width=4)
+        svg, w, h, _constraints, aspect = convert_shape(element, stroke_width=4)
         compressor = zlib.compressobj(wbits=-15)
         shape = 'stencil(' + base64.b64encode(compressor.compress(art.stencil.encode()) + compressor.flush()).decode() + ')'
         anchors = {name: (x * art.width / 2, y * art.height / 2) for name, x, y in art.anchors}
         ports = {name: anchors[side] for name, side in names.items()}
         faces = {name: {side: ports[name]} for name, side in names.items()}
         icon = f'<g id="sym_{kind}_{variant}"><g transform="scale(.5)">{svg}</g></g>'
-        lines.append(f'    registry.register({kind!r}, Symbol(svg={icon!r}, width={w/2!r}, height={h/2!r}, ports={ports!r}, port_faces={faces!r}, drawio_shape={shape!r}), {variant!r})')
+        # Ports must follow the same letterbox as the native stencil. Treating
+        # fixed artwork as stretchable moves its nozzles off the drawn body.
+        fixed = ', stretchable=False' if aspect == 'fixed' else ''
+        lines.append(f'    registry.register({kind!r}, Symbol(svg={icon!r}, width={w/2!r}, height={h/2!r}, ports={ports!r}, port_faces={faces!r}, drawio_shape={shape!r}{fixed}), {variant!r})')
     return '\n'.join(lines) + '\n'
 
 

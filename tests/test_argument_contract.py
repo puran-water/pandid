@@ -683,6 +683,15 @@ _sheet_case(
     Flowsheet.add_balloon,
     lambda fs, kw: fs.add_balloon(**_default(kw, element=fs.units[1])).name,
 )
+
+
+def _contain_equipment(fs: Flowsheet, kw: dict[str, Any]) -> str:
+    equipment = fs.add(U.AirDiffuser("DIFFUSER"))
+    basin = fs.add(U.ConcreteBasin("BASIN"))
+    return fs.contain(**_default(kw, equipment=equipment, basin=basin)).name
+
+
+_sheet_case("Flowsheet.contain", Flowsheet.contain, _contain_equipment)
 _sheet_case(
     "Flowsheet.add_control_loop",
     Flowsheet.add_control_loop,

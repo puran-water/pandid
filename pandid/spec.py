@@ -812,7 +812,7 @@ def _read_balloon(fs: Flowsheet, entry: Mapping[str, Any], where: str) -> Instru
     for key in ("offset", "angle", "width", "height"):
         if key in entry:
             kwargs[key] = _number(entry[key], f"{where}.{key}")
-    for key in ("variant", "display", "description", "reference", "label_pos"):
+    for key in ("variant", "display", "description", "reference", "label_pos", "area"):
         if key in entry:
             kwargs[key] = _text(entry[key], f"{where}.{key}")
     try:
@@ -1842,6 +1842,8 @@ def _write_stream(stream: Stream) -> dict[str, Any]:
         if value is not None and not (key == "sequence" and value == stream._auto_sequence):
             entry[key] = value
     for key in ("color", "dasharray", "flow_class", "representation"):
+        if key == "flow_class" and stream.flow_class == "main":
+            continue
         if key == "representation" and stream.representation == "pipe":
             continue
         if getattr(stream, key) is not None:

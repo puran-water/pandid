@@ -13,7 +13,7 @@ kinds, each argued at the class or the module it applies to:
 
 - the **numbered members** of a variable-sized family (``Mixer``'s ``in_1`` ...
   ``in_n``, ``Splitter``'s ``out_1`` ... ``out_n``, both of ``Block``'s and
-  ``Junction``'s, the
+  ``Junction``'s and ``ConcreteBasin``'s, the
   ``feed_1`` ... ``feed_n`` a second feed spells a ``Column``, ``Reactor`` or
   ``Separator`` with, and the ``draw_1`` ... ``draw_n`` a second draw spells a
   ``Column`` with -- the one class with *two* independent counted families),
@@ -128,6 +128,7 @@ _DECLARED_FAMILIES = {
     units.Splitter: {"outlets"},
     units.Block: {"inlets", "outlets"},
     units.Junction: {"inlets", "outlets"},
+    units.ConcreteBasin: {"inlets", "outlets"},
     units.Column: {"feeds", "draws"},
     units.Reactor: {"feeds"},
     units.Separator: {"feeds"},

@@ -3,17 +3,30 @@ from pandid.portgeom import unit_box
 from pandid.routing.visibility import Rect
 
 
+def anchored_waypoints(stream, points):
+    """Return a repaired drawn line to the router's anchor coordinates.
+
+    Repair measures the line between its drawn nozzles, which may sit inside
+    the equipment box. The route itself starts and ends on that box; keeping
+    the nozzle points here would change what every later routing pass reads.
+    The renderer adds the nozzle-to-anchor stubs back when it draws the line.
+    """
+    # The incoming route already owns those anchors. Keeping them also leaves
+    # clearance repair a geometry operation, without asking it to resolve ports.
+    waypoints = stream.route.waypoints
+    return [waypoints[0], *points[1:-1], waypoints[-1]]
+
+
 def square_micro_jogs(fs):
     """Remove subpixel terminal jogs that mxGraph coalesces into diagonals.
 
     The nozzle stays exact. Only an automatic adjacent track within one
     drawing pixel is straightened; authored waypoints remain untouched.
     """
-    from pandid.render.svg import stream_polyline
     for stream in fs.streams:
         if not stream.route or stream.route.manual:
             continue
-        points = stream_polyline(stream)
+        points = list(stream.route.waypoints)
         for reverse in (False, True):
             if reverse:
                 points.reverse()
@@ -61,4 +74,4 @@ def protect(fs):
         if any(sum(box.intersects_segment(*a,*b) for _,(a,b) in changed) >
                sum(box.intersects_segment(*a,*b) for (a,b),_ in changed) for box in boxes):
             continue
-        stream.route.waypoints = proposed
+        stream.route.waypoints = anchored_waypoints(stream, proposed)

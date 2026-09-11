@@ -8480,6 +8480,8 @@ class Junction(Unit):
 
 class ConcreteBasin(Unit):
     """Open basin whose separately tagged internals are declared with fs.contain()."""
+    inlets: tuple[Port, ...]
+    outlets: tuple[Port, ...]
     kind = "concrete_basin"
     LAYOUT_CONFIDENCE = 2
 
@@ -8507,12 +8509,14 @@ class ConcreteBasin(Unit):
 
 class BasinAgitator(Unit):
     """Motor, shaft and paddle; declare its receiving basin separately."""
+    shaft: Port
     kind = "basin_agitator"
     PORTS = [("shaft", "outlet", "energy")]
     PLACES = {"shaft": "S"}
 
 
 class SubmersibleMixer(Unit):
+    shaft: Port
     kind = "submersible_mixer"
     PORTS = [("shaft", "outlet", "energy")]
     PLACES = {"shaft": "E"}

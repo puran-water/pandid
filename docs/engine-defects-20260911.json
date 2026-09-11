@@ -1,0 +1,275 @@
+{
+  "baseline_commit": "b720dbbb497a69242258b13d7de81870f3553347",
+  "start_commit": "c72eb30235687e38bc514d6c0b8193c93cb77c2e",
+  "branch": "puranos/engine-defects-20260911",
+  "baseline_counts": {
+    "failed": 73,
+    "passed": 16601,
+    "skipped": 720,
+    "error": 492
+  },
+  "starting_counts": {
+    "failed": 73,
+    "passed": 16605,
+    "skipped": 720,
+    "error": 492
+  },
+  "final_counts": {
+    "passed": 17200,
+    "failed": 42,
+    "skipped": 726,
+    "error": 0
+  },
+  "final_collected_testcases": 17968,
+  "suite_elapsed_seconds": 971.317,
+  "pytest_summary": "42 failed, 17200 passed, 726 skipped, 251 warnings in 972.87s (0:16:12)",
+  "exit_code": 1,
+  "baseline_failure_set_size": 565,
+  "starting_failure_set_size": 565,
+  "final_failure_set_size": 42,
+  "final_minus_baseline": [],
+  "baseline_minus_final_count": 523,
+  "baseline_minus_final_outcomes": {
+    "passed": 515,
+    "skipped": 8
+  },
+  "starting_minus_final_count": 523,
+  "final_minus_starting": [],
+  "retained_final_failures": [
+    "tests/test_block.py::test_a_spec_refuses_connection_faces_on_anything_but_a_block_a_tank_or_a_vessel",
+    "tests/test_devices.py::test_every_registered_symbol_is_claimed_exactly_once",
+    "tests/test_devices.py::test_the_committed_module_matches_the_generator",
+    "tests/test_devices.py::test_the_pages_quote_the_registry_they_are_describing",
+    "tests/test_devices.py::test_the_variants_table_gives_every_drawing_exactly_one_owner",
+    "tests/test_gallery.py::test_the_committed_sheet_is_what_the_example_draws_today[03_distillation_train]",
+    "tests/test_gallery.py::test_the_committed_sheet_is_what_the_example_draws_today[08_from_data]",
+    "tests/test_gallery.py::test_the_committed_sheet_is_what_the_example_draws_today[09_line_numbers]",
+    "tests/test_gallery.py::test_the_committed_sheet_is_what_the_example_draws_today[15_condensing_turbine]",
+    "tests/test_gallery.py::test_the_committed_sheet_is_what_the_example_draws_today[18_fixed_bed_recycle]",
+    "tests/test_gallery.py::test_the_committed_sheet_is_what_the_example_draws_today[21_alumina_refinery]",
+    "tests/test_golden.py::test_a_version_bump_does_not_move_a_fixture",
+    "tests/test_golden.py::test_golden_svg[03_distillation_train]",
+    "tests/test_golden.py::test_golden_svg[08_from_data]",
+    "tests/test_golden.py::test_golden_svg[09_line_numbers]",
+    "tests/test_golden.py::test_golden_svg[15_condensing_turbine]",
+    "tests/test_golden.py::test_golden_svg[18_fixed_bed_recycle]",
+    "tests/test_golden.py::test_golden_svg[21_alumina_refinery]",
+    "tests/test_golden.py::test_the_example_draws_the_same_sheet_as_its_fixture[03_distillation_train]",
+    "tests/test_golden.py::test_the_example_draws_the_same_sheet_as_its_fixture[08_from_data]",
+    "tests/test_golden.py::test_the_example_draws_the_same_sheet_as_its_fixture[09_line_numbers]",
+    "tests/test_golden.py::test_the_example_draws_the_same_sheet_as_its_fixture[15_condensing_turbine]",
+    "tests/test_golden.py::test_the_example_draws_the_same_sheet_as_its_fixture[18_fixed_bed_recycle]",
+    "tests/test_golden.py::test_the_example_draws_the_same_sheet_as_its_fixture[21_alumina_refinery]",
+    "tests/test_line_weight.py::test_every_symbol_declares_a_pen_centred_on_the_sheet_weight",
+    "tests/test_show.py::test_the_window_draws_the_sheet_scaled_to_the_window",
+    "tests/test_symbol_invariants.py::test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from[airlift/default-0.4x1.7]",
+    "tests/test_symbol_invariants.py::test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from[airlift/default-1.0x2.5]",
+    "tests/test_symbol_invariants.py::test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from[airlift/default-2.0x1.0]",
+    "tests/test_symbol_invariants.py::test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from[airlift/default-3.0x0.5]",
+    "tests/test_symbol_invariants.py::test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from[junction/default-0.4x1.7]",
+    "tests/test_symbol_invariants.py::test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from[junction/default-1.0x2.5]",
+    "tests/test_symbol_invariants.py::test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from[junction/default-2.0x1.0]",
+    "tests/test_symbol_invariants.py::test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from[junction/default-3.0x0.5]",
+    "tests/test_symbol_invariants.py::test_every_drawing_survives_being_scaled[airlift/default]",
+    "tests/test_symbol_invariants.py::test_every_vendored_kind_is_named_in_the_module_docstring",
+    "tests/test_symbol_invariants.py::test_port_faces_lie_on_drawn_geometry[airlift/default]",
+    "tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[airlift/default]",
+    "tests/test_symbol_invariants.py::test_ports_lie_on_drawn_geometry[airlift/default]",
+    "tests/test_symbol_invariants.py::test_svg_is_well_formed_and_declares_stroke_width[junction/default]",
+    "tests/test_symbol_invariants.py::test_variants_lists_a_kinds_catalogue_default_first",
+    "tests/test_tee.py::test_the_junction_is_the_only_symbol_drawn_as_bare_pipe"
+  ],
+  "all_removed_nodeids": "engine-defects-20260911.csv: failure_set_change=removed",
+  "new_regression_test_counts": {
+    "passed": 70
+  },
+  "visible_mcp_servers": {
+    "engineering-mcp": {
+      "tools": 148,
+      "callable": 148
+    },
+    "hatchet-mcp": {
+      "tools": 3,
+      "callable": 3
+    },
+    "office-mcp": {
+      "tools": 15,
+      "callable": 15
+    },
+    "ontology-mcp": {
+      "tools": 11,
+      "callable": 11
+    },
+    "openproject-mcp": {
+      "tools": 10,
+      "callable": 10
+    },
+    "plant-cad-mcp": {
+      "tools": 25,
+      "callable": 25
+    },
+    "site-fit-mcp": {
+      "tools": 14,
+      "callable": 14
+    },
+    "wiki-global": {
+      "tools": 30,
+      "callable": 30
+    }
+  },
+  "desktop_version": "31.4.4",
+  "native_placement_cases": 16,
+  "native_sloping_segments": 0,
+  "native_maximum_endpoint_gap_px": 0.014142135623718088,
+  "native_vendor_ports": {
+    "baseline": [
+      {
+        "case": "blower-gas-suction",
+        "endpoint": [
+          1732.52,
+          1163.68
+        ],
+        "distance_to_ink_px": 24.08641852411507,
+        "sloping_segments": 0
+      },
+      {
+        "case": "tank-concrete-drain",
+        "endpoint": [
+          1435.52,
+          1148.84
+        ],
+        "distance_to_ink_px": 45.38000000000011,
+        "sloping_segments": 0
+      },
+      {
+        "case": "tank-concrete-relief",
+        "endpoint": [
+          1435.52,
+          1148.84
+        ],
+        "distance_to_ink_px": 45.38000000000011,
+        "sloping_segments": 0
+      },
+      {
+        "case": "tank-concrete-vent",
+        "endpoint": [
+          1435.52,
+          1148.84
+        ],
+        "distance_to_ink_px": 45.38000000000011,
+        "sloping_segments": 0
+      },
+      {
+        "case": "tank-vertical-drain",
+        "endpoint": [
+          1435.52,
+          1148.84
+        ],
+        "distance_to_ink_px": 51.88999999999987,
+        "sloping_segments": 0
+      },
+      {
+        "case": "tank-vertical-relief",
+        "endpoint": [
+          1435.52,
+          1148.84
+        ],
+        "distance_to_ink_px": 51.88999999999987,
+        "sloping_segments": 0
+      },
+      {
+        "case": "tank-vertical-vent",
+        "endpoint": [
+          1435.52,
+          1148.84
+        ],
+        "distance_to_ink_px": 51.88999999999987,
+        "sloping_segments": 0
+      }
+    ],
+    "current": [
+      {
+        "case": "blower-gas-suction",
+        "endpoint": [
+          1732.52,
+          1117.32
+        ],
+        "distance_to_ink_px": 0.0,
+        "sloping_segments": 0
+      },
+      {
+        "case": "tank-concrete-drain",
+        "endpoint": [
+          1435.52,
+          1207.32
+        ],
+        "distance_to_ink_px": 0.0,
+        "sloping_segments": 0
+      },
+      {
+        "case": "tank-concrete-relief",
+        "endpoint": [
+          1516.73,
+          1086.97
+        ],
+        "distance_to_ink_px": 0.0,
+        "sloping_segments": 0
+      },
+      {
+        "case": "tank-concrete-vent",
+        "endpoint": [
+          1354.31,
+          1086.97
+        ],
+        "distance_to_ink_px": 0.0,
+        "sloping_segments": 0
+      },
+      {
+        "case": "tank-vertical-drain",
+        "endpoint": [
+          1435.52,
+          1207.32
+        ],
+        "distance_to_ink_px": 0.0,
+        "sloping_segments": 0
+      },
+      {
+        "case": "tank-vertical-relief",
+        "endpoint": [
+          1478.83,
+          1088.27
+        ],
+        "distance_to_ink_px": 0.033085648382483644,
+        "sloping_segments": 0
+      },
+      {
+        "case": "tank-vertical-vent",
+        "endpoint": [
+          1392.21,
+          1088.27
+        ],
+        "distance_to_ink_px": 0.033254296657344085,
+        "sloping_segments": 0
+      }
+    ]
+  },
+  "evidence_sha256": {
+    "/tmp/pandid-baseline-KEEP.txt": "49eb5be6bd8f93bba8e037ecb51e19051aa47314dcabb1bacdd7c4e1fd15e702",
+    "/tmp/pandid-current-KEEP.txt": "a6652f1bfb380f5ba96f2edb947551ba8d1d76b9d8883d962f401b622e329588",
+    "/tmp/pandid-engine-defects-evidence/full-suite.txt": "b98e45302a789d72f57b6d9025e4cd6803df07f69cdce7f7232c4621f50a3863",
+    "/tmp/pandid-engine-defects-evidence/full-suite.xml": "00948251514d4b164930ab56fb65385b34652125d5731c5b28c99bf8ee6cd079",
+    "/tmp/pandid-engine-defects-evidence/targeted-final.txt": "df89dbc22473f62da30a62a294d4410360c79dde3d713167d4531c937af2250a",
+    "/tmp/pandid-engine-defects-evidence/targeted-final-2.txt": "09011a2d18212611e255756bc4179424a815b1fb1a7004c79c859b6ee5949bbd",
+    "/tmp/pandid-engine-defects-evidence/regressions-on-pin-final.txt": "8ebcda545d195669f0c475a9d5c3d38f30710c69e7191763f0cb7e3d59aa6cdc",
+    "/tmp/pandid-engine-defects-evidence/native-placements-3144/measurements.json": "2f7f45dcb78e9762407bd5b3b26c8268b63e1ca3cff13ae3417ff8f46304842d",
+    "/tmp/pandid-engine-defects-evidence/native-final-inputs.json": "aa803f52d648e93da927421ef82624bfad254974b1cc6bc7919370d38a27ed45",
+    "/tmp/pandid-engine-defects-evidence/native-vendor-baseline-3144/measurements-curves.json": "246d5bac81c8acb6b5f4490da4c5d92e8a6e8a152f90bc203e758677813dffae",
+    "/tmp/pandid-engine-defects-evidence/native-vendor-current-3144/measurements-curves.json": "f9b7d3125d1b44ac95cafb225ad31d86f89f8381a0778bc8c57f0e6ef1584a98",
+    "/tmp/pandid-engine-defects-evidence/baseline-native-3144.svg": "07922bc53e626368901ac5a4142b5fa1d1a8dc575c09fc23cfff0ea2fd1065a8",
+    "/tmp/pandid-engine-defects-evidence/current-native-3144.svg": "515ea6307fdaf9b4798745042c90a209fefc77a4424ad5d72c321f91b3ca7ff4",
+    "/tmp/pandid-engine-defects-evidence/baseline-native-3144.pdf": "e60b0afbed29648219fb24d30f1cea22cac95d4b084e21d451ffa154b80ff293",
+    "/tmp/pandid-engine-defects-evidence/current-native-3144.pdf": "84288ddb8d84a6c8ae09f165b05950ac482d2d12dfcabf22d2899227d2dd7072",
+    "/tmp/pandid-engine-defects-evidence/protected-inputs-final.json": "94d26124171e7b1e1657d8591154110994d62869c26424b08cd10a05b5c28f60",
+    "/tmp/pandid-engine-defects-evidence/line-endings.json": "524d85f620f44b68f2eba61618231e3c60b45e054a4dc0e8e9661a634a95bee6"
+  }
+}

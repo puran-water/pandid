@@ -35,7 +35,7 @@ def register_vendored(registry):
     registry.register('blower', Symbol(
         svg='<g id="sym_blower_gas"><path d="M 22.0 54.0 L 10.0 67.0 L 70.0 67.0 L 58.0 54.0" fill="white" stroke="#111" stroke-width="2.0"/><path d="M 0.0 0.0 L 40.0 0.0 A 30.0 30.0 0.0 1 1 11.5 20.0 L 0.0 19.75 Z" fill="white" stroke="#111" stroke-width="2.0"/><ellipse cx="40.0" cy="30.0" rx="10.0" ry="10.0" fill="none" stroke="#111" stroke-width="2.0"/></g>',
         width=72.3, height=67.0,
-        ports={'suction': (0.0, 35.0), 'discharge': (39.8, 67.0)},
+        ports={'suction': (0.0, 9.9), 'discharge': (39.8, 67.0)},
         drawio_shape='mxgraph.pid.pumps.gas_blower',
     ), 'gas')
 
@@ -61,16 +61,18 @@ def register_vendored(registry):
     registry.register('tank', Symbol(
         svg='<g id="sym_tank_concrete"><path d="M 0.0 0.0 L 10.0 0.0 L 10.0 65.0 L 150.0 65.0 L 150.0 0.0 L 160.0 0.0 L 160.0 75.0 L 0.0 75.0 Z M 0.0 5.0 L 5.0 0.0 M 0.0 15.0 L 10.0 5.0 M 0.0 25.0 L 10.0 15.0 M 0.0 35.0 L 10.0 25.0 M 0.0 45.0 L 10.0 35.0 M 0.0 55.0 L 10.0 45.0 M 40.0 75.0 L 50.0 65.0 M 0.0 65.0 L 10.0 55.0 M 0.0 75.0 L 10.0 65.0 M 10.0 75.0 L 20.0 65.0 M 20.0 75.0 L 30.0 65.0 M 30.0 75.0 L 40.0 65.0 M 50.0 75.0 L 60.0 65.0 M 60.0 75.0 L 70.0 65.0 M 70.0 75.0 L 80.0 65.0 M 80.0 75.0 L 90.0 65.0 M 90.0 75.0 L 100.0 65.0 M 110.0 75.0 L 120.0 65.0 M 120.0 75.0 L 130.0 65.0 M 130.0 75.0 L 140.0 65.0 M 140.0 75.0 L 160.0 55.0 M 150.0 75.0 L 160.0 65.0 M 150.0 55.0 L 160.0 45.0 M 150.0 45.0 L 160.0 35.0 M 150.0 35.0 L 160.0 25.0 M 150.0 25.0 L 160.0 15.0 M 150.0 15.0 L 160.0 5.0 M 150.0 5.0 L 155.0 0.0 M 100.0 75.0 L 110.0 65.0" fill="white" stroke="#111" stroke-width="2.0"/></g>',
         width=160.0, height=75.0,
-        ports={'inlet': (0.0, 30.0), 'outlet': (160.0, 30.0)},
+        ports={'inlet': (0.0, 30.0), 'outlet': (160.0, 30.0), 'vent': (5.0, 0.0), 'relief': (155.0, 0.0), 'drain': (80.0, 75.0)},
         drawio_shape='mxgraph.pid.vessels.concrete_tank',
+        bands={'W': (10.0, 55.0), 'E': (10.0, 55.0)},
     ), 'concrete')
 
     # draw.io vessels:Tank (aspect=variable) -> tank/vertical
     registry.register('tank', Symbol(
         svg='<g id="sym_tank_vertical"><path d="M 40.0 7.69 L 40.0 87.69 A 20.0 7.6923 0.0 0 1 20.0 95.3823 A 20.0 7.6923 0.0 0 1 0.0 87.69 L 0.0 7.69 A 20.0 7.6923 0.0 0 1 20.0 -0.0023 A 20.0 7.6923 0.0 0 1 40.0 7.69 Z M 0.0 7.69 L 40.0 7.69 M 0.0 87.69 L 40.0 87.69" fill="white" stroke="#111" stroke-width="2.0"/></g>',
         width=40.0, height=95.4,
-        ports={'inlet': (0.0, 47.7), 'outlet': (40.0, 47.7)},
+        ports={'inlet': (0.0, 47.7), 'outlet': (40.0, 47.7), 'vent': (10.0, 1.0), 'relief': (30.0, 1.0), 'drain': (20.0, 95.4)},
         drawio_shape='mxgraph.pid.vessels.tank',
+        bands={'W': (17.7, 77.7), 'E': (17.7, 77.7)},
     ), 'vertical')
 
     # draw.io valves:Gate Valve (aspect=variable) -> valve/default

@@ -25,6 +25,7 @@ def _overlaps(lines, clearance=0):
 
 def repair(fs, *, radius=5, max_passes=8):
     from pandid.portgeom import unit_box
+    from pandid.routing.terminal_clearance import anchored_waypoints
     from pandid.render.svg import stream_polyline
     from pandid.routing.visibility import Rect
     from pandid.drawing_regions import captions
@@ -96,6 +97,6 @@ def repair(fs, *, radius=5, max_passes=8):
             return  # The export gate retains the unresolved hold.
         _,key,points,lost=accepted
         lines[key]=points
-        fs.streams[key].route.waypoints=points
+        fs.streams[key].route.waypoints=anchored_waypoints(fs.streams[key], points)
         if not lost and not _overlaps(lines, spacing):
             return

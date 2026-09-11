@@ -247,7 +247,7 @@ def test_the_approximations_name_only_shapes_and_symbols_that_exist():
             )
 
 
-def test_a_referenced_stencil_is_always_variable_aspect():
+def test_a_referenced_stencil_keeps_its_native_aspect():
     """What makes the box the whole of the size mapping.
 
     draw.io stretches a ``variable`` stencil to fill the cell and centres a
@@ -258,19 +258,30 @@ def test_a_referenced_stencil_is_always_variable_aspect():
     reproduces the sheet whatever ``SCALE`` in ``scripts/vendor_symbols.py`` did
     to the symbol's proportions on the way in.
 
-    A ``fixed`` one is where that stops being true, and only when its ``SCALE``
-    is uneven: pandid would centre against the reproportioned box and draw.io
-    against the stencil's own, and the two would land at different sizes. None
-    is both today. Should one arrive, the exporter has to map the box rather
-    than copy it, and this is the test that says so.
+    A fixed stencil must keep its native proportions too. The house catalogue
+    includes these, so requiring every symbol to be stretchable would demand
+    the wrong port transform. Compare the actual source aspect instead, and
+    refuse a fixed stencil whose generator reproportioned it unevenly.
     """
+    import base64
+    import zlib
+
+    stencils = {}
+    for path in STENCILS.glob("*.xml"):
+        root = ET.parse(path).getroot()
+        for shape in root.findall("shape"):
+            key = f"{root.get('name')}.{shape.get('name')}".replace(" ", "_").lower()
+            stencils[key] = shape
     for kind, variant, sym in DRAWINGS:
         if sym.drawio_shape:
-            assert sym.stretchable, (
-                f"{kind}/{variant} references a fixed-aspect stencil. Check its "
-                f"SCALE entry: if it is uneven, the exported box has to be mapped "
-                f"onto the stencil's own aspect rather than copied."
-            )
+            if sym.drawio_shape.startswith("stencil("):
+                shape = ET.fromstring(zlib.decompress(base64.b64decode(sym.drawio_shape[8:-1]), -15))
+            else:
+                shape = stencils[sym.drawio_shape]
+            assert sym.stretchable == (shape.get("aspect", "variable") != "fixed"), (kind, variant)
+            if not sym.stretchable:
+                assert sym.width / sym.height == pytest.approx(
+                    float(shape.get("w")) / float(shape.get("h"))), (kind, variant)
 
 
 # ---------------------------------------------------------------------------
@@ -954,7 +965,9 @@ def _drawio_connection_point(unit, vertex: dict, edge: dict, prefix: str) -> tup
     With ``anchorPointDirection=0`` the cell's ``direction`` leaves the bounds
     alone, so the fraction is of the box as placed; with ``<prefix>Perimeter=0``
     the point is taken as given instead of being pushed out to the outline. What
-    is left is the fraction, then the vertex's own flips about the box centre.
+    is left is the fraction, then the vertex's flips about the box centre.
+    Graph.getLegacyConnectionPoint exchanges those axes for north/south even
+    with anchorPointDirection=0; omitting that exchange hid native diagonals.
 
     A model, and only a model -- see this module's docstring.
     """
@@ -965,9 +978,12 @@ def _drawio_connection_point(unit, vertex: dict, edge: dict, prefix: str) -> tup
         )
     x0, y0, x1, y1 = cell_box(unit)
     fx, fy = float(edge[f"{prefix}X"]), float(edge[f"{prefix}Y"])
-    if vertex.get("flipH") == "1":
+    flip_h, flip_v = vertex.get("flipH") == "1", vertex.get("flipV") == "1"
+    if vertex.get("direction") in {"north", "south"}:
+        flip_h, flip_v = flip_v, flip_h
+    if flip_h:
         fx = 1.0 - fx
-    if vertex.get("flipV") == "1":
+    if flip_v:
         fy = 1.0 - fy
     return (x0 + fx * (x1 - x0), y0 + fy * (y1 - y0))
 

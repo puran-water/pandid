@@ -1041,7 +1041,12 @@ class Flowsheet:
                 f"balloon. add_balloon() takes a tagged item: a primary element "
                 f"lettered from its loop, e.g. Fitting(loop.element('FE'))"
             )
+        # A process area is part of the tag being moved, not a second
+        # identity for the balloon. Accept a restatement, but refuse one
+        # that would rename only one of the element's two marks.
         inst = Instrument(element.tag, variant=variant, **kwargs)
+        if "area" in kwargs and inst.area != Instrument(element.tag).area:
+            raise ValueError("balloon area must match the element's tag")
         # Set before add(), which is where the shared tag is either
         # allowed or refused; see Instrument.repeats.
         inst._marks = element

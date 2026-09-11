@@ -51,11 +51,22 @@ KIND_MAP = {
     ("liquid_screen", "default"): ("misc", "Screening Device, Sieve, Strainer", {"inlet": "N", "outlet": "S", "reject": "E"}),
     ("liquid_screen", "coarse_rake"): ("misc", "Screening Device, Sieve, Strainer (Coarse Rake)", {"inlet": "N", "outlet": "S", "reject": "E"}),
     ("liquid_screen", "fine_rake"): ("misc", "Screening Device, Sieve, Strainer (Fine Rake)", {"inlet": "N", "outlet": "S", "reject": "E"}),
-    ("blower", "gas"): ("pumps", "Gas Blower", {"suction": ("W", 35), "discharge": "S"}),
+    # The west mouth spans y 0..19.75; y 35 is empty paper outside
+    # the scroll. Put the connection on the middle of that drawn mouth.
+    ("blower", "gas"): ("pumps", "Gas Blower", {"suction": ("W", 9.875), "discharge": "S"}),
     ("valve", "butterfly_2"): ("valves", "Butterfly Valve 2", {"inlet": "W", "outlet": "E", "actuator": ("N", 49)}),
     ("valve", "check_2"): ("valves", "Check Valve 2", {"inlet": "W", "outlet": "E", "actuator": ("N", 49)}),
-    ("tank", "concrete"): ("vessels", "Concrete Tank", {"inlet": ("W", 30), "outlet": ("E", 30)}),
-    ("tank", "vertical"): ("vessels", "Tank", {"inlet": "W", "outlet": "E"}),
+    # These are Tank variants too, so every optional nozzle the class
+    # offers needs a distinct anchor. An open concrete tank has no roof:
+    # its upper connections meet the two rims, and its drain the floor.
+    ("tank", "concrete"): ("vessels", "Concrete Tank",
+                           {"inlet": ("W", 30), "outlet": ("E", 30),
+                            "vent": ("N", 5), "relief": ("N", 155), "drain": ("S", 80)}),
+    # The vertical tank's head is an ellipse, not the top of its box.
+    # The two upper nozzles meet that head either side of its crown.
+    ("tank", "vertical"): ("vessels", "Tank",
+                           {"inlet": "W", "outlet": "E", "vent": ("AT", 10, 1.03),
+                            "relief": ("AT", 30, 1.03), "drain": "S"}),
 
     # Valves: inline family (inlet W / outlet E).
     #
@@ -2089,6 +2100,10 @@ DIRECTIONAL = {
 # ``test_every_family_face_declares_a_band`` holds that: a face with a
 # placement and no band would be a family bounded by the box alone.
 BANDS = {
+    # Concrete walls end at y 65; the vertical tank's barrel runs
+    # between the heads at y 7.69..87.69. Keep families off the corners.
+    ("tank", "concrete"): {"W": (10.0, 55.0), "E": (10.0, 55.0)},
+    ("tank", "vertical"): {"W": (17.7, 77.7), "E": (17.7, 77.7)},
     # Shell y 25,46..95,46 under the dished roof; the fill sits at 85, ten and a
     # half above the floor, so that clearance is taken at the roof end too. N is
     # the dome crown and S the flat floor.
