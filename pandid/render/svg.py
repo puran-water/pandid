@@ -3347,6 +3347,13 @@ _PAGE_SIZES = {
 # The user unit the drawing is laid out in is the CSS pixel, 1/96 inch.
 _PX_PER_MM = 96.0 / 25.4
 
+#: Margin a fixed page with no furniture of its own is drawn inside. The dock
+#: insets a framed sheet by 50 (``OUTER_MARGIN`` + ``ZONE_BAND`` + ``INNER``), so
+#: a bare page leaves ten units less across than a framed one. Named rather than
+#: written inline because :func:`~pandid.render.drawio.fitted_band` has to know
+#: what this writer will leave.
+_PLAIN_SHEET_MARGIN = 55.0
+
 
 class _Sheet(NamedTuple):
     """A fixed sheet the drawing is placed on, rather than sized to.
@@ -4290,7 +4297,7 @@ class SvgRenderer:
         st_layout = F.stream_table_layout(fs) if show_stream_table else None
 
         # 3. Place furniture around the diagram and size the sheet.
-        margin = 55.0
+        margin = _PLAIN_SHEET_MARGIN
         furniture: list[str] = []
         free = None  # region a fixed sheet leaves for the drawing
         fit_issues: list[Issue] = []

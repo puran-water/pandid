@@ -3107,25 +3107,7 @@ class DrawioRenderer:
         really does rule every cell (``draw_table`` strokes a rectangle
         apiece) and so keeps both.
         """
-        from pandid.document import TableBox
-
-        items: list = []
-        if fs.title_block is not None:
-            items.append((fs.title_block, "bottom-right",
-                          *_strip_size(fs.title_block)))
-        for a in getattr(fs, "annotations", []) or []:
-            w, h = (F.measure_table(a) if isinstance(a, TableBox)
-                    else F.measure_annotation(a))
-            items.append((a, a.align, w, h))
-        # Last into the bottom-left column, which is where the sheet
-        # puts it: `put_bottom` stacks upward from the frame edge, so
-        # the table sits against the foot of the sheet with anything
-        # else docked there above it. The measurement is the sheet's own
-        # -- there is one stream table and both backends ask the same
-        # function for it.
-        table = F.stream_table_layout(fs) if show_stream_table else None
-        if table is not None:
-            items.append((table, "bottom-left", table.w, table.h))
+        items = dock_items(fs, show_stream_table)
 
         inner = self._drawing_box(fs,text_boxes=text_boxes)
         if sheet is None:
@@ -4514,6 +4496,65 @@ def _rev_table(cid: str, grid) -> list[str]:
     return out + _segment(f"{cid}-rule", grid.x, grid.header_y,
                           grid.x + grid.w, grid.header_y, _LINE_INK,
                           F._BOX_UNDERLINE)
+
+
+def dock_items(fs, show_stream_table: bool = False) -> list:
+    """The furniture this sheet docks, as ``(obj, align, w, h)``.
+
+    Every one of these is a property of the flowsheet rather than of its layout,
+    which is what makes the band the drawing is fitted into knowable before the
+    layout runs -- see :func:`fitted_band`. Assembled once so the band and the
+    sheet cannot come to disagree about what is on the paper.
+
+    The stream table goes last into the bottom-left column, which is where the
+    sheet puts it: ``put_bottom`` stacks upward from the frame edge, so the table
+    sits against the foot of the sheet with anything else docked there above it.
+    """
+    from pandid.document import TableBox
+
+    items: list = []
+    if fs.title_block is not None:
+        items.append((fs.title_block, "bottom-right", *_strip_size(fs.title_block)))
+    for a in getattr(fs, "annotations", []) or []:
+        w, h = F.measure_table(a) if isinstance(a, TableBox) else F.measure_annotation(a)
+        items.append((a, a.align, w, h))
+    table = F.stream_table_layout(fs) if show_stream_table else None
+    if table is not None:
+        items.append((table, "bottom-left", table.w, table.h))
+    return items
+
+
+def fitted_band(fs, page_size: str, show_stream_table: bool = False) -> "tuple[float, float]":
+    """``(width, height)`` the fitted drawing may occupy, in drawing units.
+
+    The same ``dock`` the renderer uses, on the same items, so a caller can place
+    something against the band before layout without guessing at the furniture.
+    ``dock`` derives a fixed page's frame from the page itself, so the drawing
+    box it is handed cannot affect the answer.
+    """
+    from pandid.render.svg import _page
+
+    sheet = _page(page_size, fs.print_scale)
+    if sheet is None:
+        raise ValueError("fitted_band needs a named page size")
+    items = dock_items(fs, show_stream_table)
+    _placed, _frame, free = F.dock(
+        items, (0.0, 0.0, 0.0, 0.0), sheet=sheet,
+        too_small=lambda need_w, need_h, culprit: _too_small(
+            sheet, need_w, need_h, _furniture_name(culprit) if culprit else ""))
+    width, height = free[2], free[3]
+    if not items:
+        # A fixed page carrying no furniture of its own does not go through the
+        # dock in the SVG writer: ``SvgRenderer._place_plain`` gives it a plain
+        # 55-unit margin where the dock insets 50, so that writer leaves ten
+        # units less across. The band a caller may safely fill is the one both
+        # writers leave, or a drawing sized to this one overflows the other.
+        from pandid.render.svg import _PLAIN_SHEET_MARGIN
+
+        width = min(width, sheet.width - 2 * _PLAIN_SHEET_MARGIN)
+        height = min(height, sheet.height - 2 * _PLAIN_SHEET_MARGIN)
+    scale = fs.drawing_scale or 1.0
+    return width / scale, height / scale
 
 
 def _strip_size(block) -> "tuple[float, float]":

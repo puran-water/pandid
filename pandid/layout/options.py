@@ -15,6 +15,15 @@ class LayoutOptions:
     control_grid: float = 0.0
     parallel_trains: bool = False
     aligned_boundaries: bool = False
+    #: Page whose fitted band the boundary columns are placed against, resolved
+    #: when layout runs. ``None`` keeps the historical behaviour of hanging the
+    #: rails off the core's own extent, which leaves them wherever the content
+    #: happens to end.
+    #:
+    #: A page rather than a width, because the band depends on the furniture this
+    #: sheet docks and a flowsheet is still gaining furniture when a profile is
+    #: applied to it. Measuring at layout time is measuring the finished sheet.
+    boundary_page: str | None = None
     instrument_clearance: float = 0.0
     stream_label_bands: int = 7
     strict_label_clearance: bool = False
@@ -31,6 +40,11 @@ class LayoutOptions:
                     raise ValueError(f'layout_options.{field.name} must be boolean')
                 continue
             if field.name in {'control_grid', 'instrument_clearance'} and value == 0 and type(value) is not bool:
+                continue
+            if field.name == 'boundary_page':
+                # A page name or nothing; not a measurement.
+                if value is not None and not isinstance(value, str):
+                    raise ValueError('layout_options.boundary_page must be a page name or None')
                 continue
             if type(value) not in {int, float} or not math.isfinite(value) or value <= 0:
                 raise ValueError(f"layout_options.{field.name} must be positive and finite")

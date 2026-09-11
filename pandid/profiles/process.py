@@ -7,6 +7,8 @@ export; a busy sheet must be arranged again, never shrunk into smaller lettering
 PROFILE = "circle-h2o.process-drafting/1"
 DRAWING_SCALE = .44
 PRINT_SCALE = 2.7
+#: The one page this profile draws, and so the band its rails are placed against.
+PAGE = "A1"
 UNIT_SIZES = {"membrane_cage": (100, 134), "air_diffuser": (128, 64),
               "basin_agitator": (64, 180), "submersible_mixer": (100, 70)}
 
@@ -14,6 +16,15 @@ UNIT_SIZES = {"membrane_cage": (100, 134), "air_diffuser": (128, 64),
 def apply(fs):
     fs.print_scale = PRINT_SCALE
     fs.drawing_scale = DRAWING_SCALE
+    # boundary_page is deliberately NOT set yet. Placing the rails against the
+    # band works and lands them on it exactly, but on a sheet whose core fills
+    # only a quarter of the paper it buys two very long bare runs and leaves the
+    # equipment a small cluster in the middle -- worse to read than the flags
+    # sitting inboard. The rails are the second half of this change; the first is
+    # spreading the core, which has to widen the gap *between trains*
+    # (``layout_options.column_gap``, which ``_lay_columns`` already reads) and
+    # not scale positions, or a valve station is pulled off its pump. Set
+    # ``layout_options.boundary_page`` to enable the rails once that lands.
     fs.stream_labels.font_size = 14
     fs.layout_options.aligned_boundaries = True
     fs.layout_options.band_width = 2200
@@ -24,7 +35,15 @@ def apply(fs):
 
 
 def align_boundaries(fs):
-    """Reserve a left inlet column and a right outlet column before routing."""
+    """Reserve a left inlet column and a right outlet column before routing.
+
+    Hanging the rails off the core's own extent puts them wherever the content
+    happens to end, and a fixed page then centres the whole drawing in the band
+    left for it -- so the flags land mid-sheet and the clearance to the frame is
+    whatever slack remains. On the 2026-09-10 library that was 34 to 279 mm, and
+    no sheet reached the boundary. With ``boundary_span`` set, the rails are
+    placed so the pennants' outer edges meet the band instead.
+    """
     from dataclasses import replace
     from pandid.portgeom import unit_box
     boundaries = [u for u in fs.units if u.kind in {"feed", "product"}]
@@ -33,6 +52,24 @@ def align_boundaries(fs):
         return
     left = min(unit_box(u, u.frame)[0] for u in core) - 110
     right = max(unit_box(u, u.frame)[2] for u in core) + 110
+    page = getattr(fs.layout_options, "boundary_page", None)
+    if page:
+        from pandid.render.drawio import fitted_band
+
+        span = fitted_band(fs, page)[0]
+        # The span names the pennants' outer edges, and a pennant reaches its own
+        # width past the rail it hangs on -- ``boundary_flag`` draws a feed back
+        # from its anchor and a product forward from it. Reach is therefore the
+        # widest flag on each rail, not a constant: a library whose flags carry a
+        # reference code is wider than one whose flags do not.
+        reach_l = max((u.frame.w for u in boundaries if u.kind == "feed" and u.frame), default=0.0)
+        reach_r = max((u.frame.w for u in boundaries if u.kind == "product" and u.frame), default=0.0)
+        # Never pull a rail in through the core: a sheet whose content already
+        # fills the band keeps its own extent, and the capacity check downstream
+        # is what reports that.
+        half = max((span - reach_l - reach_r) / 2, (right - left) / 2)
+        centre = (left + right) / 2
+        left, right = centre - half, centre + half
     for kind in ("feed", "product"):
         cursor = float("-inf")
         for unit in sorted((u for u in boundaries if u.kind == kind), key=lambda u: (u.frame.cy, u.name)):
