@@ -16,15 +16,7 @@ UNIT_SIZES = {"membrane_cage": (100, 134), "air_diffuser": (128, 64),
 def apply(fs):
     fs.print_scale = PRINT_SCALE
     fs.drawing_scale = DRAWING_SCALE
-    # boundary_page is deliberately NOT set yet. Placing the rails against the
-    # band works and lands them on it exactly, but on a sheet whose core fills
-    # only a quarter of the paper it buys two very long bare runs and leaves the
-    # equipment a small cluster in the middle -- worse to read than the flags
-    # sitting inboard. The rails are the second half of this change; the first is
-    # spreading the core, which has to widen the gap *between trains*
-    # (``layout_options.column_gap``, which ``_lay_columns`` already reads) and
-    # not scale positions, or a valve station is pulled off its pump. Set
-    # ``layout_options.boundary_page`` to enable the rails once that lands.
+    fs.layout_options.boundary_page = PAGE
     fs.stream_labels.font_size = 14
     fs.layout_options.aligned_boundaries = True
     fs.layout_options.band_width = 2200
