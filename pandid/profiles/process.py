@@ -9,6 +9,11 @@ DRAWING_SCALE = .44
 PRINT_SCALE = 2.7
 #: The one page this profile draws, and so the band its rails are placed against.
 PAGE = "A1"
+#: Paper kept inside the band for ink that sits just outside the equipment:
+#: route bends, leaders and the approach to a boundary flag. The same figure
+#: ``layout/coordinates.py`` reserves when it fills a band's columns, so the
+#: two agree about how much of the band is actually spendable.
+ESCAPE_LANE = 50.0
 UNIT_SIZES = {"membrane_cage": (100, 134), "air_diffuser": (128, 64),
               "basin_agitator": (64, 180), "submersible_mixer": (100, 70)}
 
@@ -49,7 +54,16 @@ def align_boundaries(fs):
     if page:
         from pandid.render.drawio import fitted_band
 
-        span = fitted_band(fs, page)[0]
+        # The band is what the dock leaves; it is not all spendable. Route
+        # bends and leaders sit a little outside the equipment they serve,
+        # and a fixed-scale export measures that ink like any other -- so
+        # rails hung on the last unit of the band guarantee an overflow the
+        # moment a corner turns outboard of a flag. ``_filled_gap`` already
+        # reserves exactly this lane when it spends a band's spare paper
+        # (``layout/coordinates.py``, "one nozzle escape lane at either
+        # end"); the rails were the one place it was not applied, which is
+        # why uhp-1 overflowed by the 15 units of a single waypoint.
+        span = fitted_band(fs, page)[0] - ESCAPE_LANE
         # The span names the pennants' outer edges, and a pennant reaches its own
         # width past the rail it hangs on -- ``boundary_flag`` draws a feed back
         # from its anchor and a product forward from it. Reach is therefore the

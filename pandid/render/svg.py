@@ -1708,8 +1708,31 @@ class StreamNumber(NamedTuple):
         return self.name if self.display_label is None else self.display_label
 
 
+def fitted_region(fs):
+    """The rectangle the sheet has given the drawing, or ``None``.
+
+    Only meaningful once the drawing is being fitted to a named page: there
+    the boundary rails have been hung on the band (``profiles.process
+    .align_boundaries``) and the equipment and flags therefore *are* the
+    extent the page was fitted to, so ink outside them is ink the fixed-scale
+    export cannot place. Off a named page the drawing keeps its own
+    coordinates and the frame is grown around it, so nothing is out of bounds
+    and the answer is ``None``.
+    """
+    from pandid.portgeom import unit_box
+
+    if not getattr(fs.layout_options, "boundary_page", None):
+        return None
+    boxes = [unit_box(u, u.frame) for u in fs.units if u.frame is not None]
+    if not boxes:
+        return None
+    return (min(b[0] for b in boxes), min(b[1] for b in boxes),
+            max(b[2] for b in boxes), max(b[3] for b in boxes))
+
+
 def stream_numbers(fs, placed: list, joints: "str | None",
-                   direction: str) -> "list[StreamNumber]":
+                   direction: str,
+                   region: "tuple[float, float, float, float] | None" = None) -> "list[StreamNumber]":
     """Where every line number on the sheet goes.
 
     Lifted out of :meth:`SvgRenderer._draw_streams` for the reason
@@ -1733,6 +1756,17 @@ def stream_numbers(fs, placed: list, joints: "str | None",
     so the two callers cannot disagree about it: :func:`_ink` for the
     lines, and :func:`~pandid.portgeom.unit_box` through
     :func:`_obstacle` for the symbols.
+
+    ``region`` is the rectangle the sheet has given the drawing, and a
+    number may not be placed outside it. Only a renderer fitting the
+    drawing to a page knows that rectangle, so only a renderer passes
+    one; called directly -- by a tool, or by a test posing a corridor
+    with no clear paper in it -- the search is unbounded as before. It
+    matters because a number is placed by *search*, and the search was
+    free to step off the side of the drawing to find clear paper: on a
+    sheet whose rails hang on the band, 303 units of line number centred
+    on a 110-unit boundary approach hangs ~96 units past the flag and a
+    fixed-scale export refuses the sheet outright.
     """
     from pandid.portgeom import unit_box
 
@@ -1909,8 +1943,29 @@ def stream_numbers(fs, placed: list, joints: "str | None",
         spot: "tuple[float, float] | None" = None
         damage: "tuple[int, int, int, int] | None" = None
         leader: "tuple | None" = None
-        for ux, uy, _off in _label_anchors(cx, cy, span, hw, hh, vertical,
-                                           shape != "none", tw, bands):
+        # Anchors that would push the drawing wider or taller than the
+        # equipment and boundary flags already make it, dropped before the
+        # search rather than scored against it. The page is fitted to that
+        # rectangle at a fixed scale, so a number outside it is not a
+        # crowded label -- it is a sheet that will not export. A long line
+        # number centred on a short boundary run-in is the case that bites:
+        # 303 units of text on a 110-unit approach hangs ~96 units past the
+        # flag, and with the rails hung on the band there is nothing there
+        # to absorb it. Sliding it inboard costs nothing a reader notices.
+        #
+        # Only ever a filter, never the last word: where no anchor fits --
+        # a label longer than the whole drawing -- the search runs on the
+        # full set exactly as before and `label_findings` reports what it
+        # had to accept.
+        if region is None:
+            within = lambda a: True
+        else:
+            rx0, ry0, rx1, ry1 = region
+            within = lambda a: (a[0] - bw / 2 >= rx0 and a[1] - bh / 2 >= ry0
+                                and a[0] + bw / 2 <= rx1 and a[1] + bh / 2 <= ry1)
+        offered = list(_label_anchors(cx, cy, span, hw, hh, vertical,
+                                      shape != "none", tw, bands))
+        for ux, uy, _off in ([a for a in offered if within(a)] or offered):
             box = (ux - bw / 2, uy - bh / 2, ux + bw / 2, uy + bh / 2)
             paper = (box if shape == "none" else
                      (ux - lw / 2, uy - lh / 2, ux + lw / 2, uy + lh / 2))
@@ -1947,24 +2002,43 @@ def stream_numbers(fs, placed: list, joints: "str | None",
         assert spot is not None and damage is not None
         if fs.layout_options.strict_label_clearance and shape == "none" and any(damage[:3]):
             # A bounded nearby search may offer only crowded positions. A
-            # house process caption must remain readable, so reserve clear
-            # paper outside the occupied region and tie it back to its run.
+            # house process caption must remain readable, so look for clear
+            # paper in the gaps and tie it back to its run.
+            #
+            # The search may not make the drawing bigger. A caption placed
+            # clear of all the ink by stepping off the side of it reads well
+            # and still ruins the sheet: the equipment and the boundary
+            # flags are what the page was fitted to, and ink outside their
+            # extent is ink outside the region the sheet gave the drawing.
+            # With the rails hung on the band that extent *is* the band, so
+            # a caption beyond it overflows a fixed-scale export outright --
+            # 23 to 92 units of it across the 2026-09-11 library, which is
+            # how this was found. Bounded by the same rectangle the fit is
+            # measured over, the gaps between bands and columns are still
+            # available and are where a clear spot is actually wanted.
             protected = symbols + placed + [line.box for line in ink]
             x0=min(b[0] for b in protected);y0=min(b[1] for b in protected)
             x1=max(b[2] for b in protected);y1=max(b[3] for b in protected)
+            lx0,ly0,lx1,ly1 = region if region is not None else (
+                float("-inf"), float("-inf"), float("inf"), float("inf"))
             candidates=[]
             for step in (0,-1,1,-2,2):
                 candidates += [(x0-bw/2-8,cy+step*(bh+8)),(x1+bw/2+8,cy+step*(bh+8)),
                                (cx+step*(bw+8),y0-bh/2-8),(cx+step*(bw+8),y1+bh/2+8)]
             for ux,uy in sorted(candidates,key=lambda p: math.hypot(p[0]-cx,p[1]-cy)):
                 box=(ux-bw/2,uy-bh/2,ux+bw/2,uy+bh/2)
+                if box[0] < lx0 or box[1] < ly0 or box[2] > lx1 or box[3] > ly1:
+                    continue
                 if any(_meets(box,b) for b in protected):
                     continue
                 leader,cut=_leader(box,seg,protected,keep)
                 spot,damage=(ux,uy),(0,0,0,cut)
                 break
-            else:
-                raise ValueError('LINE_LABEL_CLEARANCE_REQUIRED: '+name)
+            # No clear paper inside the drawing is a crowded sheet, not an
+            # unrenderable one. The nearby search already chose the least
+            # damaging spot on the run; keep it, and let `label_findings`
+            # name the crowding it carries. Refusing here would trade a
+            # readable-but-tight caption for no drawing at all.
         tx, ty = spot
         halo = (tx - bw / 2, ty - bh / 2, tx + bw / 2, ty + bh / 2)
         # The one opaque plate the label lays down -- the reserved box
@@ -4284,7 +4358,7 @@ class SvgRenderer:
             from pandid.render.drawio import _tag_pass
             from pandid.render.nameplates import label_boxes
             tags = _tag_pass(fs,self.registry,joints,jump_direction)
-            number_plan = stream_numbers(fs,list(tags.plates),joints,jump_direction)
+            number_plan = stream_numbers(fs,list(tags.plates),joints,jump_direction,fitted_region(fs))
             text_boxes = label_boxes(tags,number_plan)
 
         # 1. Diagram bounding box: union of every unit's drawn box and
@@ -5496,7 +5570,7 @@ class SvgRenderer:
         ]
 
         shape = enclosure_shape(fs)
-        numbers = stream_numbers(fs, placed, joints, jump_direction) if number_plan is None else number_plan
+        numbers = stream_numbers(fs, placed, joints, jump_direction, fitted_region(fs)) if number_plan is None else number_plan
         if number_plan is not None:
             from pandid.render.nameplates import label_boxes
             placed += label_boxes(None,numbers)

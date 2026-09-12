@@ -16,6 +16,7 @@ import pytest
 
 from pandid import Flowsheet
 from pandid.profiles import process as P
+from pandid.profiles.process import ESCAPE_LANE
 from pandid.render.drawio import fitted_band
 from pandid.units import Feed, Product, Pump, Tank
 
@@ -61,25 +62,37 @@ def test_rails_hang_off_the_core_when_no_page_is_named():
     assert band_r - max(b[0] + b[1] for b in flags) > 500
 
 
-def test_rails_meet_the_band_when_the_page_is_named():
-    """The flags span exactly the band, and the band is the one both writers
-    leave -- which for a page carrying no furniture is five units inside the
-    dock's own, so asserting against the frame would be asserting the wrong
-    band."""
+def test_rails_meet_the_band_less_the_escape_lane_when_the_page_is_named():
+    """The flags span the band less one escape lane, and the band is the one
+    both writers leave -- which for a page carrying no furniture is five units
+    inside the dock's own, so asserting against the frame would be asserting
+    the wrong band.
+
+    The lane is not slack. Rails hung on the last unit of the band leave no
+    paper for ink that sits outside the equipment -- a route corner, a leader,
+    the approach to a flag -- and on 2026-09-11 that made four of twenty-one
+    LB TEX families refuse to export. ``_filled_gap`` already withheld exactly
+    this much when spending a band's spare paper; the rails are now the second
+    place it is withheld, which is what makes the two agree."""
     fs = station()
     fs.layout_options.boundary_page = "A1"
     fs.layout()
     flags, (band_l, band_r) = flags_and_band(fs)
     width, _height = fitted_band(fs, "A1")
-    exported = width * fs.drawing_scale * fs.print_scale * 100 / 96
+    scale = fs.drawing_scale * fs.print_scale * 100 / 96
+    exported = (width - ESCAPE_LANE) * scale
 
     span = max(b[0] + b[1] for b in flags) - min(b[0] for b in flags)
     assert span == pytest.approx(exported, abs=1.0)
     # Centred in the frame's band, so the inset is equal either side.
     assert (min(b[0] for b in flags) - band_l) == pytest.approx(
         band_r - max(b[0] + b[1] for b in flags), abs=1.0)
-    # And still comfortably inside the frame it was drifting from.
-    assert min(b[0] for b in flags) - band_l < 20
+    # At least half a lane, because that is what the rails withheld, and not
+    # much more than it: the remainder is the margin the plain writer keeps
+    # over the dock's band (see the docstring), not the rails drifting back
+    # toward the middle of the sheet the way they used to by 500-plus.
+    inset = min(b[0] for b in flags) - band_l
+    assert ESCAPE_LANE / 2 * scale <= inset < ESCAPE_LANE / 2 * scale + 20
 
 
 def test_the_band_is_what_both_writers_leave():
