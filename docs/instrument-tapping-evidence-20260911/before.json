@@ -1,0 +1,185 @@
+{
+  "label": "before",
+  "units": 28,
+  "streams": 25,
+  "route_converged": true,
+  "drawing_scale": 0.44,
+  "print_scale": 2.7,
+  "sha256": "26b9e5d6b98007a023a472491aa70882493b59690fcd99b9cc1382d7a7cb6435",
+  "input_sha256": "68837f619128979a0197e0b620807b9dfee296feee5c659869d45f7f9a2a8684",
+  "instruments": {
+    "120-LIT-01": {
+      "tap": [
+        1104.5,
+        410.0
+      ],
+      "centre": [
+        1104.5,
+        350.0
+      ],
+      "size": [
+        44.0,
+        44.0
+      ],
+      "along": null,
+      "host": "tank-1"
+    },
+    "120-LIC-01": {
+      "tap": [
+        1104.5,
+        328.0
+      ],
+      "centre": [
+        1104.5,
+        258.0
+      ],
+      "size": [
+        44.0,
+        44.0
+      ],
+      "along": null,
+      "host": "120-LIT-01"
+    },
+    "120-PI-01": {
+      "tap": [
+        446.5,
+        212.0
+      ],
+      "centre": [
+        446.5,
+        152.0
+      ],
+      "size": [
+        44.0,
+        44.0
+      ],
+      "along": null,
+      "host": "air-header"
+    },
+    "120-AE-01": {
+      "tap": [
+        1104.5,
+        410.0
+      ],
+      "centre": [
+        1104.5,
+        196.0
+      ],
+      "size": [
+        44.0,
+        44.0
+      ],
+      "along": null,
+      "host": "tank-1"
+    },
+    "120-AIT-01": {
+      "tap": [
+        1104.5,
+        174.0
+      ],
+      "centre": [
+        1104.5,
+        104.0
+      ],
+      "size": [
+        44.0,
+        44.0
+      ],
+      "along": null,
+      "host": "120-AE-01"
+    },
+    "120-AE-02": {
+      "tap": [
+        1104.5,
+        410.0
+      ],
+      "centre": [
+        1104.5,
+        42.0
+      ],
+      "size": [
+        44.0,
+        44.0
+      ],
+      "along": null,
+      "host": "tank-1"
+    },
+    "120-TE-02": {
+      "tap": [
+        1104.5,
+        410.0
+      ],
+      "centre": [
+        1104.5,
+        -24.0
+      ],
+      "size": [
+        44.0,
+        44.0
+      ],
+      "along": null,
+      "host": "tank-1"
+    }
+  },
+  "segments": [
+    [
+      "120-LIT-01",
+      [
+        1104.5,
+        410.0
+      ],
+      [
+        1104.5,
+        350.0
+      ]
+    ],
+    [
+      "120-PI-01",
+      [
+        446.5,
+        212.0
+      ],
+      [
+        446.5,
+        152.0
+      ]
+    ],
+    [
+      "120-AE-01",
+      [
+        1104.5,
+        410.0
+      ],
+      [
+        1104.5,
+        196.0
+      ]
+    ],
+    [
+      "120-AE-02",
+      [
+        1104.5,
+        410.0
+      ],
+      [
+        1104.5,
+        42.0
+      ]
+    ],
+    [
+      "120-TE-02",
+      [
+        1104.5,
+        410.0
+      ],
+      [
+        1104.5,
+        -24.0
+      ]
+    ]
+  ],
+  "warnings": [
+    "[warning] route-diagonal: stream pump-path-1-1 is drawn on the slant, (1451, 420) to (1476, 406). ISO 15519-1:2010 12.1 has connecting lines oriented horizontally or vertically, and a diagonal is also invisible to the check that reports a line crossing a vessel. the router draws right angles only, so this is a path resolved against geometry that has since moved: route() again after the last change to the sheet",
+    "[warning] route-detour: stream pump-path-2-1 routes 80px for a 20px span (4.0x)"
+  ]
+}

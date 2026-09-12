@@ -363,6 +363,30 @@ def _crowded(heads: list[tuple[float, str]], floor: float
     return next((p for p in pairs if _TOL < p[0] < floor), None)
 
 
+def _tapping_issues(fs, *, resolved=False) -> list[Issue]:
+    from pandid.tapping import undeclared_taps
+
+    try:
+        groups = list(undeclared_taps(fs, resolved=resolved))
+    except ValueError as error:
+        return [] if resolved else [Issue("error", "multi-channel-invalid", str(error))]
+    issues = []
+    for members in groups:
+        # The model pass already names equal attachment coordinates. Geometry
+        # adds only coincidences that needed a placed face or routed path to
+        # discover, such as two different faces meeting at the same corner.
+        if resolved and len({(inst.at, inst.along) for inst in members}) == 1:
+            continue
+        names = ", ".join(inst.name for inst in members)
+        issues.append(Issue(
+            "error", "instrument-tap-undeclared",
+            f"{names} share a process tap on {members[0].host.name} without a "
+            "multi-channel declaration. Give independent instruments distinct "
+            "along positions on the face (at fractions on a stream), or have "
+            "the host declare_multi_channel() for one insertion's channels."))
+    return issues
+
+
 def model_issues(fs: "Flowsheet", *, tabulates: bool = True) -> list["Issue"]:
     """The findings that read the model alone (errors first).
 
@@ -406,7 +430,7 @@ def model_issues(fs: "Flowsheet", *, tabulates: bool = True) -> list["Issue"]:
     from pandid.render.symbols import default_registry
     from pandid.units import Instrument
 
-    errors: list[Issue] = []
+    errors: list[Issue] = _tapping_issues(fs)
     warnings: list[Issue] = []
 
     # --- deprecated API (recorded at the call, not recomputed here) ---
@@ -1056,7 +1080,7 @@ def geometry_issues(fs: "Flowsheet", *, arrows: bool = True) -> list["Issue"]:
     from pandid.streams import SIGNAL_KINDS, Stream
     from pandid.units import Block
 
-    errors: list[Issue] = []
+    errors: list[Issue] = _tapping_issues(fs, resolved=True)
     warnings: list[Issue] = []
 
     # --- routing settled? (reported by route(), not recomputed here)

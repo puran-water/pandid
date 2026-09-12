@@ -3,7 +3,7 @@
 A P&ID bubble is not a node in the process flow; it is furniture hung
 off a tap point. So an attached instrument takes no part in stage 1 (it
 has no column and no row) and its frame comes from its host instead: a
-point on the host stream's routed path, or the midpoint of a face of the
+point on the host stream's routed path, or a declared point across a face of the
 host unit's drawn box, pushed out along a branch direction measured from
 the flow. The space it will need is reserved before stage 1 places
 anything -- see :mod:`pandid.layout.halo` -- so what it lands in is
@@ -29,7 +29,7 @@ nothing this sweep can read, which
 from __future__ import annotations
 
 import math
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
 if TYPE_CHECKING:
     from pandid.flowsheet import Flowsheet
@@ -189,7 +189,7 @@ def _anchor(inst: "Instrument") -> tuple[Point, Point] | None:
         return _along(points, float(inst.at if inst.at is not None else 0.5))
     if host.frame is None:
         return None
-    (px, py), (nx, ny) = face_point(host, host.frame, str(inst.at or "E"))
+    (px, py), (nx, ny) = face_point(host, host.frame, str(inst.at or "E"), inst.along)
     return (px, py), (-ny, nx)
 
 
@@ -269,55 +269,49 @@ def _standoff_box(tap: Point, ref: Point, distance: float, angle: float,
     return (cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2)
 
 
+class TapRow(NamedTuple):
+    """One channel's horizontal place in the host's declared element."""
+
+    members: tuple
+    shift: float
+    width: float
+    height: float
+
+
 def shared_tap_stacks(fs: "Flowsheet") -> dict:
-    """Declared siblings on one process tap, with room for their full depth.
+    """Horizontal rows for explicitly declared multi-channel elements.
 
-    A perpendicular leader alone says nothing about sharing. The host, tap,
-    offset and sensing relation must agree; an actuator or a balloon hosted by
-    another balloon is a different connection and keeps its own branch.
+    The historical name remains for the halo caller, but no depth is stacked.
+    A stem is a process connection: matching coordinates never declare one
+    device. Its channels share a row, while panel functions remain children of
+    their own field instrument.
     """
-    from collections import defaultdict
-    from pandid.layout.stages import is_control
     from pandid.portgeom import resolve_size
-    from pandid.streams import Stream
+    from pandid.tapping import declared_elements
 
-    groups = defaultdict(list)
-    for inst in fs.units:
-        host = getattr(inst, 'host', None)
-        pin = inst.pin_
-        if (host is None or is_control(host)
-                or isinstance(host, Stream) and host.kind not in {'material', 'energy'}
-                or getattr(inst, 'relation', None) != 'sensing'
-                or inst.angle != 90.0 or inst.offset <= 0
-                or pin is not None and (pin.x is not None or pin.y is not None)):
-            continue
-        groups[(id(host), inst.at, inst.offset, inst.angle)].append(inst)
-    stacks = {}
-    for group in groups.values():
-        if len(group) < 2:
-            continue
-        distance, previous = group[0].offset, None
-        for inst in group:
-            diameter = max(resolve_size(inst))
-            if previous is not None:
-                pitch = (previous + diameter) / 2 + RESOLVED_CLEARANCE
-                distance += math.ceil(pitch / STANDOFF_STEP) * STANDOFF_STEP
-            stacks[inst] = distance
-            previous = diameter
-    return stacks
+    rows = {}
+    for members in declared_elements(fs):
+        sizes = [resolve_size(inst) for inst in members]
+        width = sum(w for w, h in sizes) + RESOLVED_CLEARANCE * (len(members) - 1)
+        height = max(h for w, h in sizes)
+        left = -width / 2
+        for inst, (w, h) in zip(members, sizes):
+            rows[inst] = TapRow(members, left + w / 2, width, height)
+            left += w + RESOLVED_CLEARANCE
+    return rows
 
 
 def _clear_standoff(inst: "Instrument", tap: Point, ref: Point,
                     w: float, h: float,
                     obstacles: list[Box],
-                    keepouts: list[Box], *, stack_distance: float | None = None) -> tuple[float, float]:
+                    keepouts: list[Box], *, shared_row: bool = False) -> tuple[float, float]:
     """``(distance, angle)`` to hang *inst* at: what it asked for, or the
     nearest standoff out from it that nothing else is standing in.
 
     The anchor does not move. Only the standoff does, and only outward:
     the balloon is swung about the tap at one distance, and *then* the
-    distance grows. Declared siblings on a shared process tap instead stay
-    collinear and start at their reserved stack depth. The bounded search
+    distance grows. A declared multi-channel row moves as one box and keeps
+    its perpendicular approach. The bounded search
     guarantees termination, not convergence of placement and routing; the
     caller reports a fixed point only when no balloon moves.
 
@@ -342,15 +336,15 @@ def _clear_standoff(inst: "Instrument", tap: Point, ref: Point,
     from pandid.streams import Stream
 
     on_a_line = isinstance(inst.host, Stream)
-    angles = _branch_angles(inst.angle) if stack_distance is None else [inst.angle]
+    angles = [inst.angle] if shared_row else _branch_angles(inst.angle)
     asked = (inst.offset, inst.angle)
     fallback, least = asked, None
     for ring in range(STANDOFF_STEPS + 1):
-        distance = (inst.offset if stack_distance is None else stack_distance) + ring * STANDOFF_STEP
+        distance = inst.offset + ring * STANDOFF_STEP
         for angle in angles:
             box = _standoff_box(tap, ref, distance, angle, w, h)
             if (distance, angle) == asked:
-                if (on_a_line and box[0] <= tap[0] <= box[2]
+                if (on_a_line and not shared_row and box[0] <= tap[0] <= box[2]
                         and box[1] <= tap[1] <= box[3]):
                     return asked
                 gap, against = -TOUCHING, obstacles
@@ -403,6 +397,7 @@ def place_attached(fs: "Flowsheet") -> bool:
                  and not (fs.layout_options.control_grid and u.kind == 'instrument' and u.pin_ is None)]
     keepouts = _nozzle_keepouts(fs)
     stacks = shared_tap_stacks(fs)
+    row_positions = {}
     # Balloons chain (an interlock hung under a controller hung off a
     # transmitter), so resolve a host before whatever hangs on it,
     # sweeping until nothing new can be placed.
@@ -417,11 +412,24 @@ def place_attached(fs: "Flowsheet") -> bool:
                 continue
             (tx, ty), ref = anchor
             w, h = resolve_size(inst)
-            distance, angle = _clear_standoff(
-                inst, (tx, ty), ref, w, h, obstacles, keepouts,
-                stack_distance=stacks.get(inst))
-            ux, uy = _rotate_ccw(ref[0], ref[1], angle)
-            cx, cy = tx + ux * distance - w / 2, ty + uy * distance - h / 2
+            row = stacks.get(inst)
+            if row is not None and inst not in row_positions:
+                distance, angle = _clear_standoff(
+                    inst, (tx, ty), ref, row.width, row.height,
+                    obstacles, keepouts, shared_row=True)
+                ux, uy = _rotate_ccw(ref[0], ref[1], angle)
+                for member in row.members:
+                    mw, mh = resolve_size(member)
+                    mx = tx + ux * distance + stacks[member].shift - mw / 2
+                    my = ty + uy * distance - mh / 2
+                    row_positions[member] = (mx, my)
+                    obstacles.append((mx, my, mx + mw, my + mh))
+            if row is not None:
+                cx, cy = row_positions[inst]
+            else:
+                distance, angle = _clear_standoff(inst, (tx, ty), ref, w, h, obstacles, keepouts)
+                ux, uy = _rotate_ccw(ref[0], ref[1], angle)
+                cx, cy = tx + ux * distance - w / 2, ty + uy * distance - h / 2
             # An absolute pin supersedes the standoff on the axis it
             # names, exactly as it supersedes a grid rank on every other
             # unit -- and per axis for the same reason, so
@@ -443,7 +451,8 @@ def place_attached(fs: "Flowsheet") -> bool:
             if pin is not None:
                 cx = cx if pin.x is None else float(pin.x)
                 cy = cy if pin.y is None else float(pin.y)
-            obstacles.append((cx, cy, cx + w, cy + h))
+            if row is None:
+                obstacles.append((cx, cy, cx + w, cy + h))
             old = inst.frame
             if old is None or abs(old.x - cx) > 0.01 or abs(old.y - cy) > 0.01:
                 moved = True

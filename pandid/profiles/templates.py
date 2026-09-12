@@ -215,5 +215,13 @@ def from_template(name, nodes, edges, *, metadata, print_scale=2.7, pins=None, f
         if row.get('attachment'):
             attachment = row['attachment']
             target = (units if attachment['kind'] == 'unit' else streams)[attachment['target']]
-            units[row['key']].attach(target, at=attachment.get('at'), offset=attachment.get('offset', 60))
+            units[row['key']].attach(target, at=attachment.get('at'),
+                                     along=attachment.get('along'),
+                                     offset=attachment.get('offset', 60))
+    # A host names its channels explicitly. Coincident attachments alone say
+    # nothing about the number of process connections installed there.
+    for rows, hosts in ((nodes, units), (edges, streams)):
+        for row in rows:
+            for members in row.get('multi_channel_elements', []):
+                hosts[row['key']].declare_multi_channel(*(units[key] for key in members))
     return fs

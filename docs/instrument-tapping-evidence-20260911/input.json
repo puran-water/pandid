@@ -1,0 +1,761 @@
+{
+  "name": "Instrument tapping - dense engineering specimen",
+  "nodes": [
+    {
+      "key": "boundary-110_01",
+      "id": "7ecd7c35-2031-57aa-a776-62707ce6fed3",
+      "symbol": "boundary.reference",
+      "label": "COOLED INFLUENT TO EQUALISATION\nSTREAM 110-01\nFROM ct-1",
+      "attributes": {
+        "semantic-class": "COOLED INFLUENT TO EQUALISATION"
+      },
+      "connector": {
+        "code": "B06",
+        "description": "COOLED INFLUENT TO EQUALISATION\nFROM ct-1",
+        "direction": "right"
+      }
+    },
+    {
+      "key": "boundary-610_01",
+      "id": "4eab37ba-51ab-55e2-8759-5faf99a0da90",
+      "symbol": "boundary.reference",
+      "label": "DEWATERING FILTRATE RETURN\nSTREAM 610-01\nFROM dw-1",
+      "attributes": {
+        "semantic-class": "DEWATERING FILTRATE RETURN"
+      },
+      "connector": {
+        "code": "B33",
+        "description": "DEWATERING FILTRATE RETURN\nFROM dw-1",
+        "direction": "right"
+      }
+    },
+    {
+      "key": "boundary-120_01",
+      "id": "32634bf0-93d8-5918-ac89-855f0e27e9b6",
+      "symbol": "boundary.reference",
+      "label": "EQUALISED EFFLUENT\nSTREAM 120-01\nTO mix-1",
+      "attributes": {
+        "semantic-class": "EQUALISED EFFLUENT"
+      },
+      "connector": {
+        "code": "B07",
+        "description": "EQUALISED EFFLUENT\nTO mix-1",
+        "direction": "right"
+      }
+    },
+    {
+      "key": "boundary-301_01",
+      "id": "58985470-47c3-5a9a-af6d-3bef61265e8c",
+      "symbol": "boundary.reference",
+      "label": "BATCH SOFTENER TREATED SUPERNATANT\nSTREAM 301-01\nFROM regen-1",
+      "attributes": {
+        "semantic-class": "BATCH SOFTENER TREATED SUPERNATANT"
+      },
+      "connector": {
+        "code": "B18",
+        "description": "BATCH SOFTENER TREATED SUPERNATANT\nFROM regen-1",
+        "direction": "right"
+      }
+    },
+    {
+      "key": "boundary-601_02",
+      "id": "dc720093-36ab-5af3-8789-595d56b61b36",
+      "symbol": "boundary.reference",
+      "label": "THICKENER OVERFLOW RETURN\nSTREAM 601-02\nFROM thk-1",
+      "attributes": {
+        "semantic-class": "THICKENER OVERFLOW RETURN"
+      },
+      "connector": {
+        "code": "B32",
+        "description": "THICKENER OVERFLOW RETURN\nFROM thk-1",
+        "direction": "right"
+      }
+    },
+    {
+      "key": "feed-header",
+      "id": "40b11262-2495-5899-8ae0-10aa02bcd6fe",
+      "symbol": "process.junction",
+      "label": "",
+      "attributes": {
+        "semantic-class": "PipeHeader"
+      }
+    },
+    {
+      "key": "product-header",
+      "id": "bafb6f31-9575-5109-b475-4e67b36ae9ae",
+      "symbol": "process.junction",
+      "label": "",
+      "attributes": {
+        "semantic-class": "PipeHeader"
+      }
+    },
+    {
+      "key": "tank-1",
+      "id": "0af59c47-e9c4-5790-9512-37bb7237ac75",
+      "symbol": "stencil.pid.vessels.concrete_tank",
+      "label": "110-TK-01",
+      "attributes": {
+        "semantic-class": "Equalisation basin"
+      },
+      "multi_channel_elements": [
+        [
+          "ae-probe",
+          "te-probe"
+        ]
+      ]
+    },
+    {
+      "key": "basin-level",
+      "id": "5c0a49f3-175f-533f-9c84-2d47093e1c85",
+      "symbol": "instrument.field",
+      "label": "120-LIT-01",
+      "attributes": {
+        "semantic-class": "LIT"
+      },
+      "instrument_function": "LIT",
+      "instrument_loop": "01",
+      "attachment": {
+        "kind": "unit",
+        "target": "tank-1",
+        "at": "N",
+        "offset": 60.0,
+        "along": 0.15
+      }
+    },
+    {
+      "key": "basin-level-controller",
+      "id": "ae2dc416-fe5d-54fe-910c-a05f85cd4bee",
+      "symbol": "instrument.control-room",
+      "label": "120-LIC-01",
+      "attributes": {
+        "semantic-class": "LAH"
+      },
+      "instrument_function": "LIC",
+      "instrument_loop": "02",
+      "attachment": {
+        "kind": "unit",
+        "target": "basin-level",
+        "at": "N",
+        "offset": 70
+      }
+    },
+    {
+      "key": "air-supply",
+      "id": "4699edb1-f36e-563b-84f0-0f2c9cda03ca",
+      "symbol": "boundary.reference",
+      "label": "PROCESS AIR SUPPLY",
+      "attributes": {
+        "semantic-class": "PROCESS AIR SUPPLY"
+      },
+      "connector": {
+        "code": "U06",
+        "description": "PROCESS AIR SUPPLY",
+        "direction": "right"
+      }
+    },
+    {
+      "key": "air-header",
+      "id": "7a2f32bd-8796-5d90-be3f-2bb3df5f5726",
+      "symbol": "process.junction",
+      "label": "",
+      "attributes": {
+        "semantic-class": "PipeHeader"
+      }
+    },
+    {
+      "key": "iso-009",
+      "id": "6c4253c1-ce4b-55ba-85fa-b1fac0dd9583",
+      "symbol": "stencil.pid.valves.butterfly_valve_1",
+      "label": "120-HV-01\nDN50 / SPEC",
+      "attributes": {
+        "semantic-class": "Manual isolation valve"
+      }
+    },
+    {
+      "key": "diffuser-1",
+      "id": "c759c618-3c2b-5c0b-b1ad-b7f7f2e22110",
+      "symbol": "house.air.diffuser_grid",
+      "label": "120-DF-01",
+      "attributes": {
+        "semantic-class": "SubmergedAirDiffuser"
+      }
+    },
+    {
+      "key": "air-pressure",
+      "id": "3719fd78-c329-51b6-b17a-bf26f58faab5",
+      "symbol": "instrument.field",
+      "label": "120-PI-01",
+      "attributes": {
+        "semantic-class": "PI"
+      },
+      "instrument_function": "PI",
+      "instrument_loop": "03",
+      "attachment": {
+        "kind": "unit",
+        "target": "air-header",
+        "at": "N",
+        "offset": 60.0
+      }
+    },
+    {
+      "key": "dissolved-oxygen",
+      "id": "3c551939-9d73-524c-b834-9189a07de575",
+      "symbol": "instrument.field",
+      "label": "120-AE-01",
+      "attributes": {
+        "semantic-class": "AIT"
+      },
+      "instrument_function": "AE",
+      "instrument_loop": "04",
+      "attachment": {
+        "kind": "unit",
+        "target": "tank-1",
+        "at": "N",
+        "offset": 60.0,
+        "along": 0.45
+      },
+      "measured_variable": "DO"
+    },
+    {
+      "key": "dissolved-oxygen-controller",
+      "id": "8c76d084-6080-5608-91b9-f603cf9c2c43",
+      "symbol": "instrument.control-room",
+      "label": "120-AIT-01",
+      "attributes": {
+        "semantic-class": "AIC"
+      },
+      "instrument_function": "AIT",
+      "instrument_loop": "05",
+      "attachment": {
+        "kind": "unit",
+        "target": "dissolved-oxygen",
+        "at": "N",
+        "offset": 70
+      }
+    },
+    {
+      "key": "ae-probe",
+      "id": "evidence-ae-probe",
+      "symbol": "instrument.field",
+      "label": "120-AE-02",
+      "attributes": {
+        "measured-variable": "pH"
+      },
+      "instrument_function": "AE",
+      "instrument_loop": "02",
+      "attachment": {
+        "kind": "unit",
+        "target": "tank-1",
+        "at": "N",
+        "along": 0.8,
+        "offset": 60
+      }
+    },
+    {
+      "key": "te-probe",
+      "id": "evidence-te-probe",
+      "symbol": "instrument.field",
+      "label": "120-TE-02",
+      "attributes": {
+        "measured-variable": "Temperature"
+      },
+      "instrument_function": "TE",
+      "instrument_loop": "02",
+      "attachment": {
+        "kind": "unit",
+        "target": "tank-1",
+        "at": "N",
+        "along": 0.8,
+        "offset": 60
+      }
+    },
+    {
+      "key": "isolation-1",
+      "id": "evidence-isolation-1",
+      "symbol": "stencil.pid.valves.butterfly_valve_1",
+      "label": "120-HV-11",
+      "attributes": {}
+    },
+    {
+      "key": "pump-1",
+      "id": "evidence-pump-1",
+      "symbol": "house.pump.rotary_lobe",
+      "label": "120-P-11",
+      "attributes": {}
+    },
+    {
+      "key": "control-1",
+      "id": "evidence-control-1",
+      "symbol": "stencil.pid.valves.pneumatic_operated_butterfly_valve",
+      "label": "120-BV-11",
+      "attributes": {}
+    },
+    {
+      "key": "isolation-2",
+      "id": "evidence-isolation-2",
+      "symbol": "stencil.pid.valves.butterfly_valve_1",
+      "label": "120-HV-12",
+      "attributes": {}
+    },
+    {
+      "key": "pump-2",
+      "id": "evidence-pump-2",
+      "symbol": "house.pump.rotary_lobe",
+      "label": "120-P-12",
+      "attributes": {}
+    },
+    {
+      "key": "control-2",
+      "id": "evidence-control-2",
+      "symbol": "stencil.pid.valves.pneumatic_operated_butterfly_valve",
+      "label": "120-BV-12",
+      "attributes": {}
+    },
+    {
+      "key": "isolation-3",
+      "id": "evidence-isolation-3",
+      "symbol": "stencil.pid.valves.butterfly_valve_1",
+      "label": "120-HV-13",
+      "attributes": {}
+    },
+    {
+      "key": "pump-3",
+      "id": "evidence-pump-3",
+      "symbol": "house.pump.rotary_lobe",
+      "label": "120-P-13",
+      "attributes": {}
+    },
+    {
+      "key": "control-3",
+      "id": "evidence-control-3",
+      "symbol": "stencil.pid.valves.pneumatic_operated_butterfly_valve",
+      "label": "120-BV-13",
+      "attributes": {}
+    }
+  ],
+  "edges": [
+    {
+      "key": "line-001",
+      "id": "ec251401-bc8b-5bb2-8514-5885d263fbba",
+      "source": "boundary-110_01",
+      "target": "feed-header",
+      "source_port": "outlet",
+      "target_port": "inlet",
+      "kind": "material",
+      "label": "120-L-001 / DN50 / SPEC",
+      "flow_class": "main",
+      "representation": "pipe",
+      "attributes": {}
+    },
+    {
+      "key": "line-002",
+      "id": "cf9e7df5-2840-5ffe-b9a4-f5666fabbf10",
+      "source": "boundary-610_01",
+      "target": "feed-header",
+      "source_port": "outlet",
+      "target_port": "in2",
+      "kind": "material",
+      "label": "120-L-002 / DN50 / SPEC",
+      "flow_class": "secondary",
+      "representation": "pipe",
+      "attributes": {}
+    },
+    {
+      "key": "line-003",
+      "id": "840b9bd0-e237-538a-bb4e-72bfea3bf990",
+      "source": "boundary-301_01",
+      "target": "feed-header",
+      "source_port": "outlet",
+      "target_port": "in3",
+      "kind": "material",
+      "label": "120-L-003 / DN50 / SPEC",
+      "flow_class": "secondary",
+      "representation": "pipe",
+      "attributes": {}
+    },
+    {
+      "key": "line-004",
+      "id": "aa46149f-daa9-5c81-9cac-d0a175db6189",
+      "source": "boundary-601_02",
+      "target": "feed-header",
+      "source_port": "outlet",
+      "target_port": "in4",
+      "kind": "material",
+      "label": "120-L-004 / DN50 / SPEC",
+      "flow_class": "secondary",
+      "representation": "pipe",
+      "attributes": {}
+    },
+    {
+      "key": "line-005",
+      "id": "362864db-fe3b-5449-b1ab-afa17e0dc543",
+      "source": "product-header",
+      "target": "boundary-120_01",
+      "source_port": "outlet",
+      "target_port": "inlet",
+      "kind": "material",
+      "label": "120-L-005 / DN50 / SPEC",
+      "flow_class": "main",
+      "representation": "pipe",
+      "attributes": {}
+    },
+    {
+      "key": "line-006",
+      "id": "b64d4358-64d8-5076-95d7-2573511be299",
+      "source": "feed-header",
+      "target": "tank-1",
+      "source_port": "outlet",
+      "target_port": "inlet",
+      "kind": "material",
+      "label": "120-L-006 / DN50 / SPEC",
+      "flow_class": "main",
+      "representation": "pipe",
+      "attributes": {}
+    },
+    {
+      "key": "line-008",
+      "id": "eeebdac5-57b5-5e3b-86ba-15d883e42cc4",
+      "source": "basin-level",
+      "target": "basin-level-controller",
+      "source_port": "signal-out",
+      "target_port": "signal-in",
+      "kind": "electric",
+      "label": "",
+      "flow_class": "secondary",
+      "representation": "pipe",
+      "attributes": {}
+    },
+    {
+      "key": "line-009",
+      "id": "fd49b2ad-752e-53a8-a1eb-b9080f118000",
+      "source": "air-supply",
+      "target": "iso-009",
+      "source_port": "outlet",
+      "target_port": "inlet",
+      "kind": "material",
+      "label": "120-L-008 / DN50 / SPEC",
+      "flow_class": "main",
+      "representation": "pipe",
+      "attributes": {}
+    },
+    {
+      "key": "line-010",
+      "id": "7e62ee50-88c5-52a0-9850-cf4ce38550f2",
+      "source": "iso-009",
+      "target": "air-header",
+      "source_port": "outlet",
+      "target_port": "inlet",
+      "kind": "material",
+      "label": "120-L-008 / DN50 / SPEC",
+      "flow_class": "main",
+      "representation": "pipe",
+      "attributes": {}
+    },
+    {
+      "key": "line-011",
+      "id": "2d4033a0-ad3b-5f98-adb5-49ab12452fad",
+      "source": "air-header",
+      "target": "diffuser-1",
+      "source_port": "outlet",
+      "target_port": "air_in",
+      "kind": "material",
+      "label": "120-L-009 / DN50 / SPEC",
+      "flow_class": "secondary",
+      "representation": "pipe",
+      "attributes": {}
+    },
+    {
+      "key": "line-012",
+      "id": "73a1dc70-1a50-5d30-adaa-07890da87219",
+      "source": "diffuser-1",
+      "target": "tank-1",
+      "source_port": "dispersed_air",
+      "target_port": "air",
+      "kind": "material",
+      "label": "120-L-010 / DN50 / SPEC",
+      "flow_class": "secondary",
+      "representation": "pipe",
+      "attributes": {}
+    },
+    {
+      "key": "line-013",
+      "id": "886712d0-26f0-54ff-8fde-28a3dd2c439d",
+      "source": "dissolved-oxygen",
+      "target": "dissolved-oxygen-controller",
+      "source_port": "signal-out",
+      "target_port": "signal-in",
+      "kind": "electric",
+      "label": "",
+      "flow_class": "secondary",
+      "representation": "pipe",
+      "attributes": {}
+    },
+    {
+      "key": "pump-path-1-0",
+      "id": "evidence-pump-path-1-0",
+      "source": "tank-1",
+      "target": "isolation-1",
+      "source_port": "outlet",
+      "target_port": "inlet",
+      "kind": "material",
+      "label": "",
+      "flow_class": "main",
+      "representation": "pipe",
+      "attributes": {}
+    },
+    {
+      "key": "pump-path-1-1",
+      "id": "evidence-pump-path-1-1",
+      "source": "isolation-1",
+      "target": "pump-1",
+      "source_port": "outlet",
+      "target_port": "inlet",
+      "kind": "material",
+      "label": "",
+      "flow_class": "main",
+      "representation": "pipe",
+      "attributes": {}
+    },
+    {
+      "key": "pump-path-1-2",
+      "id": "evidence-pump-path-1-2",
+      "source": "pump-1",
+      "target": "control-1",
+      "source_port": "outlet",
+      "target_port": "inlet",
+      "kind": "material",
+      "label": "",
+      "flow_class": "main",
+      "representation": "pipe",
+      "attributes": {}
+    },
+    {
+      "key": "pump-path-1-3",
+      "id": "evidence-pump-path-1-3",
+      "source": "control-1",
+      "target": "product-header",
+      "source_port": "outlet",
+      "target_port": "inlet",
+      "kind": "material",
+      "label": "",
+      "flow_class": "main",
+      "representation": "pipe",
+      "attributes": {}
+    },
+    {
+      "key": "pump-path-2-0",
+      "id": "evidence-pump-path-2-0",
+      "source": "tank-1",
+      "target": "isolation-2",
+      "source_port": "outlet",
+      "target_port": "inlet",
+      "kind": "material",
+      "label": "",
+      "flow_class": "main",
+      "representation": "pipe",
+      "attributes": {}
+    },
+    {
+      "key": "pump-path-2-1",
+      "id": "evidence-pump-path-2-1",
+      "source": "isolation-2",
+      "target": "pump-2",
+      "source_port": "outlet",
+      "target_port": "inlet",
+      "kind": "material",
+      "label": "",
+      "flow_class": "main",
+      "representation": "pipe",
+      "attributes": {}
+    },
+    {
+      "key": "pump-path-2-2",
+      "id": "evidence-pump-path-2-2",
+      "source": "pump-2",
+      "target": "control-2",
+      "source_port": "outlet",
+      "target_port": "inlet",
+      "kind": "material",
+      "label": "",
+      "flow_class": "main",
+      "representation": "pipe",
+      "attributes": {}
+    },
+    {
+      "key": "pump-path-2-3",
+      "id": "evidence-pump-path-2-3",
+      "source": "control-2",
+      "target": "product-header",
+      "source_port": "outlet",
+      "target_port": "inlet",
+      "kind": "material",
+      "label": "",
+      "flow_class": "main",
+      "representation": "pipe",
+      "attributes": {}
+    },
+    {
+      "key": "pump-path-3-0",
+      "id": "evidence-pump-path-3-0",
+      "source": "tank-1",
+      "target": "isolation-3",
+      "source_port": "outlet",
+      "target_port": "inlet",
+      "kind": "material",
+      "label": "",
+      "flow_class": "main",
+      "representation": "pipe",
+      "attributes": {}
+    },
+    {
+      "key": "pump-path-3-1",
+      "id": "evidence-pump-path-3-1",
+      "source": "isolation-3",
+      "target": "pump-3",
+      "source_port": "outlet",
+      "target_port": "inlet",
+      "kind": "material",
+      "label": "",
+      "flow_class": "main",
+      "representation": "pipe",
+      "attributes": {}
+    },
+    {
+      "key": "pump-path-3-2",
+      "id": "evidence-pump-path-3-2",
+      "source": "pump-3",
+      "target": "control-3",
+      "source_port": "outlet",
+      "target_port": "inlet",
+      "kind": "material",
+      "label": "",
+      "flow_class": "main",
+      "representation": "pipe",
+      "attributes": {}
+    },
+    {
+      "key": "pump-path-3-3",
+      "id": "evidence-pump-path-3-3",
+      "source": "control-3",
+      "target": "product-header",
+      "source_port": "outlet",
+      "target_port": "inlet",
+      "kind": "material",
+      "label": "",
+      "flow_class": "main",
+      "representation": "pipe",
+      "attributes": {}
+    },
+    {
+      "key": "level-control-output",
+      "id": "evidence-level-control-output",
+      "source": "basin-level-controller",
+      "target": "control-1",
+      "source_port": "signal-out",
+      "target_port": "actuator",
+      "kind": "electric",
+      "label": "",
+      "flow_class": "secondary",
+      "representation": "pipe",
+      "attributes": {}
+    }
+  ],
+  "metadata": {},
+  "pins": {},
+  "kind": "p&id",
+  "title_block": {
+    "title": "Instrument tapping - dense engineering specimen",
+    "subtitle": "Piping and instrumentation diagram",
+    "drawing_number": "TAP-GEOMETRY-REVIEW",
+    "project": "Synthetic regression specimen",
+    "client": "Engineering review",
+    "company": "Circle H2O",
+    "status": "HOLD - NOT FOR CONSTRUCTION",
+    "scale": "NTS",
+    "drawn_by": "Circle H2O",
+    "checked_by": "PENDING",
+    "approved_by": "PENDING",
+    "date": "2026-09-11",
+    "logo": "data:image/svg+xml;base64,CgkJPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2ZXJzaW9uPSIxLjEiIHdpZHRoPSIzMjI0LjAyMTAyODEwNzE3MiIgaGVpZ2h0PSIxMDk4LjYwMTYxODA2MDg4OCI+CgkJCQoJCQk8ZyB0cmFuc2Zvcm09InNjYWxlKDExLjIwMTA1MTQwNTM1ODU4NCkgdHJhbnNsYXRlKDEwLCAxMCkiPgoJCQkJPGRlZnMgaWQ9IlN2Z2pzRGVmczExNDMiPjxsaW5lYXJHcmFkaWVudCBpZD0iU3ZnanNMaW5lYXJHcmFkaWVudDExNTAiPjxzdG9wIGlkPSJTdmdqc1N0b3AxMTUxIiBzdG9wLWNvbG9yPSIjMTQ3ZDZjIiBvZmZzZXQ9IjAiPjwvc3RvcD48c3RvcCBpZD0iU3ZnanNTdG9wMTE1MiIgc3RvcC1jb2xvcj0iIzFlZmZmZiIgb2Zmc2V0PSIxIj48L3N0b3A+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PGcgaWQ9IlN2Z2pzRzExNDQiIGZlYXR1cmVLZXk9ImZQTGFiVS0wIiB0cmFuc2Zvcm09Im1hdHJpeCgwLjkxMTAyOTMxNDY2MDcwNjQsMCwwLDAuOTExMDI5MzE0NjYwNzA2NCwtMS40MzA1MzYxNzkzNzMxOTU0LC0yLjIzNjEyNDg2MDYxNTYwNTcpIiBmaWxsPSJ1cmwoI1N2Z2pzTGluZWFyR3JhZGllbnQxMTUwKSI+PHBhdGggeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBkPSJNNzkuOTg5LDQwLjAxN2MwLDAtMC4wNTUtMC4yMjUtMC4xNTctMC42NDZjLTAuMDQ3LTAuMTg1LTAuMTA1LTAuNDEzLTAuMTc0LTAuNjgxYy0wLjA2Mi0wLjI1NC0wLjE2NC0wLjU3OC0wLjI2Mi0wLjkyNCAgYy0wLjQyNS0xLjM5Mi0xLjEyOS0zLjM2OS0yLjMyMi01LjYwNWMtMC41OTUtMS4xMTgtMS4zMTktMi4yOTItMi4xNjgtMy40ODhjMC4wMjEsMC4wMjQtMC4wNi0wLjA3MywwLjA0NSwwLjA1bC0wLjAxMy0wLjAxNSAgbC0wLjAyMS0wLjAzbC0wLjA0Ni0wLjA1OWwtMC4wOTEtMC4xMThsLTAuMTg1LTAuMjM4Yy0wLjEyMi0wLjE2LTAuMjQ2LTAuMzE5LTAuMzctMC40ODFjLTAuMTI1LTAuMTYxLTAuMjQ5LTAuMzIzLTAuMzc2LTAuNDg2ICBjLTAuMTI2LTAuMTY3LTAuMjUyLTAuMzMxLTAuMzcyLTAuNDZjLTAuMjQyLTAuMjgtMC40ODgtMC41NjMtMC43MzYtMC44NDhjLTAuMTI0LTAuMTQ1LTAuMjQ5LTAuMjg5LTAuMzc1LTAuNDM1bC0wLjQyMS0wLjQyNyAgYy0wLjI4My0wLjI4OC0wLjU2Ny0wLjU3OC0wLjg1NS0wLjg3Yy0wLjI5NC0wLjI4Ni0wLjYwOC0wLjU1Mi0wLjkxNS0wLjgzNGMtMC42MDUtMC41NzYtMS4yODQtMS4wNzctMS45NS0xLjYxMyAgYy0xLjM3MS0xLjAxMS0yLjgyNS0xLjk4OS00LjM4Ni0yLjc4NWMtMC43NjYtMC40MzQtMS41NzQtMC43NzEtMi4zNzItMS4xNDNjLTAuMzk5LTAuMTgtMC44MTQtMC4zMjItMS4yMjEtMC40ODUgIGMtMC40MDgtMC4xNTktMC44MTQtMC4zMjQtMS4yMzEtMC40NDZjLTAuNDE1LTAuMTMzLTAuODMtMC4yNjYtMS4yNDEtMC4zOThjLTAuNDE0LTAuMTI1LTAuODM1LTAuMjE5LTEuMjUtMC4zMyAgYy0wLjgyOC0wLjIzNy0xLjY2OC0wLjM2NC0yLjQ5LTAuNTM0Yy0wLjQxMS0wLjA4MS0wLjgyNS0wLjExOC0xLjIzMi0wLjE3OWMtMC40MS0wLjA0Ny0wLjgxNS0wLjEyNy0xLjIxOS0wLjE0NiAgYy0wLjgwNy0wLjA1MS0xLjYwMS0wLjE0Ni0yLjM3NS0wLjEzNmMtMC4zODgtMC4wMDYtMC43NzEtMC4wMTMtMS4xNDgtMC4wMTljLTAuMzYsMC0wLjc2NywwLjAxMy0xLjEyLDAuMDI5ICBjLTAuNzIxLDAuMDI2LTEuNDM1LDAuMDg5LTIuMTExLDAuMTU3Yy0yLjcxMywwLjI5MS00Ljk0NiwwLjg2Mi02LjQ3OSwxLjM0NmMtMC43NjgsMC4yNDEtMS4zNjQsMC40NTYtMS43NjksMC42MDcgIGMtMC40MDQsMC4xNTUtMC42MiwwLjIzNy0wLjYyLDAuMjM3czAuMjA0LTAuMTA3LDAuNTg3LTAuMzFjMC4zODUtMC4xOTksMC45NTQtMC40ODQsMS42OTQtMC44MTcgIGMxLjQ3OC0wLjY2OCwzLjY1OC0xLjUxNSw2LjQwNC0yLjE0NmMwLjY4OS0wLjE1MywxLjQwMS0wLjMwMywyLjE2My0wLjQyM2MwLjM4OC0wLjA2NCwwLjczOC0wLjExNywxLjE0NS0wLjE2NiAgYzAuMzkyLTAuMDQxLDAuNzktMC4wODIsMS4xOTMtMC4xMjRjMC44MDktMC4xMDUsMS42NDQtMC4xMDcsMi41LTAuMTU0YzAuNDMtMC4wMywwLjg2MSwwLjAwMiwxLjI5OSwwICBjMC40MzgsMC4wMTIsMC44ODMsMCwxLjMyOCwwLjAzM2MwLjg4OSwwLjA3MywxLjgwMywwLjEwNSwyLjcxNSwwLjI1YzAuNDU3LDAuMDY1LDAuOTIsMC4xMTMsMS4zODIsMC4xOTQgIGMwLjQ2LDAuMDg4LDAuOTIyLDAuMTc4LDEuMzg2LDAuMjY4YzAuNDcsMC4wNzksMC45MjgsMC4yMDQsMS4zODksMC4zMjJjMC40NjMsMC4xMjQsMC45MzQsMC4yMjYsMS4zOTMsMC4zNyAgYzAuOTE0LDAuMjk2LDEuODQ4LDAuNTY1LDIuNzQ0LDAuOTM5YzEuODIzLDAuNjczLDMuNTY3LDEuNTU5LDUuMjQ0LDIuNTEzYzAuODE4LDAuNTA4LDEuNjUzLDAuOTg5LDIuNDE1LDEuNTU0ICBjMC4zODYsMC4yNzYsMC43OCwwLjUzOSwxLjE1MiwwLjgyNGMwLjM2OCwwLjI5MywwLjczMiwwLjU4NCwxLjA5NCwwLjg3M2MwLjE4MSwwLjE0NiwwLjM2LDAuMjksMC41NDEsMC40MzQgIGMwLjE3NiwwLjE1OCwwLjM1MSwwLjMxNywwLjUyNSwwLjQ3NGMwLjM0OCwwLjMxOSwwLjY5MywwLjYzNSwxLjAzNSwwLjk0N2MwLjE4LDAuMTYxLDAuMzI1LDAuMzA5LDAuNDY1LDAuNDU1ICBjMC4xNDUsMC4xNDcsMC4yODgsMC4yOTMsMC40MzIsMC40MzljMC4xNDIsMC4xNDUsMC4yODMsMC4yODksMC40MjUsMC40MzNsMC4yMSwwLjIxNWwwLjEwNCwwLjEwNmwwLjA1MywwLjA1M2wwLjAyNSwwLjAyNiAgbDAuMDE0LDAuMDE0bDAuMDY3LDAuMDc5YzEuMTQ4LDEuMjY1LDIuMTYxLDIuNTQsMy4wMjMsMy43NzNjMS43MjYsMi40NjgsMi44NjMsNC43NDMsMy41NzksNi4zNjUgIGMwLjE3NCwwLjQxNCwwLjMzLDAuNzYyLDAuNDYyLDEuMTA0YzAuMTI3LDAuMzI4LDAuMjM0LDAuNjA2LDAuMzIyLDAuODMyYzAuMTUxLDAuNDA1LDAuMjMxLDAuNjIyLDAuMjMxLDAuNjIyTDc5Ljk4OSw0MC4wMTd6Ij48L3BhdGg+PHBvbHlnb24geG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBwb2ludHM9Ijg0LjA5OCw0OC44MiA3NS4xNTcsMzcuNTU2IDg5LjM4MywzNS40NDYgIj48L3BvbHlnb24+PHBhdGggeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBkPSJNNDAuOTMzLDc3Ljg0NmMwLDAsMC4yMTUsMC4wODQsMC42MTgsMC4yNDRjMC4xNzgsMC4wNjYsMC4zOTgsMC4xNSwwLjY1NywwLjI0OGMwLjI0MywwLjA5NiwwLjU2NywwLjE5OSwwLjkwNywwLjMxOCAgYzEuMzgzLDAuNDUzLDMuNDA1LDEuMDE0LDUuOTIxLDEuMzIyYzEuMjU2LDAuMTU2LDIuNjM0LDAuMjQsNC4xLDAuMjM0Yy0wLjAzMSwwLjAwNCwwLjA5NS0wLjAwOC0wLjA2NiwwLjAwOGwwLjAxOS0wLjAwMmgwLjAzNyAgbDAuMDc1LTAuMDA0bDAuMTQ4LTAuMDA4bDAuMzAxLTAuMDEyYzAuMjAxLTAuMDEsMC40MDMtMC4wMiwwLjYwNy0wLjAyN2MwLjIwMy0wLjAwOCwwLjQwOC0wLjAxOCwwLjYxMy0wLjAyNyAgYzAuMjA5LTAuMDA4LDAuNDE2LTAuMDE4LDAuNTkxLTAuMDQxYzAuMzY4LTAuMDM3LDAuNzQxLTAuMDc0LDEuMTE2LTAuMTE1YzAuMTktMC4wMTgsMC4zODEtMC4wMzcsMC41NzItMC4wNTcgIGMwLjE5NS0wLjAzMSwwLjM5NS0wLjA2NCwwLjU5MS0wLjA5OGMwLjM5OS0wLjA2NCwwLjgtMC4xMzEsMS4yMDQtMC4xOTljMC40MDItMC4wNzYsMC44MDItMC4xOCwxLjIwOS0wLjI3ICBjMC44MTgtMC4xNjQsMS42MTktMC40MzIsMi40NC0wLjY2NmMxLjYxNi0wLjU0MSwzLjI1My0xLjE2OCw0LjgwMi0xLjk4OGMwLjc5NS0wLjM3NSwxLjUzNS0wLjg0NCwyLjI5OC0xLjI4MSAgYzAuMzc4LTAuMjI1LDAuNzMxLTAuNDgyLDEuMDk5LTAuNzIxYzAuMzY1LTAuMjQyLDAuNzM0LTAuNDc5LDEuMDc0LTAuNzVjMC4zNDgtMC4yNjQsMC42OTMtMC41MjcsMS4wMzktMC43ODcgIGMwLjM0Mi0wLjI2OCwwLjY2LTAuNTU5LDAuOTg4LTAuODM0YzAuNjcxLTAuNTQxLDEuMjU3LTEuMTU0LDEuODY5LTEuNzI5YzAuMzAzLTAuMjkxLDAuNTcxLTAuNjA3LDAuODU2LTAuOTA2ICBjMC4yNzMtMC4zMDksMC41NzEtMC41OTQsMC44MTktMC45MTRjMC41MDUtMC42MjksMS4wMzktMS4yMjUsMS40NzctMS44NjNjMC4yMjktMC4zMTQsMC40NTQtMC42MjMsMC42NzUtMC45MyAgYzAuMjA4LTAuMjkzLDAuNDMyLTAuNjMzLDAuNjIyLTAuOTMyYzAuMzk0LTAuNjA1LDAuNzUyLTEuMjI1LDEuMDg2LTEuODE2YzEuMzIyLTIuMzg3LDIuMTM5LTQuNTQzLDIuNjI0LTYuMDc0ICBjMC4yNDQtMC43NjgsMC40MTItMS4zNzksMC41MjEtMS43OThjMC4xMDYtMC40MTksMC4xNjEtMC42NDIsMC4xNjEtMC42NDJzLTAuMDI3LDAuMjI5LTAuMDgzLDAuNjU3ICBjLTAuMDYsMC40My0wLjE1MiwxLjA2LTAuMzA3LDEuODU2Yy0wLjMwMywxLjU5Mi0wLjg2NCwzLjg2My0xLjkyNyw2LjQ3M2MtMC4yNzEsMC42NS0wLjU1OCwxLjMyLTAuODk3LDIuMDEyICBjLTAuMTcyLDAuMzU1LTAuMzMsMC42NzItMC41MjQsMS4wMzNjLTAuMTkxLDAuMzQ0LTAuMzg3LDAuNjkzLTAuNTg0LDEuMDQ3Yy0wLjM3OSwwLjcyMy0wLjg1NywxLjQwNi0xLjMxMiwyLjEzMyAgYy0wLjIyMywwLjM2OS0wLjQ5NywwLjcwNS0wLjc0NywxLjA2NGMtMC4yNjMsMC4zNS0wLjUwOSwwLjcyMS0wLjc5MSwxLjA2NGMtMC41NzEsMC42ODYtMS4xMjQsMS40MTQtMS43NjcsMi4wNzggIGMtMC4zMTUsMC4zMzYtMC42MjIsMC42ODgtMC45NTMsMS4wMmMtMC4zMzgsMC4zMjQtMC42NzcsMC42NS0xLjAxNywwLjk4Yy0wLjMzNCwwLjMzNi0wLjcsMC42MzktMS4wNjMsMC45NDkgIGMtMC4zNjcsMC4zMDctMC43MjIsMC42MzMtMS4xMDQsMC45MjZjLTAuNzY4LDAuNTc2LTEuNTI0LDEuMTg4LTIuMzQ2LDEuNzA1Yy0xLjYwMSwxLjEwNS0zLjMyNywyLjAyMS01LjA3MiwyLjg0NCAgYy0wLjg4NiwwLjM3OS0xLjc1OSwwLjc4NS0yLjY1OSwxLjA4NGMtMC40NDcsMC4xNTQtMC44OSwwLjMyOC0xLjMzOCwwLjQ2OWMtMC40NSwwLjEzMS0wLjg5OCwwLjI2Mi0xLjM0MiwwLjM5MyAgYy0wLjIyMywwLjA2NC0wLjQ0NSwwLjEyOS0wLjY2NiwwLjE5MWMtMC4yMzEsMC4wNTMtMC40NjEsMC4xMDUtMC42OTEsMC4xNThjLTAuNDYsMC4xMDItMC45MTcsMC4yMDEtMS4zNjksMC4zMDEgIGMtMC4yMzQsMC4wNTctMC40MzksMC4wODgtMC42MzksMC4xMjFjLTAuMjA1LDAuMDMzLTAuNDA2LDAuMDY2LTAuNjA3LDAuMWMtMC4yLDAuMDMzLTAuNCwwLjA2Ni0wLjYsMC4wOThsLTAuMjk2LDAuMDQ5ICBsLTAuMTQ3LDAuMDI1bC0wLjA3NCwwLjAxMmwtMC4wMzcsMC4wMDZsLTAuMDE4LDAuMDA0bC0wLjEwNCwwLjAwOGMtMS42OTUsMC4yMTMtMy4zMiwwLjMwOS00LjgyNSwwLjMwNSAgYy0zLjAxMi0wLjAwOC01LjUyNy0wLjM4NS03LjI2Ni0wLjczNGMtMC40MzgtMC4wOTQtMC44MTMtMC4xNjgtMS4xNjgtMC4yNTZjLTAuMzQtMC4wODYtMC42My0wLjE1OC0wLjg2Ni0wLjIxNSAgYy0wLjQxOS0wLjEwOS0wLjY0My0wLjE3LTAuNjQzLTAuMTdMNDAuOTMzLDc3Ljg0NnoiPjwvcGF0aD48cG9seWdvbiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHBvaW50cz0iMzEuMzY3LDc2LjE0NSA0NS43MjUsNzUuMzA5IDM5LjI2OSw4OC4xNiAiPjwvcG9seWdvbj48cGF0aCB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGQ9Ik0yNy42NDQsMjUuMzU5YzAsMC0wLjE3NiwwLjE1LTAuNTA0LDAuNDMyYy0wLjE0MywwLjEyNi0wLjMyLDAuMjgxLTAuNTI4LDAuNDYzYy0wLjE5OCwwLjE3LTAuNDQxLDAuNDA4LTAuNzA2LDAuNjUyICBjLTEuMDQ3LDEuMDA5LTIuNDkyLDIuNTMzLTMuOTQ0LDQuNjFjLTAuNzI3LDEuMDM3LTEuNDQ2LDIuMjE0LTIuMTI4LDMuNTExYzAuMDExLTAuMDI5LTAuMDM4LDAuMDg3LDAuMDI0LTAuMDYybC0wLjAwOCwwLjAxNyAgbC0wLjAxNiwwLjAzNGwtMC4wMzIsMC4wNjdsLTAuMDY0LDAuMTM1bC0wLjEyOSwwLjI3MWMtMC4wODYsMC4xODItMC4xNzMsMC4zNjQtMC4yNjEsMC41NDhjLTAuMDg3LDAuMTg0LTAuMTc2LDAuMzY5LTAuMjYzLDAuNTU1ICBjLTAuMDkxLDAuMTg4LTAuMTgsMC4zNzUtMC4yNDEsMC41NGMtMC4xNCwwLjM0My0wLjI4LDAuNjktMC40MjMsMS4wNDFjLTAuMDcyLDAuMTc3LTAuMTQ1LDAuMzU0LTAuMjE4LDAuNTMyICBjLTAuMDYzLDAuMTg5LTAuMTI2LDAuMzc4LTAuMTksMC41NjljLTAuMTI4LDAuMzgyLTAuMjU4LDAuNzY4LTAuMzg5LDEuMTU2Yy0wLjEyMSwwLjM5MS0wLjIxNiwwLjc5Mi0wLjMyNywxLjE5NCAgYy0wLjI0LDAuOC0wLjM3OSwxLjYzMi0wLjU1NywyLjQ2OWMtMC4yNzksMS42ODEtMC40OTMsMy40Mi0wLjQ5NSw1LjE3MmMtMC4wNDEsMC44NzgsMC4wMjUsMS43NTMsMC4wNTUsMi42MzEgIGMwLjAyMSwwLjQzOSwwLjA4MiwwLjg3MiwwLjEyMSwxLjMwOWMwLjA0NCwwLjQzNiwwLjA4LDAuODczLDAuMTYxLDEuMzAxYzAuMDY5LDAuNDMsMC4xMzgsMC44NTksMC4yMDcsMS4yODcgIGMwLjA3NywwLjQyNiwwLjE4NCwwLjg0NCwwLjI3MywxLjI2MmMwLjE2NCwwLjg0NiwwLjQzMSwxLjY1MiwwLjY1MiwyLjQ2MmMwLjExMywwLjQwNSwwLjI2OSwwLjc5LDAuMzk5LDEuMTgyICBjMC4xNDQsMC4zODcsMC4yNTUsMC43ODIsMC40MjEsMS4xNTFjMC4zMiwwLjc0NCwwLjU5NSwxLjQ5NCwwLjk1NSwyLjE4YzAuMTcsMC4zNSwwLjMzOCwwLjY5MSwwLjUwNCwxLjAzMSAgYzAuMTYzLDAuMzIyLDAuMzU4LDAuNjc4LDAuNTMzLDAuOTg2YzAuMzUsMC42MzEsMC43MjksMS4yNCwxLjA5NywxLjgwOWMxLjQ4OCwyLjI4OSwzLjAwOSw0LjAyMSw0LjEzNCw1LjE2OCAgYzAuNTYzLDAuNTc0LDEuMDI0LDEuMDEsMS4zNDMsMS4zMDFjMC4zMjEsMC4yOTEsMC40OTMsMC40NDUsMC40OTMsMC40NDVzLTAuMTg4LTAuMTMzLTAuNTQyLTAuMzg1ICBjLTAuMzUyLTAuMjUyLTAuODYzLTAuNjI5LTEuNDk2LTEuMTM5Yy0xLjI2NS0xLjAxNi0zLjAwNy0yLjU3NC00LjgxNC00LjczNmMtMC40NDktMC41NDUtMC45MDUtMS4xMTMtMS4zNTctMS43MzggIGMtMC4yMzItMC4zMTYtMC40MzgtMC42MDQtMC42NjctMC45NDNjLTAuMjE0LTAuMzMyLTAuNDMxLTAuNjY4LTAuNjUtMS4wMDhjLTAuNDYtMC42NzQtMC44NC0xLjQxOC0xLjI3LTIuMTYgIGMtMC4yMjEtMC4zNjktMC4zODgtMC43NjgtMC41ODgtMS4xNThjLTAuMTg4LTAuMzk2LTAuNC0wLjc4Ny0wLjU3Mi0xLjE5OGMtMC4zMzctMC44MjUtMC43MjItMS42NTQtMS4wMDYtMi41MzQgIGMtMC4xNDktMC40MzYtMC4zMTctMC44NzEtMC40NTQtMS4zMTljLTAuMTI5LTAuNDUtMC4yNTktMC45MDMtMC4zODktMS4zNTdjLTAuMTQyLTAuNDUyLTAuMjM4LTAuOTE4LTAuMzQyLTEuMzg1ICBjLTAuMDk5LTAuNDY2LTAuMjIxLTAuOTMzLTAuMzAxLTEuNDA3Yy0wLjE0OS0wLjk0OS0wLjMzMy0xLjkwNS0wLjQwNi0yLjg3MmMtMC4yMjYtMS45MzEtMC4yMjYtMy44ODctMC4xMzYtNS44MTMgIGMwLjA4My0wLjk2LDAuMTMzLTEuOTIxLDAuMjkyLTIuODU3YzAuMDcxLTAuNDY5LDAuMTI2LTAuOTM5LDAuMjExLTEuNDAxYzAuMDk1LTAuNDYsMC4xODktMC45MTcsMC4yODMtMS4zNyAgYzAuMDQ3LTAuMjI3LDAuMDk1LTAuNDUzLDAuMTQyLTAuNjc4YzAuMDYyLTAuMjI5LDAuMTI0LTAuNDU3LDAuMTg1LTAuNjgzYzAuMTI3LTAuNDU1LDAuMjUyLTAuOTA1LDAuMzc1LTEuMzUyICBjMC4wNjItMC4yMzMsMC4xMjgtMC40MjksMC4xOTQtMC42MjJjMC4wNjYtMC4xOTUsMC4xMzEtMC4zOSwwLjE5Ni0wLjU4M2MwLjA2NS0wLjE5MywwLjEyOS0wLjM4NSwwLjE5My0wLjU3NWwwLjA5Ni0wLjI4NSAgbDAuMDQ4LTAuMTQyTDE0Ljg0MiwzM2wwLjAxMS0wLjAzNmwwLjAwNi0wLjAxN2wwLjA0LTAuMDk2YzAuNjA4LTEuNTk3LDEuMjg1LTMuMDc3LDEuOTk1LTQuNDA0ICBjMS40MTgtMi42NTgsMi45MzEtNC43MDMsNC4wNTMtNi4wNzZjMC4yOS0wLjM0MiwwLjUzLTAuNjM5LDAuNzc1LTAuOTEyYzAuMjM0LTAuMjYxLDAuNDM0LTAuNDgzLDAuNTk2LTAuNjYzICBjMC4yOTMtMC4zMTksMC40NDktMC40ODgsMC40NDktMC40ODhMMjcuNjQ0LDI1LjM1OXoiPjwvcGF0aD48cG9seWdvbiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHBvaW50cz0iMzMuNjMsMTcuNzA4IDI3LjYzOCwzMC43ODEgMTkuMzEyLDE5LjA1NSAiPjwvcG9seWdvbj48L2c+PGcgaWQ9IlN2Z2pzRzExNDUiIGZlYXR1cmVLZXk9Imt5TDJxSC0wIiB0cmFuc2Zvcm09Im1hdHJpeCgxLjc4MzkyODYwMTgwODY5NDgsMCwwLDEuNzgzOTI4NjAxODA4Njk0OCwxMDEuMTQ1NzE1MjU3ODc4MjIsOC42NTMyMTU0NzA1MzkwODMpIiBmaWxsPSIjMDQ0YjQ3Ij48cGF0aCBkPSJNMTAuOSAxOC43IGwwIDEuMyBsLTUuOCAwIGMtMi4xIDAgLTMuNSAtMS40IC0zLjUgLTMuMyBsMCAtNy40IGMwIC0xLjkgMS40IC0zLjMgMy41IC0zLjMgbDUuOCAwIGwwIDAuOSBsLTAuNCAwLjQgbC01LjQgMCBjLTEuMSAwIC0yIDAuOSAtMiAyIGwwIDcuNCBjMCAxLjEgMC45IDIgMiAyIGw1LjggMCB6IE0xNC42IDkuOCBsMCAxMC4yIGwtMS40IDAgbDAgLTEwLjIgbDEuNCAwIHogTTE0LjYgNiBsMCAyLjQgbC0xLjQgMCBsMCAtMi40IGwxLjQgMCB6IE0yMy40IDkuNiBsMCAxLjMgbC0xLjkgMCBjLTEuNSAwIC0yLjMgMS43IC0yLjMgMS43IGwwIDcuNCBsLTEuNCAwIGwwIC0xMC4yIGwwLjkgMCBsMC4yIDEuNCBsMC4xIDAgczAuOCAtMS42IDIuNSAtMS42IGwxLjkgMCB6IE0zMi4yIDExIGwtNC4yIDAgYy0wLjkgMCAtMS42IDAuNyAtMS42IDEuNiBsMCA0LjYgYzAgMC45IDAuNyAxLjYgMS42IDEuNiBsNC42IDAgbDAgMS4yIGwtNC42IDAgYy0xLjkgMCAtMyAtMS4yIC0zIC0yLjggbDAgLTQuNiBjMCAtMS42IDEuMiAtMi44IDMgLTIuOCBsNC42IDAgbDAgMC44IHogTTM0LjgwMDAwMDAwMDAwMDAwNCAxNy4yIGwwIC0xMS4yIGwxLjQgMCBsMCAxMS4yIGMwIDAuOSAwLjcgMS42IDEuNiAxLjYgbDAuMyAwIGwwIDEuMiBsLTAuMyAwIGMtMS44IDAgLTMgLTEuMiAtMyAtMi44IHogTTQ3LjcgMjAgbC00LjggMCBjLTEuOSAwIC0zIC0xLjIgLTMgLTIuOCBsMCAtNC44IGMwIC0xLjYgMS4yIC0yLjggMyAtMi44IGwyLjIgMCBjMS44IDAgMyAxLjIgMyAyLjggbDAgMy4xIGwtNi44IDAgbDAgMS43IGMwIDAuOSAwLjcgMS42IDEuNiAxLjYgbDQuOCAwIGwwIDEuMiB6IE00MS4zIDEyLjQgbDAgMS45IGw1LjQgMCBsMCAtMS45IGMwIC0wLjkgLTAuNyAtMS42IC0xLjYgLTEuNiBsLTIuMiAwIGMtMC45IDAgLTEuNiAwLjcgLTEuNiAxLjYgeiBNNjQuNyA2IGwxLjUgMCBsMCAxNCBsLTEuNSAwIGwwIC02LjUgbC02LjkgMCBsMCA2LjUgbC0xLjUgMCBsMCAtMTQgbDEuNSAwIGwwIDYuMiBsNi45IDAgbDAgLTYuMiB6IE03NS44IDEzLjkgbC01LjIgNC43IGwwIDAuMSBsNy42IDAgbDAgMS4zIGwtOS43IDAgbDAgLTEuMyBsNi4zIC01LjcgYzEgLTAuOSAxLjggLTEuNyAxLjggLTMuMiBsMCAtMC41IGMwIC0xLjEgLTAuOSAtMiAtMiAtMiBsLTUuMyAwIGwtMC40IC0wLjQgbDAgLTAuOSBsNS43IDAgYzIuMSAwIDMuNSAxLjQgMy41IDMuMyBsMCAwLjUgYzAgMS45IC0xLjEgMyAtMi4zIDQuMSB6IE04MC43IDE2LjkgbDAgLTcuOCBjMCAtMS45IDEuNCAtMy4zIDMuNSAtMy4zIGwzLjUgMCBjMi4xIDAgMy41IDEuNCAzLjUgMy4zIGwwIDcuOCBjMCAxLjkgLTEuNCAzLjMgLTMuNSAzLjMgbC0zLjUgMCBjLTIuMSAwIC0zLjUgLTEuNCAtMy41IC0zLjMgeiBNODkuNyAxNi45IGwwIC03LjggYzAgLTEuMSAtMC45IC0yIC0yIC0yIGwtMy41IDAgYy0xLjEgMCAtMiAwLjkgLTIgMiBsMCA3LjggYzAgMS4xIDAuOSAyIDIgMiBsMy41IDAgYzEuMSAwIDIgLTAuOSAyIC0yIHoiPjwvcGF0aD48L2c+PGcgaWQ9IlN2Z2pzRzExNDYiIGZlYXR1cmVLZXk9IkVmTVFqUy0wIiB0cmFuc2Zvcm09Im1hdHJpeCgwLjcyMjYwNjA4NDIwNTI5NCwwLDAsMC43MjI2MDYwODQyMDUyOTQsOTkuMjY1MjE4MDA3MTM0OTgsNTUuMzQ1OTgzNjU3NjIyNDIpIiBmaWxsPSIjMDQ0YjQ3Ij48cGF0aCBkPSJNNy4yMzcxIDExLjk2NjMgYzAuMjIwMzQgMC4xNTI1NCAwLjMwNTI1IDAuMjcxMTkgMC4xMzU5MiAwLjUwODQ3IGwtMC44ODEzNiAxLjI4ODEgYy0wLjEwMTY5IDAuMTUyNTQgLTAuMjM3MjkgMC4yMDMzOSAtMC40NDA2OCAwLjE1MjU0IGMtMC4yMzcyOSAtMC4wODQ3NDYgLTAuNDc0NTggLTAuMjAzMzkgLTAuOTgzMjIgLTAuMjAzMzkgYy0wLjUwODQ3IDAgLTEuNDU3NiAwLjIyMDM0IC0xLjcxMTkgMS4zMjIgbDAgNC42NDQxIGMwIDAuMTY5NDkgLTAuMTM1NTkgMC4zMjE4NiAtMC4zMjIwMyAwLjMyMTg2IGwtMS43MTE5IDAgYy0wLjE2OTQ5IDAgLTAuMzA1MDggLTAuMTUyMzggLTAuMzA1MDggLTAuMzIxODYgbDAgLTcuNzQ1NiBjMCAtMC4xNjk0OSAwLjEzNTU5IC0wLjMyMjAzIDAuMzA1MDggLTAuMzIyMDMgbDEuMTY5NSAwIGMwLjQ1NzYzIDAgMC43NjI3MSAwLjQwNjc4IDAuODQ3MjkgMC43NjI3MSBjMC41MDg2NCAtMC40NDA2OCAxLjE2OTcgLTAuODMwNjggMi4xMzU2IC0wLjgzMDY4IGMwLjg2NDQxIDAgMS40NzQ2IDAuMjIwMzQgMS43NjI3IDAuNDIzNzMgeiBNMjMuNTA4NTA2Nzc5NjYxMDIgMTYuNTkzNCBjMC43NDU3NiAwIDEuMjM3NSAtMC40MDY5NSAxLjIzNzUgLTEuMjIwNSBjMCAtMS45ODMxIC0xLjU1OTMgLTMuODgxNCAtNC4wNjc4IC0zLjg4MTQgYy0yLjM3MjkgMCAtNC4yMjAzIDEuODQ3NSAtNC4yMjAzIDQuMzA1MSBjMCAyLjU3NjMgMS45NDkgNC4yODggNC4zMjE5IDQuMjg4IGMxLjUwODUgMCAyLjcxMTkgLTAuNTI1NDIgMy40MDY4IC0xLjUwODUgYzAuMTE4NjQgLTAuMTUyNTQgMC4wODQ3NDYgLTAuMjcxMTkgLTAuMDUwODQ3IC0wLjQ0MDY4IGwtMC4zODk4MyAtMC41NDIyIGMtMC4xNjk0OSAtMC4yMjAzNCAtMC4zMjIwMyAtMC4xODY0NCAtMC41MjU0MiAtMC4wODQ3NDYgYy0wLjQ1NzYzIDAuMjU0MjQgLTEuMzM5IDAuNTI1NDIgLTIuMTY5NSAwLjUyNTQyIGMtMS4wMTY5IDAgLTEuOTMyMiAtMC40OTE1MyAtMi4xMzU2IC0xLjQ0MDUgbDQuNTkzMiAwIHogTTE4LjkzMjIwNjc3OTY2MTAxNiAxNC43OTY2IGMwLjA4NDc0NiAtMC41NDIzNyAwLjcyODgxIC0xLjE2OTUgMS42OTQ5IC0xLjE2OTUgYzAuOTgzMDUgMCAxLjU5MzIgMC42MTAxNyAxLjY3OCAxLjE2OTUgbC0zLjM3MjkgMCB6IE00Mi43Mjg3Nzk2NjEwMTY5NDQgMTkuNTc2NDQgYzAuMDMzODk4IDAuMjIwMzQgLTAuMDMzNzMyIDAuNDIzNTYgLTAuMjAzMjIgMC40MjM1NiBsLTEuNDIzNyAwIGMtMC41NDIzNyAwIC0wLjg0NzQ2IC0wLjM3Mjg4IC0wLjg0NzQ2IC0wLjg0NzQ2IGwwIC00LjE4NjQgYzAgLTAuOTQ5MTUgLTAuNzI4ODEgLTEuMzg5OCAtMS41MjU0IC0xLjM4OTggYy0wLjc0NTc2IDAgLTEuMzg5OCAwLjMzODk4IC0xLjk2NjEgMC44NjQ0MSBsMCA1LjIzNzMgYzAgMC4xNjk0OSAtMC4xNTI1NCAwLjMyMTg2IC0wLjMyMjAzIDAuMzIxODYgbC0xLjcxMTkgMCBjLTAuMTY5NDkgMCAtMC4zMDUwOCAtMC4xNTIzOCAtMC4zMDUwOCAtMC4zMjE4NiBsMCAtNy43NDU2IGMwIC0wLjE2OTQ5IDAuMTM1NTkgLTAuMzIyMDMgMC4zMDUwOCAtMC4zMjIwMyBsMS4xNjk1IDAgYzAuNDIzNzMgMCAwLjcxMTY5IDAuMzU1OTMgMC44MTM1NiAwLjY5NDkyIGMwLjYxMDE3IC0wLjQyMzczIDEuMzg5OCAtMC44MTM1NiAyLjM1NTkgLTAuODEzNTYgYzEuNzQ1NiAwIDMuNTI1NCAxLjE2OTcgMy41MjU0IDMuMjU0MiBsMCAzLjcyODggYzAuMDE2Nzg0IDAuNDc0NTggMC4wNjc2MzEgMC43OTY2MSAwLjEzNTQzIDEuMTAxNyB6IE01OS4yODgxNjc3OTY2MTAxNzUgMTYuNTkzNCBjMC43NDU3NiAwIDEuMjM3NSAtMC40MDY5NSAxLjIzNzUgLTEuMjIwNSBjMCAtMS45ODMxIC0xLjU1OTMgLTMuODgxNCAtNC4wNjc4IC0zLjg4MTQgYy0yLjM3MjkgMCAtNC4yMjAzIDEuODQ3NSAtNC4yMjAzIDQuMzA1MSBjMCAyLjU3NjMgMS45NDkgNC4yODggNC4zMjE5IDQuMjg4IGMxLjUwODUgMCAyLjcxMTkgLTAuNTI1NDIgMy40MDY4IC0xLjUwODUgYzAuMTE4NjQgLTAuMTUyNTQgMC4wODQ3NDYgLTAuMjcxMTkgLTAuMDUwODQ3IC0wLjQ0MDY4IGwtMC4zODk4MyAtMC41NDIyIGMtMC4xNjk0OSAtMC4yMjAzNCAtMC4zMjIwMyAtMC4xODY0NCAtMC41MjU0MiAtMC4wODQ3NDYgYy0wLjQ1NzYzIDAuMjU0MjQgLTEuMzM5IDAuNTI1NDIgLTIuMTY5NSAwLjUyNTQyIGMtMS4wMTY5IDAgLTEuOTMyMiAtMC40OTE1MyAtMi4xMzU2IC0xLjQ0MDUgbDQuNTkzMiAwIHogTTU0LjcxMTg2Nzc5NjYxMDE3IDE0Ljc5NjYgYzAuMDg0NzQ2IC0wLjU0MjM3IDAuNzI4ODEgLTEuMTY5NSAxLjY5NDkgLTEuMTY5NSBjMC45ODMwNSAwIDEuNTkzMiAwLjYxMDE3IDEuNjc4IDEuMTY5NSBsLTMuMzcyOSAwIHogTTgyLjQ0MDQ0MDY3Nzk2NjExIDExLjYxMDIgYzAuMjM3MjkgMCAwLjM1NTU5IDAuMTUyNTQgMC4yNTM5IDAuMzg5NjYgbC0zLjI3MTIgNy43Nzk4IGMtMC4wMzM4OTggMC4xMTg2NCAtMC4xNjk0OSAwLjIyMDE3IC0wLjMwNDkyIDAuMjIwMTcgbC0wLjIzNzI5IDAgYy0wLjE1MjU0IDAgLTAuMjg4MTQgLTAuMTAxNTMgLTAuMzU1OTMgLTAuMjIwMTcgbC0yLjMzODggLTQuNDA2OCBsLTIuMzU1OSA0LjQwNjggYy0wLjA2Nzc5NyAwLjExODY0IC0wLjIwMzM5IDAuMjIwMTcgLTAuMzU1OTMgMC4yMjAxNyBsLTAuMjM3MjkgMCBjLTAuMTUyNTQgMCAtMC4yNzExOSAtMC4xMDE1MyAtMC4zMjIwMyAtMC4yMjAxNyBsLTMuMjU0MiAtNy43Nzk4IGMtMC4xMDE1MyAtMC4yMzcxMiAwLjAxNzExNSAtMC4zODk2NiAwLjI1NDQxIC0wLjM4OTY2IGwxLjc2MjcgMCBjMC4xNjk0OSAwIDAuMzIyMDMgMC4xMDE2OSAwLjM4OTgzIDAuMjM3MjkgbDEuNjI3MSA0LjI3MTIgbDEuOTQ5MiAtNC4yMDM0IGMwLjA2Nzc5NyAtMC4xMzU1OSAwLjIwMzM5IC0wLjIyMDM0IDAuMzg5ODMgLTAuMjIwMzQgbDAuMjg3OTcgMCBjMC4yMDMzOSAwIDAuMzIyMiAwLjA4NDc0NiAwLjM3MzA1IDAuMjIwMzQgbDEuOTY1OSA0LjIwMzQgbDEuNjI3MSAtNC4yNzEyIGMwLjA2Nzc5NyAtMC4xMzU1OSAwLjIwMzM5IC0wLjIzNzI5IDAuMzcyNzEgLTAuMjM3MjkgbDEuNzc5OCAwIHogTTkzLjY2MTAzODk4MzA1MDg2IDguOTY2IGMtMC42OTQ5MiAwIC0xLjI1NDIgLTAuNTU5MzIgLTEuMjU0MiAtMS4yNTQyIHMwLjU1OTMyIC0xLjI3MTIgMS4yNTQyIC0xLjI3MTIgYzAuNjk0NzUgMCAxLjI3MSAwLjU3NjI3IDEuMjcxIDEuMjcxMiBzLTAuNTc2MjcgMS4yNTQyIC0xLjI3MSAxLjI1NDIgeiBNOTQuNTI1NDM4OTgzMDUwODUgMTEuNjEwMyBsLTEuNjk1MSAwIGMtMC4xODY0NCAwIC0wLjMyMjAzIDAuMTUyNTQgLTAuMzIyMDMgMC4zMjIwMyBsMCA3LjIwMzIgYzAgMC40OTE1MyAwLjMwNTA4IDAuODY0NDEgMC44MzA1MSAwLjg2NDQxIGwxLjIwMzQgMCBjMC4xNjk0OSAwIDAuMzA1MDggLTAuMTM1NDMgMC4zMDUwOCAtMC4zMzg4MSBsMCAtNy43Mjg4IGMwIC0wLjE2OTQ5IC0wLjE1MjU0IC0wLjMyMjAzIC0wLjMyMTg2IC0wLjMyMjAzIHogTTExMy40OTE0OTE1MjU0MjM3NCAxOS41NzY0NCBjMC4wMzM4OTggMC4yMjAzNCAtMC4wMzM3MzIgMC40MjM1NiAtMC4yMDMyMiAwLjQyMzU2IGwtMS40MjM3IDAgYy0wLjU0MjM3IDAgLTAuODQ3NDYgLTAuMzcyODggLTAuODQ3NDYgLTAuODQ3NDYgbDAgLTQuMTg2NCBjMCAtMC45NDkxNSAtMC43Mjg4MSAtMS4zODk4IC0xLjUyNTQgLTEuMzg5OCBjLTAuNzQ1NzYgMCAtMS4zODk4IDAuMzM4OTggLTEuOTY2MSAwLjg2NDQxIGwwIDUuMjM3MyBjMCAwLjE2OTQ5IC0wLjE1MjU0IDAuMzIxODYgLTAuMzIyMDMgMC4zMjE4NiBsLTEuNzExOSAwIGMtMC4xNjk0OSAwIC0wLjMwNTA4IC0wLjE1MjM4IC0wLjMwNTA4IC0wLjMyMTg2IGwwIC03Ljc0NTYgYzAgLTAuMTY5NDkgMC4xMzU1OSAtMC4zMjIwMyAwLjMwNTA4IC0wLjMyMjAzIGwxLjE2OTUgMCBjMC40MjM3MyAwIDAuNzExNjkgMC4zNTU5MyAwLjgxMzU2IDAuNjk0OTIgYzAuNjEwMTcgLTAuNDIzNzMgMS4zODk4IC0wLjgxMzU2IDIuMzU1OSAtMC44MTM1NiBjMS43NDU2IDAgMy41MjU0IDEuMTY5NyAzLjUyNTQgMy4yNTQyIGwwIDMuNzI4OCBjMC4wMTY3ODQgMC40NzQ1OCAwLjA2NzYzMSAwLjc5NjYxIDAuMTM1NDMgMS4xMDE3IHogTTEyOC43Nzk2Nzk2NjEwMTY5NiAyMC4wMzM3MzIgYzIuMTM1NiAwLjI1NDQxIDMuNDkxNCAwLjc3OTY2IDMuNDU3NSAyLjcyODggYzAgMS45MTUzIC0xLjY2MSAzLjIzNzMgLTQuODY0NCAzLjIzNzMgYy0yLjM1NTkgMCAtMy45NjU5IC0wLjk4MzA1IC0zLjk2NTkgLTIuNjk0OSBjMCAtMC45MzIyIDAuNTU5MTUgLTEuNTkzMiAxLjgzMDMgLTEuNzk2NiBjLTEuMDY3OCAtMC4yMDMzOSAtMi4yNzEyIC0wLjg5ODMxIC0yLjI4ODEgLTIuMDUwNyBjLTAuMDE2Nzg0IC0xLjAxNjkgMC43NDU5MyAtMS43Mjg4IDIuMTg2NiAtMS41NzY0IGMtMC42NDQwNyAtMC4yNzExOSAtMS40NDA3IC0xLjMzOSAtMS40NTc2IC0yLjQ5MTUgYy0wLjAzMzg5OCAtMi4yMDM0IDEuNjQ0MSAtMy44NjQ0IDMuODEzNiAtMy44NjQ0IGMxLjI4ODEgMCAxLjg0NzUgMC4zMjIwMyAzLjkxNTMgMC4yNTQyNCBjMC4xODY0NCAwIDAuMzM4ODEgMC4xMTg2NCAwLjMyMjAzIDAuMzIyMDMgbC0wLjA4NDc0NiAxLjA1MDggYy0wLjA1MDg0NyAwLjE4NjQ0IC0wLjUyNTQyIDAuMjAzMzkgLTAuNzk2NjEgMC4yNzExOSBjMC4zODk4MyAwLjU3NjI3IDAuNTc2MjcgMS4xNjk4IDAuNTc2MjcgMS45NjY0IGMwIDIuMjM3MyAtMS43NjI3IDMuNzI4OCAtMy43NjI3IDMuNjQ0MSBjLTAuNjc3OTcgLTAuMDMzODk4IC0xLjE2OTUgLTAuMTUyNTQgLTEuNTQyNCAtMC4yMzcxMiBjLTAuNTkzMjIgLTAuMTM1NTkgLTAuODk4MzEgMC4wMTY3ODQgLTAuODk4MzEgMC4zMzg4MSBjMC4wMTY5NDkgMC4zMDUwOCAwLjQ1NzYzIDAuNDkxNTMgMS4xNTI1IDAuNTc2MjcgYzEuMDUwOCAwLjE1MjU0IDEuODEzNiAwLjIzNzEyIDIuNDA2OCAwLjMyMTY5IHogTTEyNy41NTkxNzk2NjEwMTY5NiAxMy43Mjg4IGMtMC44ODEzNiAwIC0xLjU5MzIgMC43MTE4NiAtMS41OTMyIDEuNTc2MyBjMCAwLjgxMzU2IDAuNzExODYgMS41NDI0IDEuNTkzMiAxLjU0MjQgYzAuOTE1MjUgMCAxLjU3NjMgLTAuNzI4ODEgMS41NzYzIC0xLjU0MjQgYzAgLTAuODY0NDEgLTAuNjc3OTcgLTEuNTc2MyAtMS41NzYzIC0xLjU3NjMgeiBNMTI3LjYwOTk3OTY2MTAxNjk1IDIzLjg2NDEgYzEuMTE4OCAwIDIuMTE4NiAtMC4yNTQ0MSAyLjExODYgLTEuMDAwMiBjMCAtMC4zODk4MyAtMC4zNTU5MyAtMC42MTAxNyAtMC45NDkxNSAtMC43Mjg4MSBjLTAuNTc2MjcgLTAuMTE4NjQgLTEuMzM5IC0wLjIyMDM0IC0yLjAzMzkgLTAuMzA0OTIgYy0wLjU5MzIyIC0wLjA2Nzc5NyAtMSAwLjM3Mjg4IC0xIDAuOTY2MSBjMCAwLjg0NzQ2IDAuNzQ1NzYgMS4wNjc4IDEuODY0NCAxLjA2NzggeiBNMTY2Ljg5ODA2Nzc5NjYxMDE4IDExLjYxMDIgYzAuMjM3MjkgMCAwLjM1NTU5IDAuMTUyNTQgMC4yNTM5IDAuMzg5NjYgbC0zLjI3MTIgNy43Nzk4IGMtMC4wMzM4OTggMC4xMTg2NCAtMC4xNjk0OSAwLjIyMDE3IC0wLjMwNDkyIDAuMjIwMTcgbC0wLjIzNzI5IDAgYy0wLjE1MjU0IDAgLTAuMjg4MTQgLTAuMTAxNTMgLTAuMzU1OTMgLTAuMjIwMTcgbC0yLjMzODggLTQuNDA2OCBsLTIuMzU1OSA0LjQwNjggYy0wLjA2Nzc5NyAwLjExODY0IC0wLjIwMzM5IDAuMjIwMTcgLTAuMzU1OTMgMC4yMjAxNyBsLTAuMjM3MjkgMCBjLTAuMTUyNTQgMCAtMC4yNzExOSAtMC4xMDE1MyAtMC4zMjIwMyAtMC4yMjAxNyBsLTMuMjU0MiAtNy43Nzk4IGMtMC4xMDE1MyAtMC4yMzcxMiAwLjAxNzExNSAtMC4zODk2NiAwLjI1NDQxIC0wLjM4OTY2IGwxLjc2MjcgMCBjMC4xNjk0OSAwIDAuMzIyMDMgMC4xMDE2OSAwLjM4OTgzIDAuMjM3MjkgbDEuNjI3MSA0LjI3MTIgbDEuOTQ5MiAtNC4yMDM0IGMwLjA2Nzc5NyAtMC4xMzU1OSAwLjIwMzM5IC0wLjIyMDM0IDAuMzg5ODMgLTAuMjIwMzQgbDAuMjg3OTcgMCBjMC4yMDMzOSAwIDAuMzIyMiAwLjA4NDc0NiAwLjM3MzA1IDAuMjIwMzQgbDEuOTY1OSA0LjIwMzQgbDEuNjI3MSAtNC4yNzEyIGMwLjA2Nzc5NyAtMC4xMzU1OSAwLjIwMzM5IC0wLjIzNzI5IDAuMzcyNzEgLTAuMjM3MjkgbDEuNzc5OCAwIHogTTE4NC4xMzU1NjYxMDE2OTQ5NiAxOS41NzY0NCBjLTAuMjU0NDEgLTEuNjYxIC0wLjI3MTUzIC0zLjE1MjkgLTAuMjAzNzMgLTQuNzYzMSBjMC4wODQ1OCAtMi4wMTY4IC0xLjA2NzggLTMuMzA0OSAtMy4xMzU2IC0zLjMwNDkgYy0xLjM3MjkgMCAtMi44MTM2IDAuMzg5ODMgLTMuNjQ0MSAwLjg0NzQ2IGMtMC4xNjkzMyAwLjEwMTg2IC0wLjMwNDkyIDAuMjg4MzEgLTAuMjIwMTcgMC40NTc4IGwwLjU0MjM3IDEuMjg4MSBjMC4wODQ3NDYgMC4xODY0NCAwLjIyMDM0IDAuMjU0MjQgMC40NzQ1OCAwLjE1MjU0IGMxLjAxNjkgLTAuNDQwNjggMS44NjQ0IC0wLjY5NDkyIDIuNjc4IC0wLjY5NDkyIGMwLjY2MTAyIDAgMS4wNjc4IDAuMTM1NTkgMS4wNTEgMC43OTY2MSBjLTIuNzQ1OCAwLjQ3NDU4IC01LjIzNzMgMS4wMTY5IC01LjIzNzMgMy4zMzkgYzAgMS41NDI0IDEuMTAxNyAyLjM4OTcgMi44NDc1IDIuMzg5NyBjMS40NDA3IDAgMi4wODQ3IC0wLjQyMzU2IDIuNjEwMiAtMC45MzIyIGMwLjExODY0IDAuNTA4NjQgMC4zMjIwMyAwLjg0NzQ2IDAuNzQ1NzYgMC44NDc0NiBsMS4yNzEyIDAgYzAuMTg2NDQgMCAwLjI1NDI0IC0wLjIyMDE3IDAuMjIwMzQgLTAuNDIzNTYgeiBNMTc5LjcxMTU2NjEwMTY5NDk2IDE4LjI1NDEgYy0wLjUyNTQyIDAgLTAuODgxMzYgLTAuMTUyNTQgLTAuODgxMzYgLTAuNTkzMjIgYzAgLTAuNzYyNzEgMS42MTAyIC0xLjEwMTcgMi44MTM2IC0xLjM1NTkgYy0wLjAxNjk0OSAwLjM3Mjg4IC0wLjAxNjk0OSAwLjk0OTE1IDAgMS4yNzEyIGMtMC41MDg0NyAwLjQyMzU2IC0xLjMyMiAwLjY3Nzk3IC0xLjkzMjIgMC42Nzc5NyB6IE0xOTkuNTI1MjQ0MDY3Nzk2NjUgMTkuNDIzNzMgYzAuMDMzODk4IDAuMTM1NTkgLTAuMDUwNjgxIDAuMjM3NjMgLTAuMTY5MzMgMC4zMzkzMiBjLTAuMjcxMTkgMC4yMDMzOSAtMC45MzIyIDAuMzIxODYgLTEuNTQyNCAwLjMyMTg2IGMtMS44NjQ0IDAgLTIuNzI4OCAtMC44NDcyOSAtMi43Mjg4IC0zLjExODUgbDAgLTMuMTAxNyBsLTAuOTY1OTQgMCBjLTAuMTY5NjYgMCAtMC4zMjIyIC0wLjEzNTU5IC0wLjMyMjIgLTAuMzIyMiBsMCAtMC4zMzg5OCBjMCAtMC4xNjk0OSAwLjAzMzg5OCAtMC4yODgxNCAwLjEzNTU5IC0wLjQwNjc4IGMwLjk0OTE1IC0xLjA2NzggMS45ODMxIC0yLjE4NjYgMi44ODE0IC0zLjYyNzMgYzAuMDg0NzQ2IC0wLjEzNTU5IDAuMTUyNTQgLTAuMjAzMzkgMC4yMzcyOSAtMC4yMDMzOSBsMC4xNjk0OSAwIGMwLjE1MjU0IDAgMC4yMjAzNCAwLjA4NDc0NiAwLjIyMDM0IDAuMjU0MjQgbDAgMi4zODk4IGwxLjUwODUgMCBjMC4xODY0NCAwIDAuMzU1OTMgMC4xNTI1NCAwLjM1NTkzIDAuMzM4OTggbDAgMS41NzY0IGMwIDAuMTg2NDQgLTAuMTY5NDkgMC4zMzg5OCAtMC4zNTU5MyAwLjMzODk4IGwtMS4yMDM0IDAgYy0wLjEzNTU5IDAgLTAuMjU0MjQgLTAuMDE2OTQ5IC0wLjMyMjAzIC0wLjA1MDg0NyBsMCAyLjk4MzEgYzAgMC42OTQ3NSAwLjE2OTMzIDEuMDg0NiAwLjgzMDM0IDEuMDg0NiBjMC4yMjAzNCAwIDAuNDIzNzMgLTAuMDMzODk4IDAuNTkzMjIgLTAuMDY3Nzk3IGMwLjIyMDM0IC0wLjA1MDg0NyAwLjM1NTkzIDAuMDg0NzQ2IDAuNDA2NzggMC4zMDUwOCB6IE0yMTUuOTE1Mjg2NDQwNjc4MDIgMTYuNTkzNCBjMC43NDU3NiAwIDEuMjM3NSAtMC40MDY5NSAxLjIzNzUgLTEuMjIwNSBjMCAtMS45ODMxIC0xLjU1OTMgLTMuODgxNCAtNC4wNjc4IC0zLjg4MTQgYy0yLjM3MjkgMCAtNC4yMjAzIDEuODQ3NSAtNC4yMjAzIDQuMzA1MSBjMCAyLjU3NjMgMS45NDkgNC4yODggNC4zMjE5IDQuMjg4IGMxLjUwODUgMCAyLjcxMTkgLTAuNTI1NDIgMy40MDY4IC0xLjUwODUgYzAuMTE4NjQgLTAuMTUyNTQgMC4wODQ3NDYgLTAuMjcxMTkgLTAuMDUwODQ3IC0wLjQ0MDY4IGwtMC4zODk4MyAtMC41NDIyIGMtMC4xNjk0OSAtMC4yMjAzNCAtMC4zMjIwMyAtMC4xODY0NCAtMC41MjU0MiAtMC4wODQ3NDYgYy0wLjQ1NzYzIDAuMjU0MjQgLTEuMzM5IDAuNTI1NDIgLTIuMTY5NSAwLjUyNTQyIGMtMS4wMTY5IDAgLTEuOTMyMiAtMC40OTE1MyAtMi4xMzU2IC0xLjQ0MDUgbDQuNTkzMiAwIHogTTIxMS4zMzg5ODY0NDA2NzggMTQuNzk2NiBjMC4wODQ3NDYgLTAuNTQyMzcgMC43Mjg4MSAtMS4xNjk1IDEuNjk0OSAtMS4xNjk1IGMwLjk4MzA1IDAgMS41OTMyIDAuNjEwMTcgMS42NzggMS4xNjk1IGwtMy4zNzI5IDAgeiBNMjMzLjA1MDY1OTMyMjAzMzk0IDExLjk2NjMgYzAuMjIwMzQgMC4xNTI1NCAwLjMwNTI1IDAuMjcxMTkgMC4xMzU5MiAwLjUwODQ3IGwtMC44ODEzNiAxLjI4ODEgYy0wLjEwMTY5IDAuMTUyNTQgLTAuMjM3MjkgMC4yMDMzOSAtMC40NDA2OCAwLjE1MjU0IGMtMC4yMzcyOSAtMC4wODQ3NDYgLTAuNDc0NTggLTAuMjAzMzkgLTAuOTgzMjIgLTAuMjAzMzkgYy0wLjUwODQ3IDAgLTEuNDU3NiAwLjIyMDM0IC0xLjcxMTkgMS4zMjIgbDAgNC42NDQxIGMwIDAuMTY5NDkgLTAuMTM1NTkgMC4zMjE4NiAtMC4zMjIwMyAwLjMyMTg2IGwtMS43MTE5IDAgYy0wLjE2OTQ5IDAgLTAuMzA1MDggLTAuMTUyMzggLTAuMzA1MDggLTAuMzIxODYgbDAgLTcuNzQ1NiBjMCAtMC4xNjk0OSAwLjEzNTU5IC0wLjMyMjAzIDAuMzA1MDggLTAuMzIyMDMgbDEuMTY5NSAwIGMwLjQ1NzYzIDAgMC43NjI3MSAwLjQwNjc4IDAuODQ3MjkgMC43NjI3MSBjMC41MDg2NCAtMC40NDA2OCAxLjE2OTcgLTAuODMwNjggMi4xMzU2IC0wLjgzMDY4IGMwLjg2NDQxIDAgMS40NzQ2IDAuMjIwMzQgMS43NjI3IDAuNDIzNzMgeiI+PC9wYXRoPjwvZz4KCQkJPC9nPgoJCTwvc3ZnPgoJ",
+    "logo_aspect": 2.934658911023455,
+    "fit_fields": true,
+    "extra_fields": {
+      "CONTRACTOR": "Circle H2O",
+      "APPROVAL": "R",
+      "HOLD": "GEOMETRY REVIEW ONLY: THREE TRANSFER TRAINS, INDEPENDENT TAPS AND ONE MULTI-CHANNEL ELEMENT"
+    },
+    "revisions": [
+      {
+        "rev": "01",
+        "date": "2026-09-10",
+        "description": "BFD-derived template review",
+        "by": "Circle H2O",
+        "checked": "PENDING",
+        "approved": "PENDING"
+      }
+    ]
+  },
+  "equipment_data": {
+    "tank-1": {
+      "tags": "110-TK-01",
+      "rows": [
+        "NAME: Equalisation basin",
+        "CAPACITY: 100 m3",
+        "DIMENSIONS: 10 x 5 x 2 m",
+        "MATERIAL: RCC"
+      ],
+      "side": "below",
+      "width": 260,
+      "font_size": 14
+    },
+    "diffuser-1": {
+      "tags": "120-DF-01",
+      "rows": [
+        "NAME: Submerged air diffuser grid",
+        "TYPE: Submerged grid / TYPE HOLD",
+        "AIR CAPACITY: AIR DUTY HOLD",
+        "DIFFUSER COUNT: QUANTITY HOLD",
+        "MATERIAL: MATERIAL HOLD"
+      ],
+      "side": "below",
+      "width": 260,
+      "font_size": 14
+    },
+    "pump-1": {
+      "tags": "120-P-11",
+      "rows": [
+        "NAME: Transfer pump",
+        "DUTY: SAMPLE / NOT RATED"
+      ],
+      "side": "below",
+      "width": 260,
+      "font_size": 14
+    },
+    "pump-2": {
+      "tags": "120-P-12",
+      "rows": [
+        "NAME: Transfer pump",
+        "DUTY: SAMPLE / NOT RATED"
+      ],
+      "side": "below",
+      "width": 260,
+      "font_size": 14
+    },
+    "pump-3": {
+      "tags": "120-P-13",
+      "rows": [
+        "NAME: Transfer pump",
+        "DUTY: SAMPLE / NOT RATED"
+      ],
+      "side": "below",
+      "width": 260,
+      "font_size": 14
+    }
+  },
+  "evidence_geometry": {
+    "unit_widths": {
+      "tank-1": 400
+    },
+    "fill_columns": false
+  }
+}

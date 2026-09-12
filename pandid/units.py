@@ -29,6 +29,7 @@ from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
 from pandid.deprecation import Deprecation
 from pandid.geometry import Frame, Pin, _Slot
 from pandid.ports import Port
+from pandid.tapping import TapHost
 
 if TYPE_CHECKING:
     from pandid.flowsheet import Flowsheet
@@ -189,7 +190,7 @@ _LAYOUT_INPUTS = frozenset(
 )
 
 
-class Unit:
+class Unit(TapHost):
     #: The equipment type this unit is drawn as: the key the symbol
     #: registry is looked up by, and the tag a spec's ``kind:`` names.
     kind: str = "unit"
@@ -4435,6 +4436,7 @@ class Instrument(Unit):
         # resolves it into a frame, as Pin -> Frame for equipment.
         self.host: "Stream | Unit | None" = None
         self.at: float | str | None = None
+        self.along: float = 0.5
         self.offset: float = 45.0
         self.angle: float = 90.0
         #: One of :data:`RELATIONS`; set only by :meth:`attach`. What
@@ -4715,6 +4717,7 @@ class Instrument(Unit):
         on: "Stream | Unit",
         *,
         at: float | str | None = None,
+        along: float | None = None,
         offset: float = 45.0,
         angle: float = 90.0,
         relation: str = "sensing",
@@ -4725,7 +4728,10 @@ class Instrument(Unit):
         line) or a :class:`Unit` (mount on equipment). ``at`` locates
         the tap: a fraction ``0..1`` along the host stream's routed
         path, or a face (``"N"``, ``"S"``, ``"E"``, ``"W"``) of a host
-        unit's drawn box.
+        unit's drawn box. ``along`` is a fraction across that named face:
+        left to right on N/S, top to bottom on E/W, in sheet coordinates.
+        Omitted, it is the centre (0.5). A stream already has ``at`` and
+        refuses ``along`` rather than silently ignoring it.
 
         ``relation`` is what the balloon has to do with the host, one of
         :data:`RELATIONS`, and it decides whether a line is drawn
@@ -4777,6 +4783,13 @@ class Instrument(Unit):
                     f"{self.name}: at= on a unit host is a face 'N'/'S'/'E'/'W', got {at!r}"
                 )
             at = at.upper()
+        if along is not None:
+            from math import isfinite
+            if isinstance(on, Stream):
+                raise ValueError(f"{self.name}: along= belongs to a unit face; use at= on a stream")
+            if (isinstance(along, bool) or not isinstance(along, (int, float))
+                    or not isfinite(along) or not 0 <= along <= 1):
+                raise ValueError(f"{self.name}: along= must be a finite fraction within 0..1")
         if offset < 0:
             raise ValueError(f"{self.name}: offset= must not be negative, got {offset!r}")
         if relation not in RELATIONS:
@@ -4787,10 +4800,11 @@ class Instrument(Unit):
             )
         self.host = on
         self.at = at
+        self.along = 0.5 if along is None else float(along)
         self.offset = float(offset)
         self.angle = float(angle)
         self.relation = relation
-        # Where this balloon lands is these five together, and it is
+        # Where this balloon lands is this attachment intent, and it is
         # resolved inside route(); re-anchoring an already-placed one
         # therefore has to send the sheet round again.
         self._invalidate_layout()

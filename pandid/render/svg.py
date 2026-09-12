@@ -410,7 +410,7 @@ class _Ink(NamedTuple):
 
 
 def tap_lines(fs):
-    """Every impulse line, as ``(instrument, tap, balloon centre)``.
+    """Every tap segment, as ``(instrument, start, end)``.
 
     The line from a tap to the balloon reading it, and the rule for when
     there is one at all: nothing is drawn where the balloon is merely
@@ -427,8 +427,10 @@ def tap_lines(fs):
     already touch a stream of their own (a signal wire to another
     instrument) and were never at risk.
     """
-    from pandid.layout.attach import is_attached
+    from pandid.layout.attach import is_attached, shared_tap_stacks
 
+    rows = shared_tap_stacks(fs)
+    drawn = set()
     wired = {(id(s.source.owner), id(s.dest.owner)) for s in fs.streams}
     out = []
     for u in fs.units:
@@ -443,7 +445,27 @@ def tap_lines(fs):
         centre = (u.frame.cx, u.frame.cy)
         if abs(centre[0] - tap[0]) < 0.5 and abs(centre[1] - tap[1]) < 0.5:
             continue
-        out.append((u, tap, centre))
+        row = rows.get(u)
+        if row is not None:
+            if u in drawn:
+                continue
+            members = row.members
+            if any(inst.frame is None for inst in members):
+                continue
+            # One process connection reaches the horizontal pair. Emitting
+            # one diagonal per channel would turn an explicit shared element
+            # back into several apparent insertions at the same point.
+            left = min(inst.frame.x for inst in members)
+            right = max(inst.frame.x_max for inst in members)
+            junction = ((left + right) / 2, centre[1])
+            out.append((u, tap, junction))
+            for inst in members:
+                end = (inst.frame.cx, inst.frame.cy)
+                if math.dist(junction, end) > 0.01:
+                    out.append((inst, junction, end))
+            drawn.update(members)
+        else:
+            out.append((u, tap, centre))
     return out
 
 

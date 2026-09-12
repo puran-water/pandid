@@ -126,12 +126,14 @@ def _charge(inst: "Unit", stacks: dict | None = None) -> tuple[float, float, str
             return None
         seen.add(id(node))
         w, h = resolve_size(node)
-        # Pad.widened takes a maximum, so siblings must be charged at their
-        # cumulative depth before that maximum is taken. Counting only each
-        # declared offset reserves one balloon's paper for the whole stack.
-        offset = (stacks or {}).get(node, float(getattr(node, "offset", 0.0)))
+        # The declared channels occupy one horizontal row. Reserve its width
+        # before Pad.widened takes a maximum; otherwise the second channel
+        # borrows the next unit's paper. A panel child carries this width back
+        # through its own field channel too.
+        row = (stacks or {}).get(node)
+        offset = float(getattr(node, "offset", 0.0))
         reach += offset + max(w, h) / 2.0
-        girth = max(girth, max(w, h) / 2.0)
+        girth = max(girth, max(w, h) / 2.0 + (abs(row.shift) if row else 0.0))
         # ``host`` lives on Instrument rather than on Unit, and what the
         # walk holds is whatever the last host was -- a balloon, a unit
         # or a stream -- so it is read off the object and not the class.
@@ -150,9 +152,17 @@ def _charge(inst: "Unit", stacks: dict | None = None) -> tuple[float, float, str
     else:
         nx, ny = _face_normal(str(getattr(root, "at", None) or "E"))
         flow = (-ny, nx)  # the face's tangent, as attach() measures from
+        width, height = resolve_size(node)
+        span = width if nx == 0 else height
+        girth += abs(getattr(root, "along", 0.5) - 0.5) * span
         hosts = [node]
 
     ux, uy = _rotate_ccw(flow[0], flow[1], float(getattr(root, "angle", 90.0)))
+    # The row stays horizontal even on a vertical process line, so its
+    # width extends the outward reach there just as it does on an E/W face.
+    row = (stacks or {}).get(root)
+    if row and abs(ux) > abs(uy):
+        reach += row.width / 2
     face = "E" if ux >= abs(uy) else ("W" if -ux >= abs(uy) else ("N" if uy < 0 else "S"))
     return reach, girth, face, hosts
 

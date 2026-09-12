@@ -122,12 +122,18 @@ def apply_bindings(document: str, fs) -> str:
         for index, obj in enumerate(objects):
             if obj.name in bindings.get(field, {}):
                 entries[f"{prefix}{index}"] = bindings[field][obj.name]
-    # Instrument stems follow the balloon's stable appearance identity.
+    # Instrument connections follow the balloon's stable appearance identity.
+    # A declared element adds one common stem before its channel branches, so
+    # the stem needs a suffix of its own; reusing the first channel's tap ID
+    # would make two editable cells claim the same appearance.
     from pandid.render.svg import tap_lines
+    from pandid.layout.attach import shared_tap_stacks
+    rows = shared_tap_stacks(fs)
     for n, (instrument, _tap, _centre) in enumerate(tap_lines(fs)):
         owner = bindings.get("units", {}).get(instrument.name)
         if owner and owner.get("id"):
-            entries[f"t{n}"] = {"id": owner["id"] + "-tap", "attributes": {
+            suffix = "-tap-stem" if instrument in rows and _tap == instrument.tap else "-tap"
+            entries[f"t{n}"] = {"id": owner["id"] + suffix, "attributes": {
                 "puran-kind": "appearance-detail", "for-cell": owner["id"]}}
     if bindings.get("layer"):
         entries["1"] = {"attributes": bindings["layer"]}

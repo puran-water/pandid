@@ -84,18 +84,27 @@ def test_an_overfull_sheet_reports_capacity_at_the_same_printed_size():
 
 
 @pytest.mark.parametrize('count', [2, 3, 4])
-def test_shared_unit_taps_reserve_and_draw_the_entire_vertical_stack(count):
-    fs = Flowsheet('Shared level tap')
+def test_declared_channels_reserve_and_draw_the_entire_horizontal_row(count):
+    fs = Flowsheet('Multi-channel element')
     fs.layout_options.control_passes = 16
     host = fs.add(Tank('T-1'))
     balloons = [fs.add(Instrument(f'LT-{i}')).attach(host, at='N', offset=60)
                 for i in range(count)]
+    host.declare_multi_channel(*balloons)
     fs.route()
     tap, _ = _anchor(balloons[0])
     for index, inst in enumerate(balloons):
-        assert inst.frame.cx == pytest.approx(tap[0])
-        assert tap[1] - inst.frame.cy == pytest.approx(60 + index * 66)
-    assert balloon_pads(fs)[host].north >= 60 + (count - 1) * 66 + 22 + 80
+        assert inst.frame.cx == pytest.approx(tap[0] + (index - (count - 1) / 2) * 50)
+        assert tap[1] - inst.frame.cy == pytest.approx(60)
+    pad = balloon_pads(fs)[host]
+    assert pad.north >= 60 + 22 + 80
+    assert pad.east >= (count - 1) * 25 + 22 + 80
+    assert pad.west == pad.east
+    from pandid.render.svg import tap_lines
+    lines = tap_lines(fs)
+    assert len([line for line in lines if line[1] == tap]) == 1
+    assert all(a[0] == pytest.approx(b[0]) or a[1] == pytest.approx(b[1])
+               for _, a, b in lines)
     assert fs.route_converged
     assert not place_attached(fs)
     before = [u.frame for u in fs.units]
@@ -173,8 +182,9 @@ def test_a_shared_process_tap_on_a_valve_is_distinct_from_its_actuator():
     b = fs.add(Instrument('PT-2')).attach(valve, at='N', offset=60, relation='sensing')
     actuator = fs.add(Instrument('XI-1')).attach(valve, at='N', offset=60,
                                               angle=30, relation='acting_on')
+    valve.declare_multi_channel(a, b)
     assert set(shared_tap_stacks(fs)) == {a, b}
     fs.layout()
-    assert a.frame.cx == pytest.approx(b.frame.cx)
-    assert a.frame.cy - b.frame.cy >= 50
+    assert a.frame.cy == pytest.approx(b.frame.cy)
+    assert b.frame.cx - a.frame.cx == pytest.approx(50)
     assert actuator.angle == 30

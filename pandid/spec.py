@@ -342,7 +342,7 @@ def _resolve_kind(value: Any, where: str) -> type[Unit]:
 _TOP_KEYS = {
     "drawio_metadata", "equipment_data", "regions", "captions",
     "print_scale", "drawing_scale", "containments",
-    "layout_options",
+    "layout_options", "multi_channel_elements",
     "name", "stream_naming_scheme", "stream_number_start",
     "line_numbering_scheme", "line_number_start", "loop_number_start",
     "auto_faces", "components", "units", "loops",
@@ -365,7 +365,7 @@ _INSTRUMENT_KEYS = {
     "area",
     "type", "number", "variant", "display", "description", "reference", "width",
     "height", "label_pos", "new_line_number", "sensing", "acting_on", "near",
-    "at", "offset", "angle", "pin", "port_faces", "quadrants",
+    "at", "along", "offset", "angle", "pin", "port_faces", "quadrants",
 }
 #: The three ways an instrument entry names its anchor.
 _ANCHOR_KEYS = ("sensing", "acting_on", "near")
@@ -548,6 +548,24 @@ def from_dict(spec: Mapping[str, Any]) -> Flowsheet:
 
     for inst, entry, where_i in pending:
         _attach_instrument(fs, inst, entry, where_i)
+
+    by_name = {u.name: u for u in fs.units}
+    for i, entry in enumerate(_sequence(data.get("multi_channel_elements", []),
+                                        "multi_channel_elements")):
+        where_i = f"multi_channel_elements[{i}]"
+        entry = _mapping(entry, where_i)
+        _check_keys(entry, {"host", "members"}, where_i)
+        if "host" not in entry or "members" not in entry:
+            raise SpecError(f"{where_i}: an element needs host and members")
+        host = _read_host(fs, entry["host"], f"{where_i}.host")
+        names = [_text(name, f"{where_i}.members")
+                 for name in _sequence(entry["members"], f"{where_i}.members")]
+        if any(name not in by_name for name in names):
+            raise SpecError(f"{where_i}: an element names an unknown member")
+        try:
+            host.declare_multi_channel(*(by_name[name] for name in names))
+        except (TypeError, ValueError) as e:
+            raise _fail_from(e, where_i) from None
 
     fs.stream_table_sections = [
         _read_section(entry, f"stream_table_sections[{i}]")
@@ -809,7 +827,7 @@ def _read_balloon(fs: Flowsheet, entry: Mapping[str, Any], where: str) -> Instru
     if "at" in entry:
         at = entry["at"]
         kwargs["at"] = at if isinstance(at, str) else _number(at, f"{where}.at")
-    for key in ("offset", "angle", "width", "height"):
+    for key in ("along", "offset", "angle", "width", "height"):
         if key in entry:
             kwargs[key] = _number(entry[key], f"{where}.{key}")
     for key in ("variant", "display", "description", "reference", "label_pos", "area"):
@@ -1156,7 +1174,7 @@ def _attach_instrument(fs: Flowsheet, inst: Instrument, data: Mapping[str, Any],
             f"connection, 'near' draws nothing"
         )
     if not named:
-        stray = [key for key in ("at", "offset", "angle") if key in data]
+        stray = [key for key in ("at", "along", "offset", "angle") if key in data]
         if stray:
             raise SpecError(
                 f"{where}: {stray} only mean something with one of "
@@ -1170,7 +1188,7 @@ def _attach_instrument(fs: Flowsheet, inst: Instrument, data: Mapping[str, Any],
     if "at" in data:
         at = data["at"]
         kwargs["at"] = at if isinstance(at, str) else _number(at, f"{where}.at")
-    for key in ("offset", "angle"):
+    for key in ("along", "offset", "angle"):
         if key in data:
             kwargs[key] = _number(data[key], f"{where}.{key}")
     try:
@@ -1457,6 +1475,15 @@ def to_dict(fs: Flowsheet) -> dict:
         spec["instruments"] = [_write_instrument(u) for u in instruments]
     if fs.streams:
         spec["streams"] = [_write_stream(s) for s in fs.streams]
+    from pandid.tapping import declared_elements
+    elements = []
+    for members in declared_elements(fs):
+        host = members[0].host
+        elements.append({"host": [host.source.owner.name, host.source.name]
+                         if isinstance(host, Stream) else host.name,
+                         "members": [inst.name for inst in members]})
+    if elements:
+        spec["multi_channel_elements"] = elements
     if fs.stream_table_sections:
         spec["stream_table_sections"] = [list(sec) for sec in fs.stream_table_sections]
     # Only what was changed, so a spec written by a sheet that left the
@@ -1788,6 +1815,8 @@ def _write_instrument(inst: Instrument) -> dict[str, Any]:
                    for codes in [inst.quadrants.get(letter, ())] if codes}
         if by_name:
             entry["quadrants"] = by_name
+    if inst.host is not None and inst.along != 0.5:
+        entry["along"] = inst.along
     if inst._marks is not None:
         entry["at"] = inst.at
         if inst.offset != 46.0:

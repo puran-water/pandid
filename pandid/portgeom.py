@@ -342,9 +342,9 @@ def unit_box(unit: "Unit", frame) -> tuple[float, float, float, float]:
     return (frame.x, frame.y, frame.x + frame.w, frame.y + frame.h)
 
 
-def face_point(unit: "Unit", frame, face: str) -> tuple[tuple[float, float],
+def face_point(unit: "Unit", frame, face: str, along: float = 0.5) -> tuple[tuple[float, float],
                                                         tuple[float, float]]:
-    """Midpoint of one face of a unit's box, and its outward normal.
+    """Point across a named face of a unit's box, and its outward normal.
 
     The tap point for an instrument mounted on equipment. Read off the
     same :func:`unit_box` the router treats as the obstacle, so a bubble
@@ -352,11 +352,13 @@ def face_point(unit: "Unit", frame, face: str) -> tuple[tuple[float, float],
     leave from.
     """
     x0, y0, x1, y1 = unit_box(unit, frame)
+    x, y = (((x0 + x1) / 2, (y0 + y1) / 2) if along == 0.5 else
+            (x0 + along * (x1 - x0), y0 + along * (y1 - y0)))
     return {
-        "N": (((x0 + x1) / 2, y0), (0.0, -1.0)),
-        "S": (((x0 + x1) / 2, y1), (0.0, 1.0)),
-        "W": ((x0, (y0 + y1) / 2), (-1.0, 0.0)),
-        "E": ((x1, (y0 + y1) / 2), (1.0, 0.0)),
+        "N": ((x, y0), (0.0, -1.0)),
+        "S": ((x, y1), (0.0, 1.0)),
+        "W": ((x0, y), (-1.0, 0.0)),
+        "E": ((x1, y), (1.0, 0.0)),
     }[face.upper()]
 
 

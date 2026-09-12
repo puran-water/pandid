@@ -1,0 +1,200 @@
+{
+  "parent_commit": "a5e17ffd618112d727f8507d183efbbadd709de1",
+  "branch": "puranos/instrument-tapping-20260911",
+  "before_engine": "git archive a5e17ff extracted under /tmp/pandid-tapping-before-a5e17ff",
+  "after_source_sha256": {
+    "pandid/__init__.py": "34ab4892157577fe2565ea1168c6a676434f42457f3d976ead0ed0e21be2e295",
+    "pandid/__main__.py": "93b2bde4f1b4228876fc85ac1cbc946bb642b2bcbb1d526c6ed95448ce6077a5",
+    "pandid/cli.py": "d24f33017bbfd31070c555fcc35ea6cf544537feadf7c43649384c61a8b663d7",
+    "pandid/components.py": "6e48974a2a71c829fce831848c404234dc61cb85fdd6f7323d1909cb1aaa91ef",
+    "pandid/containment.py": "1ee3cf9e7ad9c4c8bf71bdba7704e3fb121fbdc3bcc977d00294facc30658213",
+    "pandid/deprecation.py": "3da2fda9e85d59ed4d722316948e4e8f7a24dc8d6751c0017de3ffd8d49addc0",
+    "pandid/devices.py": "92b0f2dcb39f6fc43c254919b195ba1c61887fbed4ebf3bc7ce72025b416fb57",
+    "pandid/discovery.py": "84cbc610b4ad3aa4e2d7ad1a810a454aabb669fc989d0f5f9bc56da9aa4f5089",
+    "pandid/document.py": "495880ea064222d36178d45e6d3343212266eb53ac75395463e6507813b35080",
+    "pandid/drawing_regions.py": "48722232afcac75ef7dd2b139b713e11ab92881dcbd4210405873f22e05cf002",
+    "pandid/drawio_metadata.py": "b130ac563487b878d049f3bdcd1450e3fbaf1082e5566e972cd6a1e433b7c2b0",
+    "pandid/flowsheet.py": "c39cdc3f3eadae08af0117b2f99d47e51ee271a50398b095a39ff61bd85e9722",
+    "pandid/geometry.py": "70344e7703c6419ecc433ac0fa51f3a603707c9e03c7bba688d8ca1e1cec1ab8",
+    "pandid/house_library.py": "c2389ca507a94134a7df35b9e01f9cfe51c283c43475a5b3ac10837355de9a97",
+    "pandid/layout/__init__.py": "9625a8a9483213071a4380255f3be771690693bb531c47d9809c163adb4ac600",
+    "pandid/layout/attach.py": "233242c3581360d8218c98de07c99986f2c9663a24d6912b08ee76bbae7251f6",
+    "pandid/layout/block_lanes.py": "07a7dc61079da042a6d170d244347a31c77f897f34393b3e031b46d4587b34b4",
+    "pandid/layout/claims.py": "0ee8fb2fa5dcc86e28866c3df3a0e7c5df56661fffe9cbd4620abc8e82f0c1a2",
+    "pandid/layout/control.py": "f478b7b124ebac0ad3956a4b1033fb1678a8cad099866b80f22969864bffabdc",
+    "pandid/layout/coordinates.py": "29117ecafbc78dfaeba00a11aba539b9e8a527df093c9d9b2ffa6a7ff6c93e14",
+    "pandid/layout/cycles.py": "7b1502b4a616364bad03a82d9017b2f212331c9698523f7988a0a67a1cc3b46e",
+    "pandid/layout/faces.py": "67edbc5b03f1057af10f4f059b2dd641ddb287730a91a0b92a5cc84138b48a97",
+    "pandid/layout/halo.py": "1eaf607f930dc42592a96c8db55b23798663272260016206a70e54768545711e",
+    "pandid/layout/options.py": "9d9bc111474db5f72a11c5afe13cb2c72e8ad4efc7ef0c638688ed32138e8990",
+    "pandid/layout/parallel_trains.py": "46bb54a65e7047816aad827004f13b026f849c2f725993d5b3f8176c876b8992",
+    "pandid/layout/place.py": "81da5c3faf4042db198aaecf043bd535fbc6b307fd8a83513eaeb15659b22b5b",
+    "pandid/layout/solver.py": "ee301df2fc69f1b80208cdcd5e6a7103c711219a2a2c7b1bf176f01b0c7d47ef",
+    "pandid/layout/stages.py": "16ec2bca0449e071108a02b13075ecac3313f752f44ea2bb5f207365bda52318",
+    "pandid/loops.py": "5b91d8a9a44ea79a9c9aa05f3de3ea093299f03e9c081d4307ecb1a0f8134b37",
+    "pandid/portgeom.py": "9a2241df16618a8d0fe4ce8c864c607e556653dbd4b6815eef797e99f0955616",
+    "pandid/ports.py": "79de985368b426d48610147da0793db28a2c966a8bb0465c6bcafb828ce21997",
+    "pandid/profiles/__init__.py": "9c5a490624f71070dce9253a931a9329811a0a5c72883060f95a6cfc8f579dd4",
+    "pandid/profiles/circle_h2o.py": "c1f930e2ddfd1beb02c1ea08b76a5f46fe5040ac9f2bc9e250700dd8cc6e62d8",
+    "pandid/profiles/legend.py": "2a3448a77dce1d823960806aabe6ce2efb32edca77fd74d7ed8f0b79d6efe4bc",
+    "pandid/profiles/process.py": "a5804a85fff49cffa36e88257c7654537fa69f38a0b69a20ebd78005e4d78cf8",
+    "pandid/profiles/templates.py": "a39a7a5c90525e1a552965685fd746c1cd6434b7309d39c1e7d8dcf7176a2ee9",
+    "pandid/render/__init__.py": "e66535fff6c0d34dcf9ebb0adceb93cc1e96600811187a55cb0a89b07168feb4",
+    "pandid/render/_house_symbols.py": "7b0a657778aeb206c8509a26c85c5c51f3141c19fbc58f7ac96131f43f5b4de2",
+    "pandid/render/_vendored_symbols.py": "42ceeb0da79662df2df0bbfabf4c5798fd57788a0ceb4276135fd34b49471621",
+    "pandid/render/crossings.py": "18d6abd027a62592a07cb3980f31f8b654115c02e5fb8a70051ac87df2cd032c",
+    "pandid/render/debug.py": "7c8862d3e3c5969a9c46beff67be12230409b6e34f1f2794d0be9ab2fce04bcd",
+    "pandid/render/drawio.py": "477c49aef0edaaa327fda580a7494ce78a990b351e7d0018f16acb23438f2717",
+    "pandid/render/escape.py": "fce17ed18c281fe857a46e08f6a955ed32c8098c4bbc7b6013c9d9252861e21e",
+    "pandid/render/export.py": "7e746039cbab1efcd8e31acbe76cb56599ba5b88b94237b5f0f7cd332412168f",
+    "pandid/render/furniture.py": "1962aa0d4316daaa46fc099385d73e67b67476ee133c775136b803e9693af66d",
+    "pandid/render/house_artwork.py": "602a333297e8af06dee06d77179a23dd4e20eaf2df33ad2b667df325cc2b9883",
+    "pandid/render/iso_parts.py": "0428ff817255a913bfa0cf7aa115392816935ae198b694c39e009be7266dd3da",
+    "pandid/render/nameplates.py": "4ac7132a91bfbf823926149088a322d75a854617a8e2b6a37f460c3e78bfb784",
+    "pandid/render/preview.py": "2569afc590ed8df454e08eaebb0b1cf18285b4e573e6f4c43420b04ebc389311",
+    "pandid/render/reference_flags.py": "954d467247c4ecd713a9edad23ecbe8b078a5a6323d087850259e652c539739e",
+    "pandid/render/svg.py": "a92ee6765315470d4ae35f70104f372eb4ad38f6b511dac712c79d05f4beed42",
+    "pandid/render/symbols.py": "e52a3465b70537d9f572477a6df44dd922d4e2db84d28a6a800fc77760d2f71f",
+    "pandid/render/weights.py": "6fa09b42f85542551157fd6ecc23a9a0de4b05b82fa61c0352d3f4ed3a396d69",
+    "pandid/routing/__init__.py": "6d3243ddec0c83ad994ab217c4777a2f91978454464c1e0579e1b76fce3db33e",
+    "pandid/routing/astar.py": "22079514edbad90e7699f233cc57477f2e64be0982e4dd4c3cd985d1e7da1437",
+    "pandid/routing/body_clearance.py": "8c0a270903c23f0696f191dd6c6a446c63d9f3ea4b8b0421b8d75bca4324af9e",
+    "pandid/routing/crossing_clearance.py": "d2cd7ce22a2e6cc437f46ad907b2f70cc0d889785d3a6dd954d8ac61564a70f1",
+    "pandid/routing/separation.py": "ff7b5374d63966d64d56b8de9039c69d68e168729eb01529d2fd00e6e4b3a344",
+    "pandid/routing/terminal_clearance.py": "3a1dd0bfbf17dc3e1da76a5c7dfeff8bfdb922c6250e2aa7d2effe25d37fb1db",
+    "pandid/routing/visibility.py": "afa90bc4ea78cdd9a77d8a5fab983f88308d71c8074fd9649f8617e4197e65d2",
+    "pandid/spec.py": "37a5fe70eb84a43b5856bd6fcb93d9b0d684d63710a481159de2d5cafb03e2d2",
+    "pandid/state.py": "b98a1decd9b47358be51a788502cb66e545e43d864e88331c38a6f9cb44c3549",
+    "pandid/stations.py": "9ad88547f5abb0b98e57bc7faed9c34b41b401656a151141fe2c0238969181d8",
+    "pandid/streams.py": "21445ad5981fe069f09882b7f3d5e6c4afb729d250f01c7b8c8cded881d31ad8",
+    "pandid/tapping.py": "ce934270b54e1c44edc5144d53a7e3f37382a6cb92be43d9b4f3cda39f4bc0fb",
+    "pandid/units.py": "ad09e9e1ad19df5a392e443575a57f78a40869d599095dedff6d02afa6fd732f",
+    "pandid/validate.py": "ea926e2705b0e246d95b985d64ddc3e50dfaf351977b1d387acbb2995865d5fb"
+  },
+  "reference": {
+    "path": "/tmp/pandid-drafting-reference-downloads/nanded-r6.pdf",
+    "sha256": "353c4e188f02b79423a1d59c53a93dd1cfa29b18b5e8e28938610dda2fb919be",
+    "pdf_pages_inspected": [
+      5,
+      10
+    ]
+  },
+  "density": {
+    "units": 28,
+    "connections": 25,
+    "process_trains": 3,
+    "paper": "A1",
+    "drawing_scale": 0.44,
+    "print_scale": 2.7
+  },
+  "input_origin": "Synthetic extension of saved 2026-09-10 Equalisation template (index 8 in /tmp/pandid-corpus-inputs.json); three transfer trains and a declared pH/temperature insertion; no project records changed.",
+  "input_geometry": "400-unit basin width; minimum column gaps, fill_columns=false, identical in both renders.",
+  "independent_instruments": [
+    "120-LIT-01",
+    "120-AE-01"
+  ],
+  "independent_tap_pitch_before": 0.0,
+  "independent_tap_pitch_after": 120.0,
+  "independent_stems_after": {
+    "120-LIT-01": {
+      "dx": 0.0,
+      "dy": -60.0
+    },
+    "120-AE-01": {
+      "dx": 0.0,
+      "dy": -60.0
+    }
+  },
+  "multi_channel_members": [
+    "120-AE-02",
+    "120-TE-02"
+  ],
+  "multi_channel_pitch_after": 50.0,
+  "multi_channel_segments_after": [
+    [
+      "120-AE-02",
+      [
+        1369.5,
+        316.5
+      ],
+      [
+        1369.5,
+        256.5
+      ]
+    ],
+    [
+      "120-AE-02",
+      [
+        1369.5,
+        256.5
+      ],
+      [
+        1344.5,
+        256.5
+      ]
+    ],
+    [
+      "120-TE-02",
+      [
+        1369.5,
+        256.5
+      ],
+      [
+        1394.5,
+        256.5
+      ]
+    ]
+  ],
+  "converged": {
+    "before": true,
+    "after": true
+  },
+  "native_export": "draw.io Desktop 31.4.4, xvfb-run, --export --format pdf; isolated user-data-dir under /tmp; no XML patching",
+  "retained_native_ids": 259,
+  "removed_native_ids": [],
+  "added_native_ids": [
+    "evidence-ae-probe-tap-stem"
+  ],
+  "retained_font_size_changes": [],
+  "pdf_nonwhitespace_character_multisets_equal": true,
+  "pdf_text_comparison_note": "A line caption changes orientation, splitting extracted words differently; compare characters, not whitespace token counts.",
+  "visual_review": "Full pages and equal-scale 520 x 600 point PDF crops inspected. Independent stems are parallel; each panel remains over its field device. Declared AE/TE channels are horizontal on one common stem.",
+  "limitations": [
+    "[warning] route-diagonal: stream pump-path-1-1 is drawn on the slant, (1741, 326.5) to (1766, 312.5). ISO 15519-1:2010 12.1 has connecting lines oriented horizontally or vertically, and a diagonal is also invisible to the check that reports a line crossing a vessel. the router draws right angles only, so this is a path resolved against geometry that has since moved: route() again after the last change to the sheet",
+    "[warning] route-detour: stream pump-path-2-1 routes 80px for a 20px span (4.0x)"
+  ],
+  "files": {
+    "after-detail.png": "2615a52ed2cce01be59dd2693ff7ab8546ba0ca7bf1ce04af5d7c69a032a5cc0",
+    "after-engine.svg": "165dbb443c8cbc07994f689de09e4504a012b04ca0dacedef083657c13908547",
+    "after.drawio": "8389c91534a09b7f5566f975ebb754801f648f183b9c7b45cdd2419fb889117e",
+    "after.json": "57df68a02a4e1ca4af110995016c82602bbd5629207f13954a0be3507456094b",
+    "after.pdf": "e8098ffb9724d3ef22290c89bca54b4704fafa73b7a82e6bd378612847b2be25",
+    "after.png": "470f62f0fb706371d963459aa0c186a391799b816008a9c2df0660457c1093a5",
+    "before-detail.png": "1c88a51a3e474fefbb3d44d9e8b92b0e170d5195442426e1c6245a276ce26fd7",
+    "before-engine.svg": "0c7b36ec4cc117ff724869f692338351ee5d1f26492c219ce56de0b4c90b2d0b",
+    "before.drawio": "26b9e5d6b98007a023a472491aa70882493b59690fcd99b9cc1382d7a7cb6435",
+    "before.json": "4a1480cf03a5f63542a38487e3133330b50835ea964a03680cad65a9c2b4ebe9",
+    "before.pdf": "fa7769e3d3dd0e728996a8a2a1d13413071e189a84b5ed39b986ba2351f9e1df",
+    "before.png": "182f106deb4b841bfd3571ee390a00ad03ec325147ec633268c85c2b9fb516a8",
+    "input.json": "68837f619128979a0197e0b620807b9dfee296feee5c659869d45f7f9a2a8684",
+    "focused-tests.txt": "4fa79b48a8917b67aea5a5ee53b74c778549014bad4bb077114ef0e2959e2657",
+    "suite-delta.json": "8798f9fcd679d286a4e8f995acda37eb3eed3b3399a1e3b6733aac7340c90cf2",
+    "full-suite.txt": "934b50b8d0c2435d41095fe5e13155dc191e1b74ddd6d6d581e1cdcefea8f4ac"
+  },
+  "native_runtime": {
+    "executable": "/home/hvksh/.local/lib/puran/drawio/31.4.4/drawio",
+    "version": "31.4.4",
+    "executable_sha256": "9622b3685e675561cf937887a80961c3b72ceb6a16ec2c588eec5c92083fc1e6",
+    "archive_sha256": "7c4b63d21ed356b8055c2f977fc99865755ed461949af439d2da2d098aea682b"
+  },
+  "final_source_replay": "Final halo correction replayed through render_tapping_evidence.py; after.drawio and after-engine.svg are byte-identical to the inspected native master and SVG.",
+  "reproducer_sha256": "5bc35650ad391854928e2aa2496dadff89e8a8f2af023ea90af9619961905012",
+  "suite_result": {
+    "failed": 38,
+    "passed": 17293,
+    "skipped": 726,
+    "errors": 0,
+    "exit": 1
+  },
+  "new_failure_nodeids": []
+}

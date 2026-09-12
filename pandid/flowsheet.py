@@ -817,7 +817,7 @@ class Flowsheet:
                        sensing: "Stream | Unit | None" = None,
                        acting_on: "Stream | Unit | None" = None,
                        near: "Stream | Unit | None" = None,
-                       at: float | str | None = None,
+                       at: float | str | None = None, along: float | None = None,
                        offset: float = 45.0, angle: float = 90.0,
                        variant: str = "default", **kwargs) -> "Instrument":
         """Add an ISA-5.1 instrument balloon, anchored to the sheet.
@@ -850,7 +850,7 @@ class Flowsheet:
           over the valve it drives is near it; what reaches the actuator
           is a signal, stated with :meth:`connect` and routed like one.
 
-        ``at``/``offset``/``angle`` locate the balloon against whichever
+        ``at``/``along``/``offset``/``angle`` locate the balloon against whichever
         was named; see :meth:`~pandid.units.Instrument.attach`. With no
         anchor at all the balloon is laid out like any other unit.
 
@@ -872,7 +872,7 @@ class Flowsheet:
                 self._refuse_foreign(role, host)
         inst = self._build_instrument(
             type, number, sensing=sensing, acting_on=acting_on, near=near,
-            at=at, offset=offset, angle=angle, variant=variant, **kwargs)
+            at=at, along=along, offset=offset, angle=angle, variant=variant, **kwargs)
         self.add(inst)
         return inst
 
@@ -881,7 +881,7 @@ class Flowsheet:
                           sensing: "Stream | Unit | None" = None,
                           acting_on: "Stream | Unit | None" = None,
                           near: "Stream | Unit | None" = None,
-                          at: float | str | None = None,
+                          at: float | str | None = None, along: float | None = None,
                           offset: float = 45.0, angle: float = 90.0,
                           variant: str = "default", **kwargs) -> "Instrument":
         """The balloon :meth:`add_instrument` would add, built and
@@ -915,8 +915,10 @@ class Flowsheet:
             number = number.number
         inst = Instrument(type, number, variant=variant, **kwargs)
         host, relation = self._anchor(inst, sensing, acting_on, near)
+        if host is None and along is not None:
+            raise ValueError("along= needs a unit host")
         if host is not None:
-            inst.attach(host, at=at, offset=offset, angle=angle, relation=relation)
+            inst.attach(host, at=at, along=along, offset=offset, angle=angle, relation=relation)
         return inst
 
     def _refuse_foreign(self, role: str, thing: "Stream | Port | Unit") -> None:
@@ -981,6 +983,7 @@ class Flowsheet:
         return host, relation
 
     def add_balloon(self, element: "Unit", *, at: float | str | None = None,
+                    along: float | None = None,
                     offset: float = 46.0, angle: float = 90.0,
                     variant: str = "default", **kwargs) -> "Instrument":
         """Draw *element*'s tag in a balloon beside it, not against it.
@@ -1050,16 +1053,16 @@ class Flowsheet:
         # Set before add(), which is where the shared tag is either
         # allowed or refused; see Instrument.repeats.
         inst._marks = element
+        inst.attach(element, at=at, along=along, offset=offset, angle=angle, relation="sensing")
         self.add(inst)
         element.balloon = inst
-        inst.attach(element, at=at, offset=offset, angle=angle, relation="sensing")
         return inst
 
     def add_control_loop(
         self, variable: "str | Loop", number: str | int | None = None, *,
         measuring: "Stream | Unit", acting_on: "Port | Unit",
         at: float | str | None = None, offset: float | None = None,
-        angle: float | None = None,
+        angle: float | None = None, along: float | None = None,
         controller_at: str | None = None, controller_offset: float | None = None,
         transmitter_letters: str | None = None, controller_letters: str | None = None,
         controller_variant: str = "shared",
@@ -1239,7 +1242,7 @@ class Flowsheet:
         # hangs off the transmitter.
         transmitter = self._build_instrument(
             transmitter_code, loop, sensing=measuring,
-            **_stated(at=at, offset=offset, angle=angle))
+            **_stated(at=at, along=along, offset=offset, angle=angle))
         # ``near=``, not ``sensing=``: the controller does not read the
         # transmitter, it is only stacked on it, and what passes between
         # them is the measurement below -- a signal line, routed like

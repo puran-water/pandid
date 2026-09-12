@@ -213,9 +213,9 @@ Registers an `Annotation` or `TableBox` (see [Sheet furniture](#sheet-furniture)
 
 ```text
 add_instrument(type, number="", *, sensing=None, acting_on=None, near=None,
-               at=None, offset=45.0, angle=90.0, variant="default",
+               at=None, along=None, offset=45.0, angle=90.0, variant="default",
                display=None, **kwargs) -> Instrument
-add_balloon(element, *, at=None, offset=46.0, angle=90.0, **kwargs) -> Instrument
+add_balloon(element, *, at=None, along=None, offset=46.0, angle=90.0, **kwargs) -> Instrument
 add_loop(variable: str, number: str | int | None = None) -> Loop
 add_control_loop(variable, number=None, *, measuring, acting_on,
                  **kwargs) -> ControlLoop
@@ -2769,7 +2769,7 @@ write to. Only a render that produces a file changes anything.
 
 ```text
 fs.add_instrument(type, number="", *, sensing=None, acting_on=None, near=None,
-                  at=None, offset=45.0, angle=90.0, variant="default",
+                  at=None, along=None, offset=45.0, angle=90.0, variant="default",
                   display=None, **kwargs) -> Instrument
 ```
 
@@ -2893,7 +2893,7 @@ unchanged. See [Declaring a flowsheet as data](#declaring-a-flowsheet-as-data).
 
 ```text
 fs.add_control_loop(variable, number=None, *, measuring, acting_on,
-                    at=None, offset=None, angle=None,
+                    at=None, along=None, offset=None, angle=None,
                     controller_at=None, controller_offset=None,
                     transmitter_letters=None, controller_letters=None,
                     controller_variant="shared",
@@ -3133,7 +3133,7 @@ tag is free to be used again.
 
 ```text
 fs.add_instrument(type, number, *, sensing=…, acting_on=…, near=…, at=…, offset=…)
-instrument.attach(on, *, at=None, offset=45.0, angle=90.0, relation="sensing")
+instrument.attach(on, *, at=None, along=None, offset=45.0, angle=90.0, relation="sensing")
 ```
 
 **Three keywords name the anchor, and they say different things.** Each takes a
@@ -3169,6 +3169,10 @@ for. It was removed in 0.1.3; it meant `sensing=`.
 - `at` is, on a stream, a fraction `0..1` along the host's **routed** path
   (default `0.5`); on a unit, a face `"N"`/`"S"`/`"E"`/`"W"` of its drawn box
   (default `"E"`). Out-of-range or wrong-typed values raise `ValueError`.
+- `along` is a finite numeric fraction `0..1` across a unit's named face,
+  left to right on N/S or top to bottom on E/W, after the host is transformed.
+  Omitted or `None` selects the centre (`0.5`), preserving the existing geometry.
+  It requires a unit host; a stream already uses `at` for its position.
 - `offset` is the distance from the tap to the balloon centre (default `45.0`).
   `offset=0` leaves an in-line primary element sitting *on* the line, which is
   how an orifice-plate FE is drawn. Negative raises.
@@ -3227,6 +3231,41 @@ lic.annotate(high="LAH", low="LAL")                                     # the al
 fs.add_instrument("I", 1, near=lic, at="S", offset=44, variant="logic") # interlock
 ```
 
+Independent instruments on one face need distinct process taps. Adequately
+spaced taps retain parallel perpendicular stems at the requested offset. Very
+close taps or another obstructing unit can still make the existing standoff
+search rotate a balloon; distinct coordinates alone do not provide clearance.
+
+```python
+lit = fs.add_instrument("LIT", "101-07", sensing=basin, at="N", along=.2)
+ae = fs.add_instrument("AE", "101-08", sensing=basin, at="N", along=.8)
+lic = fs.add_instrument("LIC", lit.number, sensing=lit, at="N", display="central")
+ait = fs.add_instrument("AIT", ae.number, sensing=ae, at="N", display="central")
+```
+
+One insertion reading several variables declares its channels on the host:
+
+```python
+ph = fs.add_instrument("AE", 201, sensing=basin, at="S", offset=60)
+temperature = fs.add_instrument("TE", 201, sensing=basin, at="S", offset=60)
+basin.declare_multi_channel(ph, temperature)
+```
+
+This draws one stem to a horizontal row, in declaration order. The same method
+works on a process stream. Members must be field sensing instruments with the
+same host, tap, offset and perpendicular angle, without absolute pins. They
+must be distinct members on the same flowsheet. The declaration is checked
+again after edits; a stale or incomplete one fails as `multi-channel-invalid`.
+It is serialized in `multi_channel_elements`, with a `host` reference and
+`members` instrument names. Instrument records retain noncentral `along`.
+
+Undeclared coincident process taps fail checked rendering with
+`instrument-tap-undeclared`; changing an offset, an angle or a pin does not make
+a second physical connection. `layout()` and `route()` remain geometry-only
+operations; `validate()` reports the error and checked exports refuse it.
+A panel function of one device attaches to that device, and an actuator leader
+continues to use its declared relation and angle.
+
 ### Letter codes outside the symbol
 
 ```text
@@ -3277,7 +3316,7 @@ written across one.
 ### A primary element's balloon
 
 ```text
-fs.add_balloon(element, *, at=None, offset=46.0, angle=90.0, **kwargs) -> Instrument
+fs.add_balloon(element, *, at=None, along=None, offset=46.0, angle=90.0, **kwargs) -> Instrument
 ```
 
 A primary element is **one instrument shown as two marks**: the thing in the

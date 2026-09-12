@@ -1,0 +1,1756 @@
+........................................................................ [  0%]
+........................................................................ [  0%]
+........................................................................ [  1%]
+........................................................................ [  1%]
+........................................................................ [  1%]
+........................................................................ [  2%]
+........................................................................ [  2%]
+........................................................................ [  3%]
+........................................................................ [  3%]
+........................................................................ [  3%]
+........................................................................ [  4%]
+........................................................................ [  4%]
+........................................................................ [  5%]
+........................................................................ [  5%]
+........................................................................ [  5%]
+........................................................................ [  6%]
+........................................................................ [  6%]
+........................................................................ [  7%]
+........................................................................ [  7%]
+........................................................................ [  7%]
+...F.................................................................... [  8%]
+........................................................................ [  8%]
+........................................................................ [  9%]
+........................................................................ [  9%]
+........................................................................ [  9%]
+........................................................................ [ 10%]
+........................................................................ [ 10%]
+........................................................................ [ 11%]
+........................................................................ [ 11%]
+........................................................................ [ 11%]
+........................................................................ [ 12%]
+........................................................................ [ 12%]
+........................................................................ [ 13%]
+........................................................................ [ 13%]
+........................................................................ [ 13%]
+........................................................................ [ 14%]
+..................................s..ssssssssss.......ss..sss.s.ssssssss [ 14%]
+ssss..ss.s.ssssssssssss...........................s....s......s......... [ 15%]
+...s................sssssssssssss....sssssss...........s...sssssss..sss. [ 15%]
+......sss...........s................................................... [ 15%]
+........................................................................ [ 16%]
+........................................................................ [ 16%]
+........................................................................ [ 17%]
+........................................................................ [ 17%]
+........................................................................ [ 17%]
+........................................................................ [ 18%]
+........................................................................ [ 18%]
+........................................................................ [ 19%]
+........................................................................ [ 19%]
+........................................................................ [ 19%]
+........................................................................ [ 20%]
+........................................................................ [ 20%]
+........................................................................ [ 21%]
+........................................................................ [ 21%]
+........................................................................ [ 21%]
+........................................................................ [ 22%]
+........................................................................ [ 22%]
+........................................................................ [ 23%]
+........................................................................ [ 23%]
+........................................................................ [ 23%]
+........................................................................ [ 24%]
+........................................................................ [ 24%]
+........................................................................ [ 25%]
+........................................................................ [ 25%]
+........................................................................ [ 25%]
+........................................................................ [ 26%]
+........................................................................ [ 26%]
+........................................................................ [ 27%]
+........................................................................ [ 27%]
+........................................................................ [ 27%]
+........................................................................ [ 28%]
+....................................................................ssss [ 28%]
+sssssssssssssssssssssssssssssssss....................................... [ 29%]
+...........................................................F....FF.....F [ 29%]
+..F..F.................................................................. [ 29%]
+....................................................................F... [ 30%]
+.FF.....F..F..FF..F....FF.....F..F..F................................... [ 30%]
+........................................................................ [ 31%]
+........................................................................ [ 31%]
+........................................................................ [ 31%]
+........................................................................ [ 32%]
+........................................................................ [ 32%]
+........................................................................ [ 33%]
+........................................................................ [ 33%]
+........................................................................ [ 33%]
+........................................................................ [ 34%]
+........................................................................ [ 34%]
+........................................................................ [ 35%]
+........................................................................ [ 35%]
+...................F.................................................... [ 35%]
+........................................................................ [ 36%]
+........................................................................ [ 36%]
+........................................................................ [ 37%]
+........................................................................ [ 37%]
+........................................................................ [ 37%]
+...........s...s........................................................ [ 38%]
+........................................................................ [ 38%]
+........................................................................ [ 39%]
+........................................................................ [ 39%]
+........................................................................ [ 39%]
+........................................................................ [ 40%]
+........................................................................ [ 40%]
+........................................................................ [ 41%]
+........................................................................ [ 41%]
+........................................................................ [ 41%]
+........................................................................ [ 42%]
+.........................................sss............................ [ 42%]
+........................................................................ [ 43%]
+........................................................................ [ 43%]
+..............................................F......................... [ 43%]
+........................................................................ [ 44%]
+........................................................................ [ 44%]
+....................................s..ssssssssss.......ss..sss.s.ssssss [ 45%]
+ssssss..ss.s.ssssssssssss...........................s....s......s....... [ 45%]
+.....s................sssssssssssss....sssssss...........s...sssssss..ss [ 45%]
+s.......sss...........s................................................. [ 46%]
+........................................................................ [ 46%]
+........................................................................ [ 47%]
+........................................................................ [ 47%]
+....................................................................ss.. [ 47%]
+........................................................................ [ 48%]
+........s...................................ssss........................ [ 48%]
+........................................................................ [ 49%]
+........................................................................ [ 49%]
+........................................................................ [ 49%]
+........................................................................ [ 50%]
+........................................................................ [ 50%]
+.......F................................................................ [ 51%]
+..............................................FFFF...................... [ 51%]
+........................................................................ [ 51%]
+........................................................................ [ 52%]
+........................................................................ [ 52%]
+........................................................................ [ 53%]
+........................................................................ [ 53%]
+........................................................................ [ 53%]
+........................................................................ [ 54%]
+........................................................................ [ 54%]
+........................................................................ [ 55%]
+..........................FFFF.......................................... [ 55%]
+........................................................................ [ 55%]
+........................................................................ [ 56%]
+........................................................................ [ 56%]
+........................................................................ [ 57%]
+........................................................................ [ 57%]
+........................................................................ [ 57%]
+........................................................................ [ 58%]
+........................................................................ [ 58%]
+........................................................................ [ 59%]
+........................................................................ [ 59%]
+........................................................................ [ 59%]
+........................................................................ [ 60%]
+........................................................................ [ 60%]
+........................................................................ [ 61%]
+........................................................................ [ 61%]
+........................................................................ [ 61%]
+........................................................................ [ 62%]
+........................................................................ [ 62%]
+........................................................................ [ 63%]
+........................................................................ [ 63%]
+.......................F................................................ [ 63%]
+.........s.............................................................. [ 64%]
+..................................s..................................... [ 64%]
+.....................................................F.................. [ 64%]
+.......................................s................................ [ 65%]
+................................................................s....... [ 65%]
+........................................................................ [ 66%]
+........................................................................ [ 66%]
+........................................................................ [ 66%]
+........................................................................ [ 67%]
+........................................................................ [ 67%]
+........................................................................ [ 68%]
+........................................................................ [ 68%]
+........................................................................ [ 68%]
+........................................................................ [ 69%]
+........................................................................ [ 69%]
+........................................s............................... [ 70%]
+........................................................................ [ 70%]
+........................................................................ [ 70%]
+......................................................................s. [ 71%]
+........................................................................ [ 71%]
+........................................................................ [ 72%]
+........................................................................ [ 72%]
+........................................................................ [ 72%]
+.................F.....................ss............................... [ 73%]
+...s.................................................................... [ 73%]
+............................s........................................... [ 74%]
+..............................................sssssssssssssssssssssssss. [ 74%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 74%]
+sssssssssssssssssssss.s.ssssssssssssssssssssssssssssssssssssssssssssssss [ 75%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 75%]
+sssssssssssssssssssssssssssss.ssssssssssssssssssssssssssssssssssssssssss [ 76%]
+sssssssssssssssssssssssssssssssssssssssssssssssssss.s.ssssssssssssssssss [ 76%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 76%]
+ssssssssssssssssssssssssssssssssss.......................ss............. [ 77%]
+.....................s.................................................. [ 77%]
+..............................................s......................... [ 78%]
+........................................................................ [ 78%]
+........................................................................ [ 78%]
+...................................................s.................... [ 79%]
+........................................................................ [ 79%]
+....s................................................................... [ 80%]
+........................................................................ [ 80%]
+........................................................................ [ 80%]
+..................................................F..................... [ 81%]
+........................................................................ [ 81%]
+........................................................................ [ 82%]
+..........................F............................................. [ 82%]
+........................................................................ [ 82%]
+........................................................................ [ 83%]
+........................................................................ [ 83%]
+..................................................F..................F.. [ 84%]
+........................................................................ [ 84%]
+........................................................................ [ 84%]
+........................................................................ [ 85%]
+........................................................................ [ 85%]
+........................................................................ [ 86%]
+........................................................................ [ 86%]
+........................................................................ [ 86%]
+........................................................................ [ 87%]
+........................................................................ [ 87%]
+........................................................................ [ 88%]
+........................................................................ [ 88%]
+........................................................................ [ 88%]
+........................................................................ [ 89%]
+........................................................................ [ 89%]
+........................................................................ [ 90%]
+........................................................................ [ 90%]
+........................................................................ [ 90%]
+........................................................................ [ 91%]
+........................................................................ [ 91%]
+........................................................................ [ 92%]
+........................................................................ [ 92%]
+........................................................................ [ 92%]
+........................................................................ [ 93%]
+........................................................................ [ 93%]
+........................................................................ [ 94%]
+........................................................................ [ 94%]
+.............................s.......................................... [ 94%]
+......................................................................ss [ 95%]
+.................................................................sss.... [ 95%]
+..................................sss................................... [ 96%]
+........................................................................ [ 96%]
+........................................................................ [ 96%]
+........................................................................ [ 97%]
+........................................................................ [ 97%]
+........................................................................ [ 98%]
+........................................................................ [ 98%]
+........................................................................ [ 98%]
+........................................................................ [ 99%]
+........................................................................ [ 99%]
+.........................................................                [100%]
+=================================== FAILURES ===================================
+_ test_a_spec_refuses_connection_faces_on_anything_but_a_block_a_tank_or_a_vessel _
+
+    def test_a_spec_refuses_connection_faces_on_anything_but_a_block_a_tank_or_a_vessel():
+        from pandid.spec import SpecError, from_dict
+    
+        with pytest.raises(SpecError, match="only a Block or a Tank or a Vessel takes 'inputs'"):
+>           from_dict({"name": "x", "units": [{"kind": "Pump", "name": "P-1", "inputs": 2}]})
+
+tests/test_block.py:870: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+pandid/spec.py:520: in from_dict
+    _read_unit(fs, entry, f"units[{i}]")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+fs = Flowsheet('x', units=0, streams=0)
+entry = {'inputs': 2, 'kind': 'Pump', 'name': 'P-1'}, where = "units[0] 'P-1'"
+
+    def _read_unit(fs: Flowsheet, entry: Any, where: str) -> Unit:
+        data = _mapping(entry, where)
+        if "kind" not in data:
+            raise SpecError(
+                f"{where} needs a 'kind' (the equipment type, e.g. 'Pump'); got {dict(data)!r}"
+            )
+        cls = _resolve_kind(data["kind"], where)
+        if "name" not in data:
+            raise SpecError(f"{where}: a {cls.__name__} needs a 'name' (its tag, e.g. 'P-101')")
+        name = _text(data["name"], f"{where}.name")
+        where = f"{where} {name!r}"
+    
+        allowed = set(_UNIT_KEYS)
+        for key, owners in _KIND_KEYS.items():
+            # By inheritance, not by name: the tables above name the class
+            # that *declares* the argument, and a ControlValve is a Valve.
+            # Matching on the name would refuse every device class an
+            # argument its own constructor accepts.
+            if _takes(cls, owners):
+                allowed.add(key)
+            elif key in data:
+                takers = " or ".join(f"a {owner}" for owner in owners)
+>               raise SpecError(f"{where}: only {takers} takes {key!r}, not a {cls.__name__}")
+E               pandid.spec.SpecError: units[0] 'P-1': only a Block or a Tank or a Vessel or a Junction or a ConcreteBasin takes 'inputs', not a Pump
+
+pandid/spec.py:656: SpecError
+
+During handling of the above exception, another exception occurred:
+
+    def test_a_spec_refuses_connection_faces_on_anything_but_a_block_a_tank_or_a_vessel():
+        from pandid.spec import SpecError, from_dict
+    
+>       with pytest.raises(SpecError, match="only a Block or a Tank or a Vessel takes 'inputs'"):
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: "only a Block or a Tank or a Vessel takes 'inputs'"
+E         Actual message: "units[0] 'P-1': only a Block or a Tank or a Vessel or a Junction or a ConcreteBasin takes 'inputs', not a Pump"
+
+tests/test_block.py:869: AssertionError
+_ test_the_committed_sheet_is_what_the_example_draws_today[03_distillation_train] _
+docs/gallery/03_distillation_train.svg is not what examples/03_distillation_train.py draws today.
+The gallery is generated; regenerate it with
+
+    python scripts/gallery.py
+
+and commit the result with the change that moved it.
+
+first divergence at line 449 of 640:
+   [447] committed:     <text x="1688.0" y="936.0" font-family="sans-serif" font-size="8.0" text-anchor="middle" font-weight="bold" fill="black">PANDID</text>
+   [447] rendered :     <text x="1688.0" y="936.0" font-family="sans-serif" font-size="8.0" text-anchor="middle" font-weight="bold" fill="black">PANDID</text>
+   [448] committed:     <text x="1744.0" y="890.0" font-family="sans-serif" font-size="6.5" text-anchor="start" fill="#666">CLIENT</text>
+   [448] rendered :     <text x="1744.0" y="890.0" font-family="sans-serif" font-size="6.5" text-anchor="start" fill="#666">CLIENT</text>
+>> [449] committed:     <text x="1778.0" y="890.0" font-family="sans-serif" font-size="9.0" text-anchor="start" fill="black">Aromatics Australia Pty Ltd</text>
+>> [449] rendered :     <text x="1780.3" y="890.0" font-family="sans-serif" font-size="9.0" text-anchor="start" fill="black">Aromatics Australia Pty Ltd</text>
+   [450] committed:     <line x1="1738.0" y1="894.0" x2="1990.0" y2="894.0" stroke="black" stroke-width="0.5"/>
+   [450] rendered :     <line x1="1738.0" y1="894.0" x2="1990.0" y2="894.0" stroke="black" stroke-width="0.5"/>
+   [451] committed:     <text x="1744.0" y="903.0" font-family="sans-serif" font-size="6.5" text-anchor="start" fill="#666">PROJECT</text>
+   [451] rendered :     <text x="1744.0" y="903.0" font-family="sans-serif" font-size="6.5" text-anchor="start" fill="#666">PROJECT</text>
+____ test_the_committed_sheet_is_what_the_example_draws_today[08_from_data] ____
+docs/gallery/08_from_data.svg is not what examples/08_from_data.py draws today.
+The gallery is generated; regenerate it with
+
+    python scripts/gallery.py
+
+and commit the result with the change that moved it.
+
+first divergence at line 2 of 349:
+   [1] committed: <?xml version="1.0" encoding="UTF-8"?>
+   [1] rendered : <?xml version="1.0" encoding="UTF-8"?>
+>> [2] committed: <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1838" height="898" viewBox="-76.0 -218.5 1838.5 898.0">
+>> [2] rendered : <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="2162" height="898" viewBox="-76.0 -218.5 2162.5 898.0">
+   [3] committed:   <title>Utilities U200</title>
+   [3] rendered :   <title>Utilities U200</title>
+   [4] committed:   <!-- pandid:provenance -->
+   [4] rendered :   <!-- pandid:provenance -->
+__ test_the_committed_sheet_is_what_the_example_draws_today[09_line_numbers] ___
+docs/gallery/09_line_numbers.svg is not what examples/09_line_numbers.py draws today.
+The gallery is generated; regenerate it with
+
+    python scripts/gallery.py
+
+and commit the result with the change that moved it.
+
+first divergence at line 146 of 227:
+   [144] committed:     <text x="901.0" y="422.5" font-family="sans-serif" font-size="8.0" text-anchor="middle" font-weight="bold" fill="black">PANDID</text>
+   [144] rendered :     <text x="901.0" y="422.5" font-family="sans-serif" font-size="8.0" text-anchor="middle" font-weight="bold" fill="black">PANDID</text>
+   [145] committed:     <text x="957.0" y="385.0" font-family="sans-serif" font-size="6.5" text-anchor="start" fill="#666">PROJECT</text>
+   [145] rendered :     <text x="957.0" y="385.0" font-family="sans-serif" font-size="6.5" text-anchor="start" fill="#666">PROJECT</text>
+>> [146] committed:     <text x="991.0" y="385.0" font-family="sans-serif" font-size="9.0" text-anchor="start" fill="black">Feed Transfer Package</text>
+>> [146] rendered :     <text x="993.3" y="385.0" font-family="sans-serif" font-size="9.0" text-anchor="start" fill="black">Feed Transfer Package</text>
+   [147] committed:     <line x1="951.0" y1="389.0" x2="1203.0" y2="389.0" stroke="black" stroke-width="0.75"/>
+   [147] rendered :     <line x1="951.0" y1="389.0" x2="1203.0" y2="389.0" stroke="black" stroke-width="0.75"/>
+   [148] committed:     <line x1="951.0" y1="421.0" x2="1203.0" y2="421.0" stroke="black" stroke-width="0.75"/>
+   [148] rendered :     <line x1="951.0" y1="421.0" x2="1203.0" y2="421.0" stroke="black" stroke-width="0.75"/>
+_ test_the_committed_sheet_is_what_the_example_draws_today[15_condensing_turbine] _
+docs/gallery/15_condensing_turbine.svg is not what examples/15_condensing_turbine.py draws today.
+The gallery is generated; regenerate it with
+
+    python scripts/gallery.py
+
+and commit the result with the change that moved it.
+
+first divergence at line 2 of 176:
+   [1] committed: <?xml version="1.0" encoding="UTF-8"?>
+   [1] rendered : <?xml version="1.0" encoding="UTF-8"?>
+>> [2] committed: <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="2320" height="709" viewBox="-49.0 2.5 2320.0 709.4">
+>> [2] rendered : <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="2932" height="709" viewBox="-49.0 2.5 2932.5 709.4">
+   [3] committed:   <title>Condensing Turbine and Vacuum System</title>
+   [3] rendered :   <title>Condensing Turbine and Vacuum System</title>
+   [4] committed:   <!-- pandid:provenance -->
+   [4] rendered :   <!-- pandid:provenance -->
+_ test_the_committed_sheet_is_what_the_example_draws_today[18_fixed_bed_recycle] _
+docs/gallery/18_fixed_bed_recycle.svg is not what examples/18_fixed_bed_recycle.py draws today.
+The gallery is generated; regenerate it with
+
+    python scripts/gallery.py
+
+and commit the result with the change that moved it.
+
+first divergence at line 2 of 496:
+   [1] committed: <?xml version="1.0" encoding="UTF-8"?>
+   [1] rendered : <?xml version="1.0" encoding="UTF-8"?>
+>> [2] committed: <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="2520" height="1589" viewBox="-84.0 -171.0 2520.0 1589.4">
+>> [2] rendered : <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="3270" height="1589" viewBox="-84.0 -171.0 3270.5 1589.4">
+   [3] committed:   <title>Methanol Synthesis Loop</title>
+   [3] rendered :   <title>Methanol Synthesis Loop</title>
+   [4] committed:   <!-- pandid:provenance -->
+   [4] rendered :   <!-- pandid:provenance -->
+_ test_the_committed_sheet_is_what_the_example_draws_today[21_alumina_refinery] _
+docs/gallery/21_alumina_refinery.svg is not what examples/21_alumina_refinery.py draws today.
+The gallery is generated; regenerate it with
+
+    python scripts/gallery.py
+
+and commit the result with the change that moved it.
+
+first divergence at line 1800 of 2258:
+   [1798] committed:     <text x="3205.0" y="2551.5" font-family="sans-serif" font-size="8.0" text-anchor="middle" font-weight="bold" fill="black">PANDID</text>
+   [1798] rendered :     <text x="3205.0" y="2551.5" font-family="sans-serif" font-size="8.0" text-anchor="middle" font-weight="bold" fill="black">PANDID</text>
+   [1799] committed:     <text x="3261.0" y="2514.0" font-family="sans-serif" font-size="6.5" text-anchor="start" fill="#666">PROJECT</text>
+   [1799] rendered :     <text x="3261.0" y="2514.0" font-family="sans-serif" font-size="6.5" text-anchor="start" fill="#666">PROJECT</text>
+>> [1800] committed:     <text x="3295.0" y="2514.0" font-family="sans-serif" font-size="9.0" text-anchor="start" fill="black">Bayer Process Alumina Refinery</text>
+>> [1800] rendered :     <text x="3297.3" y="2514.0" font-family="sans-serif" font-size="9.0" text-anchor="start" fill="black">Bayer Process Alumina Refinery</text>
+   [1801] committed:     <line x1="3255.0" y1="2518.0" x2="3507.0" y2="2518.0" stroke="black" stroke-width="0.75"/>
+   [1801] rendered :     <line x1="3255.0" y1="2518.0" x2="3507.0" y2="2518.0" stroke="black" stroke-width="0.75"/>
+   [1802] committed:     <line x1="3255.0" y1="2550.0" x2="3507.0" y2="2550.0" stroke="black" stroke-width="0.75"/>
+   [1802] rendered :     <line x1="3255.0" y1="2550.0" x2="3507.0" y2="2550.0" stroke="black" stroke-width="0.75"/>
+____________________ test_golden_svg[03_distillation_train] ____________________
+03_distillation_train: first mismatch at line 439 of 631
+   [437] golden:     <text x="1688.0" y="936.0" font-family="sans-serif" font-size="8.0" text-anchor="middle" font-weight="bold" fill="black">PANDID</text>
+   [437] actual:     <text x="1688.0" y="936.0" font-family="sans-serif" font-size="8.0" text-anchor="middle" font-weight="bold" fill="black">PANDID</text>
+   [438] golden:     <text x="1744.0" y="890.0" font-family="sans-serif" font-size="6.5" text-anchor="start" fill="#666">CLIENT</text>
+   [438] actual:     <text x="1744.0" y="890.0" font-family="sans-serif" font-size="6.5" text-anchor="start" fill="#666">CLIENT</text>
+>> [439] golden:     <text x="1778.0" y="890.0" font-family="sans-serif" font-size="9.0" text-anchor="start" fill="black">Aromatics Australia Pty Ltd</text>
+>> [439] actual:     <text x="1780.3" y="890.0" font-family="sans-serif" font-size="9.0" text-anchor="start" fill="black">Aromatics Australia Pty Ltd</text>
+   [440] golden:     <line x1="1738.0" y1="894.0" x2="1990.0" y2="894.0" stroke="black" stroke-width="0.5"/>
+   [440] actual:     <line x1="1738.0" y1="894.0" x2="1990.0" y2="894.0" stroke="black" stroke-width="0.5"/>
+   [441] golden:     <text x="1744.0" y="903.0" font-family="sans-serif" font-size="6.5" text-anchor="start" fill="#666">PROJECT</text>
+   [441] actual:     <text x="1744.0" y="903.0" font-family="sans-serif" font-size="6.5" text-anchor="start" fill="#666">PROJECT</text>
+________________________ test_golden_svg[08_from_data] _________________________
+08_from_data: first mismatch at line 1 of 340
+   [0] golden: <?xml version="1.0" encoding="UTF-8"?>
+   [0] actual: <?xml version="1.0" encoding="UTF-8"?>
+>> [1] golden: <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1838" height="898" viewBox="-76.0 -218.5 1838.5 898.0">
+>> [1] actual: <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="2162" height="898" viewBox="-76.0 -218.5 2162.5 898.0">
+   [2] golden:   <title>Utilities U200</title>
+   [2] actual:   <title>Utilities U200</title>
+   [3] golden:   <!-- pandid:provenance -->
+   [3] actual:   <!-- pandid:provenance -->
+_______________________ test_golden_svg[09_line_numbers] _______________________
+09_line_numbers: first mismatch at line 136 of 218
+   [134] golden:     <text x="901.0" y="422.5" font-family="sans-serif" font-size="8.0" text-anchor="middle" font-weight="bold" fill="black">PANDID</text>
+   [134] actual:     <text x="901.0" y="422.5" font-family="sans-serif" font-size="8.0" text-anchor="middle" font-weight="bold" fill="black">PANDID</text>
+   [135] golden:     <text x="957.0" y="385.0" font-family="sans-serif" font-size="6.5" text-anchor="start" fill="#666">PROJECT</text>
+   [135] actual:     <text x="957.0" y="385.0" font-family="sans-serif" font-size="6.5" text-anchor="start" fill="#666">PROJECT</text>
+>> [136] golden:     <text x="991.0" y="385.0" font-family="sans-serif" font-size="9.0" text-anchor="start" fill="black">Feed Transfer Package</text>
+>> [136] actual:     <text x="993.3" y="385.0" font-family="sans-serif" font-size="9.0" text-anchor="start" fill="black">Feed Transfer Package</text>
+   [137] golden:     <line x1="951.0" y1="389.0" x2="1203.0" y2="389.0" stroke="black" stroke-width="0.75"/>
+   [137] actual:     <line x1="951.0" y1="389.0" x2="1203.0" y2="389.0" stroke="black" stroke-width="0.75"/>
+   [138] golden:     <line x1="951.0" y1="421.0" x2="1203.0" y2="421.0" stroke="black" stroke-width="0.75"/>
+   [138] actual:     <line x1="951.0" y1="421.0" x2="1203.0" y2="421.0" stroke="black" stroke-width="0.75"/>
+____________________ test_golden_svg[15_condensing_turbine] ____________________
+15_condensing_turbine: first mismatch at line 1 of 167
+   [0] golden: <?xml version="1.0" encoding="UTF-8"?>
+   [0] actual: <?xml version="1.0" encoding="UTF-8"?>
+>> [1] golden: <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="2320" height="709" viewBox="-49.0 2.5 2320.0 709.4">
+>> [1] actual: <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="2932" height="709" viewBox="-49.0 2.5 2932.5 709.4">
+   [2] golden:   <title>Condensing Turbine and Vacuum System</title>
+   [2] actual:   <title>Condensing Turbine and Vacuum System</title>
+   [3] golden:   <!-- pandid:provenance -->
+   [3] actual:   <!-- pandid:provenance -->
+____________________ test_golden_svg[18_fixed_bed_recycle] _____________________
+18_fixed_bed_recycle: first mismatch at line 1 of 487
+   [0] golden: <?xml version="1.0" encoding="UTF-8"?>
+   [0] actual: <?xml version="1.0" encoding="UTF-8"?>
+>> [1] golden: <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="2520" height="1589" viewBox="-84.0 -171.0 2520.0 1589.4">
+>> [1] actual: <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="3270" height="1589" viewBox="-84.0 -171.0 3270.5 1589.4">
+   [2] golden:   <title>Methanol Synthesis Loop</title>
+   [2] actual:   <title>Methanol Synthesis Loop</title>
+   [3] golden:   <!-- pandid:provenance -->
+   [3] actual:   <!-- pandid:provenance -->
+_____________________ test_golden_svg[21_alumina_refinery] _____________________
+21_alumina_refinery: first mismatch at line 1790 of 2249
+   [1788] golden:     <text x="3205.0" y="2551.5" font-family="sans-serif" font-size="8.0" text-anchor="middle" font-weight="bold" fill="black">PANDID</text>
+   [1788] actual:     <text x="3205.0" y="2551.5" font-family="sans-serif" font-size="8.0" text-anchor="middle" font-weight="bold" fill="black">PANDID</text>
+   [1789] golden:     <text x="3261.0" y="2514.0" font-family="sans-serif" font-size="6.5" text-anchor="start" fill="#666">PROJECT</text>
+   [1789] actual:     <text x="3261.0" y="2514.0" font-family="sans-serif" font-size="6.5" text-anchor="start" fill="#666">PROJECT</text>
+>> [1790] golden:     <text x="3295.0" y="2514.0" font-family="sans-serif" font-size="9.0" text-anchor="start" fill="black">Bayer Process Alumina Refinery</text>
+>> [1790] actual:     <text x="3297.3" y="2514.0" font-family="sans-serif" font-size="9.0" text-anchor="start" fill="black">Bayer Process Alumina Refinery</text>
+   [1791] golden:     <line x1="3255.0" y1="2518.0" x2="3507.0" y2="2518.0" stroke="black" stroke-width="0.75"/>
+   [1791] actual:     <line x1="3255.0" y1="2518.0" x2="3507.0" y2="2518.0" stroke="black" stroke-width="0.75"/>
+   [1792] golden:     <line x1="3255.0" y1="2550.0" x2="3507.0" y2="2550.0" stroke="black" stroke-width="0.75"/>
+   [1792] actual:     <line x1="3255.0" y1="2550.0" x2="3507.0" y2="2550.0" stroke="black" stroke-width="0.75"/>
+_________________ test_a_version_bump_does_not_move_a_fixture __________________
+03_distillation_train: first mismatch at line 439 of 631
+   [437] golden:     <text x="1688.0" y="936.0" font-family="sans-serif" font-size="8.0" text-anchor="middle" font-weight="bold" fill="black">PANDID</text>
+   [437] actual:     <text x="1688.0" y="936.0" font-family="sans-serif" font-size="8.0" text-anchor="middle" font-weight="bold" fill="black">PANDID</text>
+   [438] golden:     <text x="1744.0" y="890.0" font-family="sans-serif" font-size="6.5" text-anchor="start" fill="#666">CLIENT</text>
+   [438] actual:     <text x="1744.0" y="890.0" font-family="sans-serif" font-size="6.5" text-anchor="start" fill="#666">CLIENT</text>
+>> [439] golden:     <text x="1778.0" y="890.0" font-family="sans-serif" font-size="9.0" text-anchor="start" fill="black">Aromatics Australia Pty Ltd</text>
+>> [439] actual:     <text x="1780.3" y="890.0" font-family="sans-serif" font-size="9.0" text-anchor="start" fill="black">Aromatics Australia Pty Ltd</text>
+   [440] golden:     <line x1="1738.0" y1="894.0" x2="1990.0" y2="894.0" stroke="black" stroke-width="0.5"/>
+   [440] actual:     <line x1="1738.0" y1="894.0" x2="1990.0" y2="894.0" stroke="black" stroke-width="0.5"/>
+   [441] golden:     <text x="1744.0" y="903.0" font-family="sans-serif" font-size="6.5" text-anchor="start" fill="#666">PROJECT</text>
+   [441] actual:     <text x="1744.0" y="903.0" font-family="sans-serif" font-size="6.5" text-anchor="start" fill="#666">PROJECT</text>
+_ test_the_example_draws_the_same_sheet_as_its_fixture[03_distillation_train] __
+examples/03_distillation_train.py does not draw tests/golden/03_distillation_train.svg.
+The golden is built from the fixture in this file, so the two have drifted: either the example was edited and the fixture was not, or the reverse. Fix whichever is wrong -- do not regenerate the golden until they agree.
+
+03_distillation_train: first mismatch at line 439 of 631
+   [437] golden:     <text x="1688.0" y="936.0" font-family="sans-serif" font-size="8.0" text-anchor="middle" font-weight="bold" fill="black">PANDID</text>
+   [437] actual:     <text x="1688.0" y="936.0" font-family="sans-serif" font-size="8.0" text-anchor="middle" font-weight="bold" fill="black">PANDID</text>
+   [438] golden:     <text x="1744.0" y="890.0" font-family="sans-serif" font-size="6.5" text-anchor="start" fill="#666">CLIENT</text>
+   [438] actual:     <text x="1744.0" y="890.0" font-family="sans-serif" font-size="6.5" text-anchor="start" fill="#666">CLIENT</text>
+>> [439] golden:     <text x="1778.0" y="890.0" font-family="sans-serif" font-size="9.0" text-anchor="start" fill="black">Aromatics Australia Pty Ltd</text>
+>> [439] actual:     <text x="1780.3" y="890.0" font-family="sans-serif" font-size="9.0" text-anchor="start" fill="black">Aromatics Australia Pty Ltd</text>
+   [440] golden:     <line x1="1738.0" y1="894.0" x2="1990.0" y2="894.0" stroke="black" stroke-width="0.5"/>
+   [440] actual:     <line x1="1738.0" y1="894.0" x2="1990.0" y2="894.0" stroke="black" stroke-width="0.5"/>
+   [441] golden:     <text x="1744.0" y="903.0" font-family="sans-serif" font-size="6.5" text-anchor="start" fill="#666">PROJECT</text>
+   [441] actual:     <text x="1744.0" y="903.0" font-family="sans-serif" font-size="6.5" text-anchor="start" fill="#666">PROJECT</text>
+----------------------------- Captured stdout call -----------------------------
+Generated distillation_train.svg and distillation_train.drawio
+______ test_the_example_draws_the_same_sheet_as_its_fixture[08_from_data] ______
+examples/08_from_data.py does not draw tests/golden/08_from_data.svg.
+The golden is built from the fixture in this file, so the two have drifted: either the example was edited and the fixture was not, or the reverse. Fix whichever is wrong -- do not regenerate the golden until they agree.
+
+08_from_data: first mismatch at line 1 of 340
+   [0] golden: <?xml version="1.0" encoding="UTF-8"?>
+   [0] actual: <?xml version="1.0" encoding="UTF-8"?>
+>> [1] golden: <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1838" height="898" viewBox="-76.0 -218.5 1838.5 898.0">
+>> [1] actual: <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="2162" height="898" viewBox="-76.0 -218.5 2162.5 898.0">
+   [2] golden:   <title>Utilities U200</title>
+   [2] actual:   <title>Utilities U200</title>
+   [3] golden:   <!-- pandid:provenance -->
+   [3] actual:   <!-- pandid:provenance -->
+----------------------------- Captured stdout call -----------------------------
+Generated from_data.svg
+____ test_the_example_draws_the_same_sheet_as_its_fixture[09_line_numbers] _____
+examples/09_line_numbers.py does not draw tests/golden/09_line_numbers.svg.
+The golden is built from the fixture in this file, so the two have drifted: either the example was edited and the fixture was not, or the reverse. Fix whichever is wrong -- do not regenerate the golden until they agree.
+
+09_line_numbers: first mismatch at line 136 of 218
+   [134] golden:     <text x="901.0" y="422.5" font-family="sans-serif" font-size="8.0" text-anchor="middle" font-weight="bold" fill="black">PANDID</text>
+   [134] actual:     <text x="901.0" y="422.5" font-family="sans-serif" font-size="8.0" text-anchor="middle" font-weight="bold" fill="black">PANDID</text>
+   [135] golden:     <text x="957.0" y="385.0" font-family="sans-serif" font-size="6.5" text-anchor="start" fill="#666">PROJECT</text>
+   [135] actual:     <text x="957.0" y="385.0" font-family="sans-serif" font-size="6.5" text-anchor="start" fill="#666">PROJECT</text>
+>> [136] golden:     <text x="991.0" y="385.0" font-family="sans-serif" font-size="9.0" text-anchor="start" fill="black">Feed Transfer Package</text>
+>> [136] actual:     <text x="993.3" y="385.0" font-family="sans-serif" font-size="9.0" text-anchor="start" fill="black">Feed Transfer Package</text>
+   [137] golden:     <line x1="951.0" y1="389.0" x2="1203.0" y2="389.0" stroke="black" stroke-width="0.75"/>
+   [137] actual:     <line x1="951.0" y1="389.0" x2="1203.0" y2="389.0" stroke="black" stroke-width="0.75"/>
+   [138] golden:     <line x1="951.0" y1="421.0" x2="1203.0" y2="421.0" stroke="black" stroke-width="0.75"/>
+   [138] actual:     <line x1="951.0" y1="421.0" x2="1203.0" y2="421.0" stroke="black" stroke-width="0.75"/>
+----------------------------- Captured stdout call -----------------------------
+Generated line_numbers.svg
+  Raw Feed -> HV-101: 8"-P-1001-A1A
+  HV-101 -> ST-101: 8"-P-1001-A1A
+  ST-101 -> P-101: 8"-P-1001-A1A
+  P-101 -> FV-101: 6"-P-1002-A1A
+  FV-101 -> V-101: 6"-P-1003-D1B
+  V-101 -> To Unit 200: 6"-P-1004-D1B
+  V-101 -> PSV-101: 3"-P-1005-A1A
+  PSV-101 -> To Flare: 4"-FL-2740-A1A
+_ test_the_example_draws_the_same_sheet_as_its_fixture[15_condensing_turbine] __
+examples/15_condensing_turbine.py does not draw tests/golden/15_condensing_turbine.svg.
+The golden is built from the fixture in this file, so the two have drifted: either the example was edited and the fixture was not, or the reverse. Fix whichever is wrong -- do not regenerate the golden until they agree.
+
+15_condensing_turbine: first mismatch at line 1 of 167
+   [0] golden: <?xml version="1.0" encoding="UTF-8"?>
+   [0] actual: <?xml version="1.0" encoding="UTF-8"?>
+>> [1] golden: <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="2320" height="709" viewBox="-49.0 2.5 2320.0 709.4">
+>> [1] actual: <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="2932" height="709" viewBox="-49.0 2.5 2932.5 709.4">
+   [2] golden:   <title>Condensing Turbine and Vacuum System</title>
+   [2] actual:   <title>Condensing Turbine and Vacuum System</title>
+   [3] golden:   <!-- pandid:provenance -->
+   [3] actual:   <!-- pandid:provenance -->
+----------------------------- Captured stdout call -----------------------------
+Generated condensing_turbine.svg
+__ test_the_example_draws_the_same_sheet_as_its_fixture[18_fixed_bed_recycle] __
+examples/18_fixed_bed_recycle.py does not draw tests/golden/18_fixed_bed_recycle.svg.
+The golden is built from the fixture in this file, so the two have drifted: either the example was edited and the fixture was not, or the reverse. Fix whichever is wrong -- do not regenerate the golden until they agree.
+
+18_fixed_bed_recycle: first mismatch at line 1 of 487
+   [0] golden: <?xml version="1.0" encoding="UTF-8"?>
+   [0] actual: <?xml version="1.0" encoding="UTF-8"?>
+>> [1] golden: <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="2520" height="1589" viewBox="-84.0 -171.0 2520.0 1589.4">
+>> [1] actual: <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="3270" height="1589" viewBox="-84.0 -171.0 3270.5 1589.4">
+   [2] golden:   <title>Methanol Synthesis Loop</title>
+   [2] actual:   <title>Methanol Synthesis Loop</title>
+   [3] golden:   <!-- pandid:provenance -->
+   [3] actual:   <!-- pandid:provenance -->
+----------------------------- Captured stdout call -----------------------------
+Generated fixed_bed_recycle.svg
+  [warning] stream-table-missing: 300-SG-301-CS, 100-CM-307-SS, 350-LG-308-CS, 80-FG-311-CS, 250-CWS-312-CS and 250-CWR-313-CS cross the sheet edge and nothing on the sheet is tabulated. ISO 10628-1:2014 4.3.2 d) has a process flow diagram name every ingoing and outgoing material and state its flow rate or quantity. Set properties={'Flow (kg/h)': ...} on the lines that carry one and render(show_stream_table=True) to report it.
+__ test_the_example_draws_the_same_sheet_as_its_fixture[21_alumina_refinery] ___
+examples/21_alumina_refinery.py does not draw tests/golden/21_alumina_refinery.svg.
+The golden is built from the fixture in this file, so the two have drifted: either the example was edited and the fixture was not, or the reverse. Fix whichever is wrong -- do not regenerate the golden until they agree.
+
+21_alumina_refinery: first mismatch at line 1790 of 2249
+   [1788] golden:     <text x="3205.0" y="2551.5" font-family="sans-serif" font-size="8.0" text-anchor="middle" font-weight="bold" fill="black">PANDID</text>
+   [1788] actual:     <text x="3205.0" y="2551.5" font-family="sans-serif" font-size="8.0" text-anchor="middle" font-weight="bold" fill="black">PANDID</text>
+   [1789] golden:     <text x="3261.0" y="2514.0" font-family="sans-serif" font-size="6.5" text-anchor="start" fill="#666">PROJECT</text>
+   [1789] actual:     <text x="3261.0" y="2514.0" font-family="sans-serif" font-size="6.5" text-anchor="start" fill="#666">PROJECT</text>
+>> [1790] golden:     <text x="3295.0" y="2514.0" font-family="sans-serif" font-size="9.0" text-anchor="start" fill="black">Bayer Process Alumina Refinery</text>
+>> [1790] actual:     <text x="3297.3" y="2514.0" font-family="sans-serif" font-size="9.0" text-anchor="start" fill="black">Bayer Process Alumina Refinery</text>
+   [1791] golden:     <line x1="3255.0" y1="2518.0" x2="3507.0" y2="2518.0" stroke="black" stroke-width="0.75"/>
+   [1791] actual:     <line x1="3255.0" y1="2518.0" x2="3507.0" y2="2518.0" stroke="black" stroke-width="0.75"/>
+   [1792] golden:     <line x1="3255.0" y1="2550.0" x2="3507.0" y2="2550.0" stroke="black" stroke-width="0.75"/>
+   [1792] actual:     <line x1="3255.0" y1="2550.0" x2="3507.0" y2="2550.0" stroke="black" stroke-width="0.75"/>
+----------------------------- Captured stdout call -----------------------------
+Generated alumina_refinery.svg
+_________ test_every_symbol_declares_a_pen_centred_on_the_sheet_weight _________
+
+    def test_every_symbol_declares_a_pen_centred_on_the_sheet_weight():
+        """The weight the *definitions* are drawn at, which nothing above can see.
+    
+        Every check above measures a placement against the definition it draws
+        from, so a definition drawn at the wrong weight passes all of them: both
+        sides of that comparison come from the same symbol. What the definitions
+        are drawn at is settled a level further up, by
+        ``scripts/vendor_symbols.py``, which bakes a compensated ``stroke-width``
+        inside the scale group it wraps each stencil's artwork in.
+    
+        That compensation divided by ``sx`` alone until #158. Under a uniform
+        factor there is nothing to choose and the outline landed exactly on the
+        sheet weight; under the four uneven pairs ``SCALE`` reproportions it put
+        the vertical strokes on that weight and left the horizontal ones at
+        ``sy/sx`` of it -- the packed tower's bed grids at 0.93 against its own
+        shell walls' 2.0, a pen a third short of the sheet's by area. It is the
+        geometric mean now, so the sheet weight is the *middle* of every pen in the
+        library rather than one edge of four of them.
+    
+        The middle is all a ``stroke-width`` inside an uneven scale group can be,
+        and until #235 that was where it ended: those four families drew 2.23 by
+        1.80 on the page, at their own natural size, and no care taken at the
+        ``<use>`` could have helped. The renderer flattens the group into the
+        coordinates now, so the mean this measures is the weight that reaches the
+        page in both directions -- which is what
+        :func:`test_every_symbol_on_the_corpus_is_drawn_at_its_declared_weight`
+        checks and what makes this the right number to hold the library to.
+        """
+        checked = 0
+        for (kind, variant), sym in sorted(default_registry._symbols.items()):
+            pens = authored_pens(sym)
+>           assert pens, f"{kind}/{variant} declares no stroke at all"
+E           AssertionError: junction/default declares no stroke at all
+E           assert []
+
+tests/test_line_weight.py:296: AssertionError
+_____________ test_the_window_draws_the_sheet_scaled_to_the_window _____________
+
+module = 'svglib.svglib', package = 'svglib', ext = '.pdf'
+
+    def _require(module: str, package: str, ext: str):
+        try:
+>           return __import__(module, fromlist=["_"])
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           ModuleNotFoundError: No module named 'svglib'
+
+pandid/render/export.py:401: ModuleNotFoundError
+
+The above exception was the direct cause of the following exception:
+
+    def test_the_window_draws_the_sheet_scaled_to_the_window():
+        """A window and not a fixed-size picture: the image is remade for the
+        size the canvas has, so resizing the window resizes the drawing rather
+        than cropping it or leaving it alone.
+    
+        The one test here that opens a real window (briefly, and closed in a
+        ``finally``); everything it needs a display for is the wiring, since
+        the arithmetic is :func:`_fit`'s and is checked above without one.
+        """
+        from pandid.render import export
+    
+        root = _tk_or_skip()
+        try:
+>           P._window(root, export.to_png(_fs().to_svg()), "Sheet 1")
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_show.py:279: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+pandid/render/export.py:509: in to_png
+    page = pdfium.PdfDocument(to_pdf(svg))[0]
+                              ^^^^^^^^^^^
+pandid/render/export.py:496: in to_pdf
+    svglib = _require("svglib.svglib", "svglib", ".pdf")
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+module = 'svglib.svglib', package = 'svglib', ext = '.pdf'
+
+    def _require(module: str, package: str, ext: str):
+        try:
+            return __import__(module, fromlist=["_"])
+        except ImportError as e:
+>           raise ImportError(
+                f"Exporting {ext} requires the optional {package} backend. "
+                f"Install it with: pip install 'pandid[pdf]'"
+            ) from e
+E           ImportError: Exporting .pdf requires the optional svglib backend. Install it with: pip install 'pandid[pdf]'
+
+pandid/render/export.py:403: ImportError
+_____ test_svg_is_well_formed_and_declares_stroke_width[junction/default] ______
+
+entry = (('junction', 'default'), Symbol(svg='<g id="sym_junction"><circle cx="2" cy="2" r="2" fill="black"/></g>', width=4, h...drawio_inscription='', drawio_flip_h=False, drawio_fill='', drawio_body_shape='', overlays=(), iso_reg='', trim=False))
+
+    @pytest.mark.parametrize("entry", _SYMBOLS, ids=_IDS)
+    def test_svg_is_well_formed_and_declares_stroke_width(entry):
+        (kind, variant), sym = entry
+        ET.fromstring(sym.svg)  # raises ET.ParseError on malformed XML
+>       assert "stroke-width" in sym.svg, f"{kind}/{variant} declares no stroke-width"
+E       AssertionError: junction/default declares no stroke-width
+E       assert 'stroke-width' in '<g id="sym_junction"><circle cx="2" cy="2" r="2" fill="black"/></g>'
+E        +  where '<g id="sym_junction"><circle cx="2" cy="2" r="2" fill="black"/></g>' = Symbol(svg='<g id="sym_junction"><circle cx="2" cy="2" r="2" fill="black"/></g>', width=4, height=4, ports={'in_1': (0... drawio_inscription='', drawio_flip_h=False, drawio_fill='', drawio_body_shape='', overlays=(), iso_reg='', trim=False).svg
+
+tests/test_symbol_invariants.py:359: AssertionError
+_ test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from[airlift/default-2.0x1.0] _
+
+entry = (('airlift', 'default'), Symbol(svg='<g id="sym_airlift_default"><g transform="scale(.5)"><path d="M 35.0 120.0 L 35.0...drawio_inscription='', drawio_flip_h=False, drawio_fill='', drawio_body_shape='', overlays=(), iso_reg='', trim=False))
+factors = (2.0, 1.0)
+
+    @pytest.mark.parametrize("factors", _REDRAWS, ids=[f"{a}x{b}" for a, b in _REDRAWS])
+    @pytest.mark.parametrize("entry", _SYMBOLS, ids=_IDS)
+    def test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from(entry, factors):
+        """``pandid.render.svg._baked`` moves the pen and nothing else.
+    
+        A placement that would scale the two axes differently is emitted redrawn at
+        the placed size rather than stretched by its viewport (#235), which rewrites
+        every number in the drawing. That is only allowed to be a change of
+        *notation*: the ink has to land where the scale would have put it. Every
+        check in this file says a port lands on drawn ink, and every one of them is
+        worth nothing if the ink itself has quietly moved.
+    
+        Measured against the scale applied by this file's own flattener rather than
+        against the renderer's arithmetic restated, so the two sides are independent
+        -- and over every registered symbol, since it is the arcs (which have to be
+        recomputed rather than scaled) and the mirrored derivations that are the
+        parts with somewhere to go wrong.
+        """
+        from pandid.render.svg import _baked
+    
+        (kind, variant), sym = entry
+        fx, fy = factors
+        want = [
+            ((ax * fx, ay * fy), (bx * fx, by * fy))
+            for (ax, ay), (bx, by) in _collect_segments(sym.svg)
+        ]
+>       got = _collect_segments(_baked(sym.svg, fx, fy))
+                                ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_symbol_invariants.py:394: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+pandid/render/svg.py:3236: in _baked
+    out.append(_scaled_element(name, attrs, here, here[0] / fx, here[1] / fy,
+pandid/render/svg.py:3161: in _scaled_element
+    out.append((key, _scaled_path(value, m)))
+                     ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+d = 'M 35.0 120.0 L 35.0 34.0 Q 35.0 14.0 55.0 14.0 L 90.0 14.0 M 55.0 120.0 L 55.0 40.0 Q 55.0 34.0 61.0 34.0 L 90.0 34.0 M 0.0 84.0 L 41.0 84.0'
+m = (1.0, 0.5, 0.0, 0.0)
+
+    def _scaled_path(d: str, m: "tuple[float, float, float, float]") -> str:
+        """One ``d`` attribute with the map *m* folded into its numbers."""
+        ax, ay, ex, ey = m
+        tokens = _PATH_TOKEN.findall(d)
+        out: list[str] = []
+        i = 0
+        while i < len(tokens):
+            cmd = tokens[i]
+            arity = _PATH_ARITY.get(cmd)
+            if arity is None:
+>               raise RuntimeError(
+                    f"path command {cmd!r} is not one pandid.render.svg._baked can scale"
+                )
+E               RuntimeError: path command 'Q' is not one pandid.render.svg._baked can scale
+
+pandid/render/svg.py:3103: RuntimeError
+_ test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from[airlift/default-1.0x2.5] _
+
+entry = (('airlift', 'default'), Symbol(svg='<g id="sym_airlift_default"><g transform="scale(.5)"><path d="M 35.0 120.0 L 35.0...drawio_inscription='', drawio_flip_h=False, drawio_fill='', drawio_body_shape='', overlays=(), iso_reg='', trim=False))
+factors = (1.0, 2.5)
+
+    @pytest.mark.parametrize("factors", _REDRAWS, ids=[f"{a}x{b}" for a, b in _REDRAWS])
+    @pytest.mark.parametrize("entry", _SYMBOLS, ids=_IDS)
+    def test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from(entry, factors):
+        """``pandid.render.svg._baked`` moves the pen and nothing else.
+    
+        A placement that would scale the two axes differently is emitted redrawn at
+        the placed size rather than stretched by its viewport (#235), which rewrites
+        every number in the drawing. That is only allowed to be a change of
+        *notation*: the ink has to land where the scale would have put it. Every
+        check in this file says a port lands on drawn ink, and every one of them is
+        worth nothing if the ink itself has quietly moved.
+    
+        Measured against the scale applied by this file's own flattener rather than
+        against the renderer's arithmetic restated, so the two sides are independent
+        -- and over every registered symbol, since it is the arcs (which have to be
+        recomputed rather than scaled) and the mirrored derivations that are the
+        parts with somewhere to go wrong.
+        """
+        from pandid.render.svg import _baked
+    
+        (kind, variant), sym = entry
+        fx, fy = factors
+        want = [
+            ((ax * fx, ay * fy), (bx * fx, by * fy))
+            for (ax, ay), (bx, by) in _collect_segments(sym.svg)
+        ]
+>       got = _collect_segments(_baked(sym.svg, fx, fy))
+                                ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_symbol_invariants.py:394: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+pandid/render/svg.py:3236: in _baked
+    out.append(_scaled_element(name, attrs, here, here[0] / fx, here[1] / fy,
+pandid/render/svg.py:3161: in _scaled_element
+    out.append((key, _scaled_path(value, m)))
+                     ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+d = 'M 35.0 120.0 L 35.0 34.0 Q 35.0 14.0 55.0 14.0 L 90.0 14.0 M 55.0 120.0 L 55.0 40.0 Q 55.0 34.0 61.0 34.0 L 90.0 34.0 M 0.0 84.0 L 41.0 84.0'
+m = (0.5, 1.25, 0.0, 0.0)
+
+    def _scaled_path(d: str, m: "tuple[float, float, float, float]") -> str:
+        """One ``d`` attribute with the map *m* folded into its numbers."""
+        ax, ay, ex, ey = m
+        tokens = _PATH_TOKEN.findall(d)
+        out: list[str] = []
+        i = 0
+        while i < len(tokens):
+            cmd = tokens[i]
+            arity = _PATH_ARITY.get(cmd)
+            if arity is None:
+>               raise RuntimeError(
+                    f"path command {cmd!r} is not one pandid.render.svg._baked can scale"
+                )
+E               RuntimeError: path command 'Q' is not one pandid.render.svg._baked can scale
+
+pandid/render/svg.py:3103: RuntimeError
+_ test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from[airlift/default-3.0x0.5] _
+
+entry = (('airlift', 'default'), Symbol(svg='<g id="sym_airlift_default"><g transform="scale(.5)"><path d="M 35.0 120.0 L 35.0...drawio_inscription='', drawio_flip_h=False, drawio_fill='', drawio_body_shape='', overlays=(), iso_reg='', trim=False))
+factors = (3.0, 0.5)
+
+    @pytest.mark.parametrize("factors", _REDRAWS, ids=[f"{a}x{b}" for a, b in _REDRAWS])
+    @pytest.mark.parametrize("entry", _SYMBOLS, ids=_IDS)
+    def test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from(entry, factors):
+        """``pandid.render.svg._baked`` moves the pen and nothing else.
+    
+        A placement that would scale the two axes differently is emitted redrawn at
+        the placed size rather than stretched by its viewport (#235), which rewrites
+        every number in the drawing. That is only allowed to be a change of
+        *notation*: the ink has to land where the scale would have put it. Every
+        check in this file says a port lands on drawn ink, and every one of them is
+        worth nothing if the ink itself has quietly moved.
+    
+        Measured against the scale applied by this file's own flattener rather than
+        against the renderer's arithmetic restated, so the two sides are independent
+        -- and over every registered symbol, since it is the arcs (which have to be
+        recomputed rather than scaled) and the mirrored derivations that are the
+        parts with somewhere to go wrong.
+        """
+        from pandid.render.svg import _baked
+    
+        (kind, variant), sym = entry
+        fx, fy = factors
+        want = [
+            ((ax * fx, ay * fy), (bx * fx, by * fy))
+            for (ax, ay), (bx, by) in _collect_segments(sym.svg)
+        ]
+>       got = _collect_segments(_baked(sym.svg, fx, fy))
+                                ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_symbol_invariants.py:394: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+pandid/render/svg.py:3236: in _baked
+    out.append(_scaled_element(name, attrs, here, here[0] / fx, here[1] / fy,
+pandid/render/svg.py:3161: in _scaled_element
+    out.append((key, _scaled_path(value, m)))
+                     ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+d = 'M 35.0 120.0 L 35.0 34.0 Q 35.0 14.0 55.0 14.0 L 90.0 14.0 M 55.0 120.0 L 55.0 40.0 Q 55.0 34.0 61.0 34.0 L 90.0 34.0 M 0.0 84.0 L 41.0 84.0'
+m = (1.5, 0.25, 0.0, 0.0)
+
+    def _scaled_path(d: str, m: "tuple[float, float, float, float]") -> str:
+        """One ``d`` attribute with the map *m* folded into its numbers."""
+        ax, ay, ex, ey = m
+        tokens = _PATH_TOKEN.findall(d)
+        out: list[str] = []
+        i = 0
+        while i < len(tokens):
+            cmd = tokens[i]
+            arity = _PATH_ARITY.get(cmd)
+            if arity is None:
+>               raise RuntimeError(
+                    f"path command {cmd!r} is not one pandid.render.svg._baked can scale"
+                )
+E               RuntimeError: path command 'Q' is not one pandid.render.svg._baked can scale
+
+pandid/render/svg.py:3103: RuntimeError
+_ test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from[airlift/default-0.4x1.7] _
+
+entry = (('airlift', 'default'), Symbol(svg='<g id="sym_airlift_default"><g transform="scale(.5)"><path d="M 35.0 120.0 L 35.0...drawio_inscription='', drawio_flip_h=False, drawio_fill='', drawio_body_shape='', overlays=(), iso_reg='', trim=False))
+factors = (0.4, 1.7)
+
+    @pytest.mark.parametrize("factors", _REDRAWS, ids=[f"{a}x{b}" for a, b in _REDRAWS])
+    @pytest.mark.parametrize("entry", _SYMBOLS, ids=_IDS)
+    def test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from(entry, factors):
+        """``pandid.render.svg._baked`` moves the pen and nothing else.
+    
+        A placement that would scale the two axes differently is emitted redrawn at
+        the placed size rather than stretched by its viewport (#235), which rewrites
+        every number in the drawing. That is only allowed to be a change of
+        *notation*: the ink has to land where the scale would have put it. Every
+        check in this file says a port lands on drawn ink, and every one of them is
+        worth nothing if the ink itself has quietly moved.
+    
+        Measured against the scale applied by this file's own flattener rather than
+        against the renderer's arithmetic restated, so the two sides are independent
+        -- and over every registered symbol, since it is the arcs (which have to be
+        recomputed rather than scaled) and the mirrored derivations that are the
+        parts with somewhere to go wrong.
+        """
+        from pandid.render.svg import _baked
+    
+        (kind, variant), sym = entry
+        fx, fy = factors
+        want = [
+            ((ax * fx, ay * fy), (bx * fx, by * fy))
+            for (ax, ay), (bx, by) in _collect_segments(sym.svg)
+        ]
+>       got = _collect_segments(_baked(sym.svg, fx, fy))
+                                ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_symbol_invariants.py:394: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+pandid/render/svg.py:3236: in _baked
+    out.append(_scaled_element(name, attrs, here, here[0] / fx, here[1] / fy,
+pandid/render/svg.py:3161: in _scaled_element
+    out.append((key, _scaled_path(value, m)))
+                     ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+d = 'M 35.0 120.0 L 35.0 34.0 Q 35.0 14.0 55.0 14.0 L 90.0 14.0 M 55.0 120.0 L 55.0 40.0 Q 55.0 34.0 61.0 34.0 L 90.0 34.0 M 0.0 84.0 L 41.0 84.0'
+m = (0.2, 0.85, 0.0, 0.0)
+
+    def _scaled_path(d: str, m: "tuple[float, float, float, float]") -> str:
+        """One ``d`` attribute with the map *m* folded into its numbers."""
+        ax, ay, ex, ey = m
+        tokens = _PATH_TOKEN.findall(d)
+        out: list[str] = []
+        i = 0
+        while i < len(tokens):
+            cmd = tokens[i]
+            arity = _PATH_ARITY.get(cmd)
+            if arity is None:
+>               raise RuntimeError(
+                    f"path command {cmd!r} is not one pandid.render.svg._baked can scale"
+                )
+E               RuntimeError: path command 'Q' is not one pandid.render.svg._baked can scale
+
+pandid/render/svg.py:3103: RuntimeError
+_ test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from[junction/default-2.0x1.0] _
+
+entry = (('junction', 'default'), Symbol(svg='<g id="sym_junction"><circle cx="2" cy="2" r="2" fill="black"/></g>', width=4, h...drawio_inscription='', drawio_flip_h=False, drawio_fill='', drawio_body_shape='', overlays=(), iso_reg='', trim=False))
+factors = (2.0, 1.0)
+
+    @pytest.mark.parametrize("factors", _REDRAWS, ids=[f"{a}x{b}" for a, b in _REDRAWS])
+    @pytest.mark.parametrize("entry", _SYMBOLS, ids=_IDS)
+    def test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from(entry, factors):
+        """``pandid.render.svg._baked`` moves the pen and nothing else.
+    
+        A placement that would scale the two axes differently is emitted redrawn at
+        the placed size rather than stretched by its viewport (#235), which rewrites
+        every number in the drawing. That is only allowed to be a change of
+        *notation*: the ink has to land where the scale would have put it. Every
+        check in this file says a port lands on drawn ink, and every one of them is
+        worth nothing if the ink itself has quietly moved.
+    
+        Measured against the scale applied by this file's own flattener rather than
+        against the renderer's arithmetic restated, so the two sides are independent
+        -- and over every registered symbol, since it is the arcs (which have to be
+        recomputed rather than scaled) and the mirrored derivations that are the
+        parts with somewhere to go wrong.
+        """
+        from pandid.render.svg import _baked
+    
+        (kind, variant), sym = entry
+        fx, fy = factors
+        want = [
+            ((ax * fx, ay * fy), (bx * fx, by * fy))
+            for (ax, ay), (bx, by) in _collect_segments(sym.svg)
+        ]
+        got = _collect_segments(_baked(sym.svg, fx, fy))
+        assert len(got) == len(want), (
+            f"{kind}/{variant} redrawn at {fx} x {fy} flattens to {len(got)} segments, "
+            f"against the {len(want)} it was drawn from"
+        )
+        worst = max(
+            (max(math.dist(p, q) for p, q in zip(g, w)) for g, w in zip(got, want)),
+            default=0.0,
+        )
+        # The redraw writes six decimals, so a point may land half a millionth of a
+        # unit from where the scale would have put it. A drawing unit is 0,26 mm.
+>       assert worst <= 1e-5, (
+            f"{kind}/{variant} redrawn at {fx} x {fy} moved its ink by {worst:.3g} units"
+        )
+E       AssertionError: junction/default redrawn at 2.0 x 1.0 moved its ink by 4 units
+E       assert 4.0 <= 1e-05
+
+tests/test_symbol_invariants.py:405: AssertionError
+_ test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from[junction/default-1.0x2.5] _
+
+entry = (('junction', 'default'), Symbol(svg='<g id="sym_junction"><circle cx="2" cy="2" r="2" fill="black"/></g>', width=4, h...drawio_inscription='', drawio_flip_h=False, drawio_fill='', drawio_body_shape='', overlays=(), iso_reg='', trim=False))
+factors = (1.0, 2.5)
+
+    @pytest.mark.parametrize("factors", _REDRAWS, ids=[f"{a}x{b}" for a, b in _REDRAWS])
+    @pytest.mark.parametrize("entry", _SYMBOLS, ids=_IDS)
+    def test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from(entry, factors):
+        """``pandid.render.svg._baked`` moves the pen and nothing else.
+    
+        A placement that would scale the two axes differently is emitted redrawn at
+        the placed size rather than stretched by its viewport (#235), which rewrites
+        every number in the drawing. That is only allowed to be a change of
+        *notation*: the ink has to land where the scale would have put it. Every
+        check in this file says a port lands on drawn ink, and every one of them is
+        worth nothing if the ink itself has quietly moved.
+    
+        Measured against the scale applied by this file's own flattener rather than
+        against the renderer's arithmetic restated, so the two sides are independent
+        -- and over every registered symbol, since it is the arcs (which have to be
+        recomputed rather than scaled) and the mirrored derivations that are the
+        parts with somewhere to go wrong.
+        """
+        from pandid.render.svg import _baked
+    
+        (kind, variant), sym = entry
+        fx, fy = factors
+        want = [
+            ((ax * fx, ay * fy), (bx * fx, by * fy))
+            for (ax, ay), (bx, by) in _collect_segments(sym.svg)
+        ]
+        got = _collect_segments(_baked(sym.svg, fx, fy))
+        assert len(got) == len(want), (
+            f"{kind}/{variant} redrawn at {fx} x {fy} flattens to {len(got)} segments, "
+            f"against the {len(want)} it was drawn from"
+        )
+        worst = max(
+            (max(math.dist(p, q) for p, q in zip(g, w)) for g, w in zip(got, want)),
+            default=0.0,
+        )
+        # The redraw writes six decimals, so a point may land half a millionth of a
+        # unit from where the scale would have put it. A drawing unit is 0,26 mm.
+>       assert worst <= 1e-5, (
+            f"{kind}/{variant} redrawn at {fx} x {fy} moved its ink by {worst:.3g} units"
+        )
+E       AssertionError: junction/default redrawn at 1.0 x 2.5 moved its ink by 6 units
+E       assert 6.0 <= 1e-05
+
+tests/test_symbol_invariants.py:405: AssertionError
+_ test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from[junction/default-3.0x0.5] _
+
+entry = (('junction', 'default'), Symbol(svg='<g id="sym_junction"><circle cx="2" cy="2" r="2" fill="black"/></g>', width=4, h...drawio_inscription='', drawio_flip_h=False, drawio_fill='', drawio_body_shape='', overlays=(), iso_reg='', trim=False))
+factors = (3.0, 0.5)
+
+    @pytest.mark.parametrize("factors", _REDRAWS, ids=[f"{a}x{b}" for a, b in _REDRAWS])
+    @pytest.mark.parametrize("entry", _SYMBOLS, ids=_IDS)
+    def test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from(entry, factors):
+        """``pandid.render.svg._baked`` moves the pen and nothing else.
+    
+        A placement that would scale the two axes differently is emitted redrawn at
+        the placed size rather than stretched by its viewport (#235), which rewrites
+        every number in the drawing. That is only allowed to be a change of
+        *notation*: the ink has to land where the scale would have put it. Every
+        check in this file says a port lands on drawn ink, and every one of them is
+        worth nothing if the ink itself has quietly moved.
+    
+        Measured against the scale applied by this file's own flattener rather than
+        against the renderer's arithmetic restated, so the two sides are independent
+        -- and over every registered symbol, since it is the arcs (which have to be
+        recomputed rather than scaled) and the mirrored derivations that are the
+        parts with somewhere to go wrong.
+        """
+        from pandid.render.svg import _baked
+    
+        (kind, variant), sym = entry
+        fx, fy = factors
+        want = [
+            ((ax * fx, ay * fy), (bx * fx, by * fy))
+            for (ax, ay), (bx, by) in _collect_segments(sym.svg)
+        ]
+        got = _collect_segments(_baked(sym.svg, fx, fy))
+        assert len(got) == len(want), (
+            f"{kind}/{variant} redrawn at {fx} x {fy} flattens to {len(got)} segments, "
+            f"against the {len(want)} it was drawn from"
+        )
+        worst = max(
+            (max(math.dist(p, q) for p, q in zip(g, w)) for g, w in zip(got, want)),
+            default=0.0,
+        )
+        # The redraw writes six decimals, so a point may land half a millionth of a
+        # unit from where the scale would have put it. A drawing unit is 0,26 mm.
+>       assert worst <= 1e-5, (
+            f"{kind}/{variant} redrawn at {fx} x {fy} moved its ink by {worst:.3g} units"
+        )
+E       AssertionError: junction/default redrawn at 3.0 x 0.5 moved its ink by 8.06 units
+E       assert 8.06225774829855 <= 1e-05
+
+tests/test_symbol_invariants.py:405: AssertionError
+_ test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from[junction/default-0.4x1.7] _
+
+entry = (('junction', 'default'), Symbol(svg='<g id="sym_junction"><circle cx="2" cy="2" r="2" fill="black"/></g>', width=4, h...drawio_inscription='', drawio_flip_h=False, drawio_fill='', drawio_body_shape='', overlays=(), iso_reg='', trim=False))
+factors = (0.4, 1.7)
+
+    @pytest.mark.parametrize("factors", _REDRAWS, ids=[f"{a}x{b}" for a, b in _REDRAWS])
+    @pytest.mark.parametrize("entry", _SYMBOLS, ids=_IDS)
+    def test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from(entry, factors):
+        """``pandid.render.svg._baked`` moves the pen and nothing else.
+    
+        A placement that would scale the two axes differently is emitted redrawn at
+        the placed size rather than stretched by its viewport (#235), which rewrites
+        every number in the drawing. That is only allowed to be a change of
+        *notation*: the ink has to land where the scale would have put it. Every
+        check in this file says a port lands on drawn ink, and every one of them is
+        worth nothing if the ink itself has quietly moved.
+    
+        Measured against the scale applied by this file's own flattener rather than
+        against the renderer's arithmetic restated, so the two sides are independent
+        -- and over every registered symbol, since it is the arcs (which have to be
+        recomputed rather than scaled) and the mirrored derivations that are the
+        parts with somewhere to go wrong.
+        """
+        from pandid.render.svg import _baked
+    
+        (kind, variant), sym = entry
+        fx, fy = factors
+        want = [
+            ((ax * fx, ay * fy), (bx * fx, by * fy))
+            for (ax, ay), (bx, by) in _collect_segments(sym.svg)
+        ]
+        got = _collect_segments(_baked(sym.svg, fx, fy))
+        assert len(got) == len(want), (
+            f"{kind}/{variant} redrawn at {fx} x {fy} flattens to {len(got)} segments, "
+            f"against the {len(want)} it was drawn from"
+        )
+        worst = max(
+            (max(math.dist(p, q) for p, q in zip(g, w)) for g, w in zip(got, want)),
+            default=0.0,
+        )
+        # The redraw writes six decimals, so a point may land half a millionth of a
+        # unit from where the scale would have put it. A drawing unit is 0,26 mm.
+>       assert worst <= 1e-5, (
+            f"{kind}/{variant} redrawn at {fx} x {fy} moved its ink by {worst:.3g} units"
+        )
+E       AssertionError: junction/default redrawn at 0.4 x 1.7 moved its ink by 3.17 units
+E       assert 3.172509981518576 <= 1e-05
+
+tests/test_symbol_invariants.py:405: AssertionError
+______________ test_ports_lie_on_drawn_geometry[airlift/default] _______________
+
+entry = (('airlift', 'default'), Symbol(svg='<g id="sym_airlift_default"><g transform="scale(.5)"><path d="M 35.0 120.0 L 35.0...drawio_inscription='', drawio_flip_h=False, drawio_fill='', drawio_body_shape='', overlays=(), iso_reg='', trim=False))
+
+    @pytest.mark.parametrize("entry", _SYMBOLS, ids=_IDS)
+    def test_ports_lie_on_drawn_geometry(entry):
+        (kind, variant), sym = entry
+        if kind in _DYNAMIC_KINDS:
+            pytest.skip("feed/product are drawn dynamically, not from Symbol.svg")
+        segments = _collect_segments(sym.svg)
+        for name, (x, y) in sym.ports.items():
+            if (kind, variant, name) in _KNOWN_GEOMETRY_GAPS or (kind, name) in _SIGNAL_PORTS:
+                continue
+            d = _nearest_distance((x, y), segments)
+>           assert d <= GEOM_TOL, (
+                f"{kind}/{variant} port {name!r} at ({x}, {y}) is {d:.1f}u "
+                f"from the nearest drawn stroke (tolerance {GEOM_TOL})"
+            )
+E           AssertionError: airlift/default port 'liquid_in' at (22.5, 60.0) is 5.0u from the nearest drawn stroke (tolerance 2.0)
+E           assert 5.0 <= 2.0
+
+tests/test_symbol_invariants.py:480: AssertionError
+____________ test_port_faces_lie_on_drawn_geometry[airlift/default] ____________
+
+entry = (('airlift', 'default'), Symbol(svg='<g id="sym_airlift_default"><g transform="scale(.5)"><path d="M 35.0 120.0 L 35.0...drawio_inscription='', drawio_flip_h=False, drawio_fill='', drawio_body_shape='', overlays=(), iso_reg='', trim=False))
+
+    @pytest.mark.parametrize("entry", _SYMBOLS, ids=_IDS)
+    def test_port_faces_lie_on_drawn_geometry(entry):
+        (kind, variant), sym = entry
+        if kind in _DYNAMIC_KINDS:
+            pytest.skip("feed/product are drawn dynamically, not from Symbol.svg")
+        segments = _collect_segments(sym.svg)
+        for name, faces in sym.port_faces.items():
+            if (kind, variant, name) in _KNOWN_GEOMETRY_GAPS or (kind, name) in _SIGNAL_PORTS:
+                continue
+            for face, (x, y) in faces.items():
+                d = _nearest_distance((x, y), segments)
+>               assert d <= GEOM_TOL, (
+                    f"{kind}/{variant} port_faces[{name!r}][{face!r}] at ({x}, {y}) is "
+                    f"{d:.1f}u from the nearest drawn stroke (tolerance {GEOM_TOL})"
+                )
+E               AssertionError: airlift/default port_faces['liquid_in']['S'] at (22.5, 60.0) is 5.0u from the nearest drawn stroke (tolerance 2.0)
+E               assert 5.0 <= 2.0
+
+tests/test_symbol_invariants.py:497: AssertionError
+________ test_ports_land_on_drawn_ink_at_any_box_shape[airlift/default] ________
+
+entry = (('airlift', 'default'), Symbol(svg='<g id="sym_airlift_default"><g transform="scale(.5)"><path d="M 35.0 120.0 L 35.0...drawio_inscription='', drawio_flip_h=False, drawio_fill='', drawio_body_shape='', overlays=(), iso_reg='', trim=False))
+odd_box_sheets = {((60.0, 300.0), 0): {('air_diffuser', 'default'): (AirDiffuser('air_diffuser-default-0'), (1.0, 0.0, 0.0, 1.0, 200.0,....0)), ('block', 'default'): (Block('block-default-3'), (1.1666666666666667, 0.0, 0.0, 1.75, 2000.0, 200.0)), ...}, ...}
+
+    @pytest.mark.parametrize("entry", _SYMBOLS, ids=_IDS)
+    def test_ports_land_on_drawn_ink_at_any_box_shape(entry, odd_box_sheets):
+        """A nozzle follows the artwork into a box of any shape, at any placement."""
+        (kind, variant), sym = entry
+        if kind in _DYNAMIC_KINDS:
+            pytest.skip("feed/product are drawn dynamically, not from Symbol.svg")
+        if kind in _UNBOXABLE_KINDS:
+            pytest.skip("a conveyor is sized by length=, so its box is its artwork's")
+        # The ink the *unit* is drawn with, which is not always the registered
+        # symbol's: a reactor composes a stirrer and its motor onto the body, and
+        # the motor grows the box upward and moves every one of the body's nozzles
+        # down into it. Measuring the moved nozzles against the unmoved body would
+        # report the composition's own offset as a gap.
+        first = next(iter(odd_box_sheets.values()))[(kind, variant)][0]
+        segments = _collect_segments(default_registry.for_unit(first).svg)
+        for key, sheet in odd_box_sheets.items():
+            unit, matrix = sheet[(kind, variant)]
+            for name in unit.ports:
+                if (kind, variant, name) in _KNOWN_GEOMETRY_GAPS or (kind, name) in _SIGNAL_PORTS:
+                    continue
+                d = _nearest_distance(_resolved_in_symbol_space(unit, matrix, name), segments)
+>               assert d <= GEOM_TOL + _ROUNDTRIP_EPS, (
+                    f"{kind}/{variant} port {name!r} in a {key[0][0]:g}x{key[0][1]:g} box at "
+                    f"{_PLACEMENTS[key[1]] or 'no turn'} is {d:.1f}u from the nearest drawn "
+                    f"stroke once the artwork's own placement is undone (tolerance {GEOM_TOL})"
+                )
+E               AssertionError: airlift/default port 'liquid_in' in a 300x60 box at no turn is 5.0u from the nearest drawn stroke once the artwork's own placement is undone (tolerance 2.0)
+E               assert 5.0 <= (2.0 + 1e-09)
+
+tests/test_symbol_invariants.py:1006: AssertionError
+_____________ test_variants_lists_a_kinds_catalogue_default_first ______________
+
+    def test_variants_lists_a_kinds_catalogue_default_first():
+>       assert default_registry.variants("tank") == [
+            "default",
+            "conical",
+            "conical_bottom",
+            "conical_ends",
+            "dished_roof_conical_bottom",
+            "floating_roof",
+            "gas_holder",
+            "sphere",
+        ]
+E       AssertionError: assert ['default', '..._bottom', ...] == ['default', '...ng_roof', ...]
+E         
+E         At index 1 diff: 'concrete' != 'conical'
+E         Left contains 2 more items, first extra item: 'sphere'
+E         Use -v to get more diff
+
+tests/test_symbol_invariants.py:2313: AssertionError
+__________ test_every_drawing_survives_being_scaled[airlift/default] ___________
+
+name = 'airlift/default'
+svg = '<g id="sym_airlift_default"><g transform="scale(.5)"><path d="M 35.0 120.0 L 35.0 34.0 Q 35.0 14.0 55.0 14.0 L 90.0 1... stroke-width="4"/><ellipse cx="47.0" cy="46.0" rx="2.0" ry="2.0" fill="none" stroke="#111" stroke-width="4"/></g></g>'
+
+    @pytest.mark.parametrize(
+        ("name", "svg"), list(_every_drawing()), ids=[n for n, _ in _every_drawing()]
+    )
+    def test_every_drawing_survives_being_scaled(name, svg):
+        """A drawing the renderer cannot resize is a crash, not a bad picture.
+    
+        ``_baked`` rewrites a symbol's geometry at the placed size, and refuses a
+        path command it has no rule for rather than guessing. That refusal is right,
+        but it is only ever reached from a *render*, so a drawing carrying one is
+        fine in the registry, fine in the invariant suite, and raises the moment
+        somebody puts it on a sheet at a size of its own.
+    
+        Two did: items 28.6 and 28.10, the propeller and the impeller, are the only
+        vendored artwork drawn with a cubic, and ``Reactor(agitator="propeller")``
+        -- a spelling ``docs/api.md`` lists -- raised ``RuntimeError`` for every
+        author who tried it. The path table said in a comment that the library
+        emitted no curve; the library had changed under it.
+    
+        So this asks the question of every drawing rather than of the ones a sheet
+        in the corpus happens to place, and it asks it where the answer is cheap.
+        """
+        from pandid.render.svg import _baked
+    
+        # Both axes, and neither of them 1.0: `_baked` short-circuits on an
+        # identity map, which would make this vacuous.
+>       _baked(svg, 1.37, 0.61)
+
+tests/test_symbol_invariants.py:3358: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+pandid/render/svg.py:3236: in _baked
+    out.append(_scaled_element(name, attrs, here, here[0] / fx, here[1] / fy,
+pandid/render/svg.py:3161: in _scaled_element
+    out.append((key, _scaled_path(value, m)))
+                     ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+d = 'M 35.0 120.0 L 35.0 34.0 Q 35.0 14.0 55.0 14.0 L 90.0 14.0 M 55.0 120.0 L 55.0 40.0 Q 55.0 34.0 61.0 34.0 L 90.0 34.0 M 0.0 84.0 L 41.0 84.0'
+m = (0.685, 0.305, 0.0, 0.0)
+
+    def _scaled_path(d: str, m: "tuple[float, float, float, float]") -> str:
+        """One ``d`` attribute with the map *m* folded into its numbers."""
+        ax, ay, ex, ey = m
+        tokens = _PATH_TOKEN.findall(d)
+        out: list[str] = []
+        i = 0
+        while i < len(tokens):
+            cmd = tokens[i]
+            arity = _PATH_ARITY.get(cmd)
+            if arity is None:
+>               raise RuntimeError(
+                    f"path command {cmd!r} is not one pandid.render.svg._baked can scale"
+                )
+E               RuntimeError: path command 'Q' is not one pandid.render.svg._baked can scale
+
+pandid/render/svg.py:3103: RuntimeError
+__________ test_every_vendored_kind_is_named_in_the_module_docstring ___________
+
+    def test_every_vendored_kind_is_named_in_the_module_docstring():
+        """The registry's own account of its sources names every kind it draws
+        from a draw.io stencil -- checked against the live registry rather than
+        read, so vendoring a ninth forgotten kind fails this instead of just
+        leaving the docstring's list one short again.
+    
+        Matched on a word boundary against a whitespace-collapsed docstring, not
+        a bare ``in`` check: the prose wraps at eighty-odd columns and "heat
+        exchangers" has genuinely split across a line break before now, which a
+        contiguous-substring test would report as ``hex`` gone missing when
+        nothing about the sourcing actually changed.
+        """
+        import re
+    
+        import pandid.render.symbols as symbols_module
+        from pandid.render._vendored_symbols import register_vendored
+    
+        fresh = default_registry.__class__.__new__(default_registry.__class__)
+        fresh._symbols, fresh._darkened, fresh._closed = {}, {}, {}
+        fresh._expanders, fresh._parts, fresh._composed = {}, {}, {}
+        register_vendored(fresh)
+        vendored_kinds = {kind for kind, _variant in fresh._symbols}
+    
+        # First claim: the mechanism under test still does something, so a
+        # register_vendored() that quietly stopped registering anything fails
+        # here instead of leaving both checks below vacuously true over an
+        # empty set.
+        assert vendored_kinds, "register_vendored() registered no (kind, variant) at all"
+    
+        unmapped = vendored_kinds - _VENDORED_SOURCE_WORDS.keys()
+>       assert not unmapped, (
+            f"{unmapped} draw from a vendored stencil and are not in "
+            f"_VENDORED_SOURCE_WORDS above; add the word this test should look for"
+        )
+E       AssertionError: {'liquid_screen'} draw from a vendored stencil and are not in _VENDORED_SOURCE_WORDS above; add the word this test should look for
+E       assert not {'liquid_screen'}
+
+tests/test_symbol_invariants.py:3505: AssertionError
+___________ test_the_junction_is_the_only_symbol_drawn_as_bare_pipe ____________
+
+    def test_the_junction_is_the_only_symbol_drawn_as_bare_pipe():
+        """The rule is keyed on what the symbol draws, not on the ``Tee`` class, so
+        this is what says how far it reaches. Every other in-line device -- a valve,
+        a reducer, a fitting -- draws a body the arrowhead lands against."""
+        from pandid.render.symbols import default_registry
+    
+        bare = sorted(key for key, symbol in default_registry._symbols.items() if symbol.bare_run)
+>       assert bare == [("tee", "default")]
+E       AssertionError: assert [('junction',...', 'default')] == [('tee', 'default')]
+E         
+E         At index 0 diff: ('junction', 'default') != ('tee', 'default')
+E         Left contains one more item: ('tee', 'default')
+E         Use -v to get more diff
+
+tests/test_tee.py:335: AssertionError
+=============================== warnings summary ===============================
+tests/test_devices.py::test_every_variant_a_class_owns_anchors_the_same_nozzles[GravitySeparator]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_devices.py:180: DeprecationWarning: X-1: Separator(variant='gravity') is deprecated and is removed in pandid 0.2.0; use Separator(characteristic='gravity')
+    built = {variant: set(cls("X-1", variant=variant).ports) for variant in cls.VARIANTS}
+
+tests/test_devices.py::test_every_variant_a_class_owns_anchors_the_same_nozzles[GravitySeparator]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_devices.py:183: DeprecationWarning: X-1: Separator(variant='gravity') is deprecated and is removed in pandid 0.2.0; use Separator(characteristic='gravity')
+    unit = cls("X-1", variant=variant)
+
+tests/test_devices.py::test_every_variant_a_class_owns_anchors_the_same_nozzles[ElectrostaticPrecipitator]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_devices.py:180: DeprecationWarning: X-1: Separator(variant='electrostatic') is deprecated and is removed in pandid 0.2.0; use Separator(characteristic='electrostatic')
+    built = {variant: set(cls("X-1", variant=variant).ports) for variant in cls.VARIANTS}
+
+tests/test_devices.py::test_every_variant_a_class_owns_anchors_the_same_nozzles[ElectrostaticPrecipitator]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_devices.py:183: DeprecationWarning: X-1: Separator(variant='electrostatic') is deprecated and is removed in pandid 0.2.0; use Separator(characteristic='electrostatic')
+    unit = cls("X-1", variant=variant)
+
+tests/test_devices.py::test_every_variant_a_class_owns_anchors_the_same_nozzles[MagneticSeparator]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_devices.py:180: DeprecationWarning: X-1: Separator(variant='electromagnetic') is deprecated and is removed in pandid 0.2.0; use Separator(characteristic='electromagnetic')
+    built = {variant: set(cls("X-1", variant=variant).ports) for variant in cls.VARIANTS}
+
+tests/test_devices.py::test_every_variant_a_class_owns_anchors_the_same_nozzles[MagneticSeparator]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_devices.py:183: DeprecationWarning: X-1: Separator(variant='electromagnetic') is deprecated and is removed in pandid 0.2.0; use Separator(characteristic='electromagnetic')
+    unit = cls("X-1", variant=variant)
+
+tests/test_devices.py::test_a_collector_draws_the_same_nozzles_whichever_way_it_was_built[GravitySeparator-gravity]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_devices.py:308: DeprecationWarning: S-2: Separator(variant='gravity') is deprecated and is removed in pandid 0.2.0; use Separator(characteristic='gravity')
+    assert set(units.Separator("S-2", variant=variant).ports) == set(cls("S-3").ports)
+
+tests/test_devices.py::test_a_collector_draws_the_same_nozzles_whichever_way_it_was_built[ElectrostaticPrecipitator-electrostatic]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_devices.py:308: DeprecationWarning: S-2: Separator(variant='electrostatic') is deprecated and is removed in pandid 0.2.0; use Separator(characteristic='electrostatic')
+    assert set(units.Separator("S-2", variant=variant).ports) == set(cls("S-3").ports)
+
+tests/test_devices.py::test_a_renamed_draw_lands_where_the_drawing_puts_the_nozzle_it_renamed[GravitySeparator-gravity]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_devices.py:322: DeprecationWarning: S-2: Separator(variant='gravity') is deprecated and is removed in pandid 0.2.0; use Separator(characteristic='gravity')
+    low_level = units.Separator("S-2", variant=variant)
+
+tests/test_devices.py::test_a_renamed_draw_lands_where_the_drawing_puts_the_nozzle_it_renamed[ElectrostaticPrecipitator-electrostatic]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_devices.py:322: DeprecationWarning: S-2: Separator(variant='electrostatic') is deprecated and is removed in pandid 0.2.0; use Separator(characteristic='electrostatic')
+    low_level = units.Separator("S-2", variant=variant)
+
+tests/test_drawio.py::test_the_sheet_covers_every_registered_symbol
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_drawio.py:405: DeprecationWarning: VES-56: Vessel(variant='legs') is deprecated and is removed in pandid 0.2.0; the drawing changes -- a pair of ISO item 26.1 C2005 legs under the standard vessel shell, where this one has its own drawn in, so use Vessel(supports='leg')
+    unit = cls(tag, variant=variant)
+
+tests/test_drawio.py::test_the_sheet_covers_every_registered_symbol
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_drawio.py:405: DeprecationWarning: VES-57: Vessel(variant='skirted') is deprecated and is removed in pandid 0.2.0; the drawing changes -- ISO item 26.3 C2007's skirt under the standard vessel shell, where this one has its own drawn in, so use Vessel(supports='skirt')
+    unit = cls(tag, variant=variant)
+
+tests/test_drawio.py::test_the_sheet_covers_every_registered_symbol
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_drawio.py:405: DeprecationWarning: REA-102: Reactor(variant='mixing') is deprecated and is removed in pandid 0.2.0; the drawing changes -- ISO item 1.27 X8006's dished-end shell with a group-28 stirrer and the motor that turns it, in place of this one's cone-bottomed box and the capsule on top of it; the cone goes, and the stirrer becomes one you can choose and route a drive to, so use Reactor(agitator='disc')
+    unit = cls(tag, variant=variant)
+
+tests/test_drawio.py::test_the_sheet_covers_every_registered_symbol
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_drawio.py:405: DeprecationWarning: REA-103: Reactor(variant='plain') is deprecated and is removed in pandid 0.2.0; the drawing changes -- ISO item 27.8 X8141's crossed bed on the standard vessel shell, in place of this one's diagonal hatch, so use Reactor(internals='packing')
+    unit = cls(tag, variant=variant)
+
+tests/test_drawio.py::test_the_sheet_covers_every_registered_symbol
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_drawio.py:405: DeprecationWarning: SEP-107: Separator(variant='electromagnetic') is deprecated and is removed in pandid 0.2.0; use Separator(characteristic='electromagnetic')
+    unit = cls(tag, variant=variant)
+
+tests/test_drawio.py::test_the_sheet_covers_every_registered_symbol
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_drawio.py:405: DeprecationWarning: SEP-108: Separator(variant='electrostatic') is deprecated and is removed in pandid 0.2.0; use Separator(characteristic='electrostatic')
+    unit = cls(tag, variant=variant)
+
+tests/test_drawio.py::test_the_sheet_covers_every_registered_symbol
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_drawio.py:405: DeprecationWarning: SEP-109: Separator(variant='gravity') is deprecated and is removed in pandid 0.2.0; use Separator(characteristic='gravity')
+    unit = cls(tag, variant=variant)
+
+tests/test_spec.py::test_a_vessels_relief_and_drain_need_no_key_of_their_own[Vessel]
+tests/test_spec.py::test_a_vessels_relief_and_drain_need_no_key_of_their_own[Vessel]
+  /tmp/pe-cad-pandid-fork-20260909/pandid/spec.py:694: DeprecationWarning: V-1: Vessel(variant='legs') is deprecated and is removed in pandid 0.2.0; the drawing changes -- a pair of ISO item 26.1 C2005 legs under the standard vessel shell, where this one has its own drawn in, so use Vessel(supports='leg')
+    unit = cls(name, **kwargs)
+
+tests/test_symbol_invariants.py::test_every_anchor_the_artwork_offers_a_modelled_port_can_reach[reactor/mixing]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_symbol_invariants.py:801: DeprecationWarning: reactor-mixing-x: Reactor(variant='mixing') is deprecated and is removed in pandid 0.2.0; the drawing changes -- ISO item 1.27 X8006's dished-end shell with a group-28 stirrer and the motor that turns it, in place of this one's cone-bottomed box and the capsule on top of it; the cone goes, and the stirrer becomes one you can choose and route a drive to, so use Reactor(agitator='disc')
+    return cls(f"{kind}-{variant}-x", variant=variant)
+
+tests/test_symbol_invariants.py::test_every_anchor_the_artwork_offers_a_modelled_port_can_reach[reactor/plain]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_symbol_invariants.py:801: DeprecationWarning: reactor-plain-x: Reactor(variant='plain') is deprecated and is removed in pandid 0.2.0; the drawing changes -- ISO item 27.8 X8141's crossed bed on the standard vessel shell, in place of this one's diagonal hatch, so use Reactor(internals='packing')
+    return cls(f"{kind}-{variant}-x", variant=variant)
+
+tests/test_symbol_invariants.py::test_every_anchor_the_artwork_offers_a_modelled_port_can_reach[separator/electromagnetic]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_symbol_invariants.py:801: DeprecationWarning: separator-electromagnetic-x: Separator(variant='electromagnetic') is deprecated and is removed in pandid 0.2.0; use Separator(characteristic='electromagnetic')
+    return cls(f"{kind}-{variant}-x", variant=variant)
+
+tests/test_symbol_invariants.py::test_every_anchor_the_artwork_offers_a_modelled_port_can_reach[separator/electrostatic]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_symbol_invariants.py:801: DeprecationWarning: separator-electrostatic-x: Separator(variant='electrostatic') is deprecated and is removed in pandid 0.2.0; use Separator(characteristic='electrostatic')
+    return cls(f"{kind}-{variant}-x", variant=variant)
+
+tests/test_symbol_invariants.py::test_every_anchor_the_artwork_offers_a_modelled_port_can_reach[separator/gravity]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_symbol_invariants.py:801: DeprecationWarning: separator-gravity-x: Separator(variant='gravity') is deprecated and is removed in pandid 0.2.0; use Separator(characteristic='gravity')
+    return cls(f"{kind}-{variant}-x", variant=variant)
+
+tests/test_symbol_invariants.py::test_every_anchor_the_artwork_offers_a_modelled_port_can_reach[vessel/legs]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_symbol_invariants.py:801: DeprecationWarning: vessel-legs-x: Vessel(variant='legs') is deprecated and is removed in pandid 0.2.0; the drawing changes -- a pair of ISO item 26.1 C2005 legs under the standard vessel shell, where this one has its own drawn in, so use Vessel(supports='leg')
+    return cls(f"{kind}-{variant}-x", variant=variant)
+
+tests/test_symbol_invariants.py::test_every_anchor_the_artwork_offers_a_modelled_port_can_reach[vessel/skirted]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_symbol_invariants.py:801: DeprecationWarning: vessel-skirted-x: Vessel(variant='skirted') is deprecated and is removed in pandid 0.2.0; the drawing changes -- ISO item 26.3 C2007's skirt under the standard vessel shell, where this one has its own drawn in, so use Vessel(supports='skirt')
+    return cls(f"{kind}-{variant}-x", variant=variant)
+
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_symbol_invariants.py:785: DeprecationWarning: reactor-mixing-166: Reactor(variant='mixing') is deprecated and is removed in pandid 0.2.0; the drawing changes -- ISO item 1.27 X8006's dished-end shell with a group-28 stirrer and the motor that turns it, in place of this one's cone-bottomed box and the capsule on top of it; the cone goes, and the stirrer becomes one you can choose and route a drive to, so use Reactor(agitator='disc')
+    return cls(f"{kind}-{variant}-{index}", variant=variant, width=w, height=h)
+
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_symbol_invariants.py:785: DeprecationWarning: reactor-plain-167: Reactor(variant='plain') is deprecated and is removed in pandid 0.2.0; the drawing changes -- ISO item 27.8 X8141's crossed bed on the standard vessel shell, in place of this one's diagonal hatch, so use Reactor(internals='packing')
+    return cls(f"{kind}-{variant}-{index}", variant=variant, width=w, height=h)
+
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_symbol_invariants.py:785: DeprecationWarning: separator-electromagnetic-181: Separator(variant='electromagnetic') is deprecated and is removed in pandid 0.2.0; use Separator(characteristic='electromagnetic')
+    return cls(f"{kind}-{variant}-{index}", variant=variant, width=w, height=h)
+
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_symbol_invariants.py:785: DeprecationWarning: separator-electrostatic-182: Separator(variant='electrostatic') is deprecated and is removed in pandid 0.2.0; use Separator(characteristic='electrostatic')
+    return cls(f"{kind}-{variant}-{index}", variant=variant, width=w, height=h)
+
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_symbol_invariants.py:785: DeprecationWarning: separator-gravity-183: Separator(variant='gravity') is deprecated and is removed in pandid 0.2.0; use Separator(characteristic='gravity')
+    return cls(f"{kind}-{variant}-{index}", variant=variant, width=w, height=h)
+
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_symbol_invariants.py:785: DeprecationWarning: vessel-legs-243: Vessel(variant='legs') is deprecated and is removed in pandid 0.2.0; the drawing changes -- a pair of ISO item 26.1 C2005 legs under the standard vessel shell, where this one has its own drawn in, so use Vessel(supports='leg')
+    return cls(f"{kind}-{variant}-{index}", variant=variant, width=w, height=h)
+
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[air_diffuser/default]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_symbol_invariants.py:785: DeprecationWarning: vessel-skirted-244: Vessel(variant='skirted') is deprecated and is removed in pandid 0.2.0; the drawing changes -- ISO item 26.3 C2007's skirt under the standard vessel shell, where this one has its own drawn in, so use Vessel(supports='skirt')
+    return cls(f"{kind}-{variant}-{index}", variant=variant, width=w, height=h)
+
+tests/test_symbol_invariants.py::test_every_holdup_variant_anchors_every_nozzle_its_class_declares[vessel/legs]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_symbol_invariants.py:1159: DeprecationWarning: X-1: Vessel(variant='legs') is deprecated and is removed in pandid 0.2.0; the drawing changes -- a pair of ISO item 26.1 C2005 legs under the standard vessel shell, where this one has its own drawn in, so use Vessel(supports='leg')
+    unit = cls("X-1", variant=variant)
+
+tests/test_symbol_invariants.py::test_every_holdup_variant_anchors_every_nozzle_its_class_declares[vessel/skirted]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_symbol_invariants.py:1159: DeprecationWarning: X-1: Vessel(variant='skirted') is deprecated and is removed in pandid 0.2.0; the drawing changes -- ISO item 26.3 C2007's skirt under the standard vessel shell, where this one has its own drawn in, so use Vessel(supports='skirt')
+    unit = cls("X-1", variant=variant)
+
+tests/test_symbol_invariants.py::test_a_relief_is_on_the_crown_and_a_drain_at_the_low_point[vessel/legs]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_symbol_invariants.py:1185: DeprecationWarning: X-1: Vessel(variant='legs') is deprecated and is removed in pandid 0.2.0; the drawing changes -- a pair of ISO item 26.1 C2005 legs under the standard vessel shell, where this one has its own drawn in, so use Vessel(supports='leg')
+    unit = cls("X-1", variant=variant)
+
+tests/test_symbol_invariants.py::test_a_relief_is_on_the_crown_and_a_drain_at_the_low_point[vessel/skirted]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_symbol_invariants.py:1185: DeprecationWarning: X-1: Vessel(variant='skirted') is deprecated and is removed in pandid 0.2.0; the drawing changes -- ISO item 26.3 C2007's skirt under the standard vessel shell, where this one has its own drawn in, so use Vessel(supports='skirt')
+    unit = cls("X-1", variant=variant)
+
+tests/test_symbol_invariants.py::test_every_member_of_a_port_series_gets_a_nozzle_of_its_own[reactor-feed_-n_feeds-W-plain]
+tests/test_symbol_invariants.py::test_every_member_of_a_port_series_gets_a_nozzle_of_its_own[reactor-feed_-n_feeds-W-plain]
+tests/test_symbol_invariants.py::test_every_member_of_a_port_series_gets_a_nozzle_of_its_own[reactor-feed_-n_feeds-W-plain]
+tests/test_symbol_invariants.py::test_every_member_of_a_port_series_gets_a_nozzle_of_its_own[reactor-feed_-n_feeds-W-plain]
+tests/test_symbol_invariants.py::test_every_member_of_a_port_series_gets_a_nozzle_of_its_own[reactor-feed_-n_feeds-W-plain]
+tests/test_symbol_invariants.py::test_every_member_of_a_port_series_gets_a_nozzle_of_its_own[reactor-feed_-n_feeds-W-plain]
+tests/test_symbol_invariants.py::test_every_member_of_a_port_series_gets_a_nozzle_of_its_own[reactor-feed_-n_feeds-W-plain]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_symbol_invariants.py:1543: DeprecationWarning: X: Reactor(variant='plain') is deprecated and is removed in pandid 0.2.0; the drawing changes -- ISO item 27.8 X8141's crossed bed on the standard vessel shell, in place of this one's diagonal hatch, so use Reactor(internals='packing')
+    unit = cls("X", variant=variant, **{ctor_arg: count})
+
+tests/test_symbol_invariants.py::test_a_lone_member_lands_where_the_fixed_nozzle_did
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_symbol_invariants.py:1603: DeprecationWarning: R: Reactor(variant='mixing') is deprecated and is removed in pandid 0.2.0; the drawing changes -- ISO item 1.27 X8006's dished-end shell with a group-28 stirrer and the motor that turns it, in place of this one's cone-bottomed box and the capsule on top of it; the cone goes, and the stirrer becomes one you can choose and route a drive to, so use Reactor(agitator='disc')
+    (U.Reactor("R", variant="mixing"), (0.0, 48.2)),
+
+tests/test_symbol_invariants.py::test_a_lone_member_lands_where_the_fixed_nozzle_did
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_symbol_invariants.py:1604: DeprecationWarning: R: Reactor(variant='plain') is deprecated and is removed in pandid 0.2.0; the drawing changes -- ISO item 27.8 X8141's crossed bed on the standard vessel shell, in place of this one's diagonal hatch, so use Reactor(internals='packing')
+    (U.Reactor("R", variant="plain"), (0.0, 30.0)),
+
+tests/test_symbol_invariants.py::test_a_holdup_family_stays_on_its_own_box_at_every_count[tank/default]
+  <string>:25: UserWarning: sym_tank: ports 'drain' and 'out_1' both have a placement at (20.0, 95.5), so a stream routed to one lands on top of a stream routed to the other. Only ports named in faceless_ports may share a placement.
+
+tests/test_symbol_invariants.py::test_a_holdup_family_stays_on_its_own_box_at_every_count[tank/conical]
+  <string>:25: UserWarning: sym_tank_conical: ports 'drain' and 'out_1' both have a placement at (20.0, 90.0), so a stream routed to one lands on top of a stream routed to the other. Only ports named in faceless_ports may share a placement.
+
+tests/test_symbol_invariants.py::test_a_holdup_family_stays_on_its_own_box_at_every_count[tank/conical_bottom]
+  <string>:25: UserWarning: sym_tank_conical_bottom: ports 'in_3' and 'vent' both have a placement at (35.0, 0.0), so a stream routed to one lands on top of a stream routed to the other. Only ports named in faceless_ports may share a placement.
+
+tests/test_symbol_invariants.py::test_a_holdup_family_stays_on_its_own_box_at_every_count[tank/conical_bottom]
+  <string>:25: UserWarning: sym_tank_conical_bottom: ports 'in_6' and 'relief' both have a placement at (65.0, 0.0), so a stream routed to one lands on top of a stream routed to the other. Only ports named in faceless_ports may share a placement.
+
+tests/test_symbol_invariants.py::test_a_holdup_family_stays_on_its_own_box_at_every_count[tank/floating_roof]
+  <string>:25: UserWarning: sym_tank_floating_roof: ports 'drain' and 'out_1' both have a placement at (20.0, 70.0), so a stream routed to one lands on top of a stream routed to the other. Only ports named in faceless_ports may share a placement.
+
+tests/test_symbol_invariants.py: 27 warnings
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_symbol_invariants.py:1929: DeprecationWarning: X-1: Vessel(variant='legs') is deprecated and is removed in pandid 0.2.0; the drawing changes -- a pair of ISO item 26.1 C2005 legs under the standard vessel shell, where this one has its own drawn in, so use Vessel(supports='leg')
+    return cls("X-1", variant=variant, inputs=faces)
+
+tests/test_symbol_invariants.py: 27 warnings
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_symbol_invariants.py:1930: DeprecationWarning: X-1: Vessel(variant='legs') is deprecated and is removed in pandid 0.2.0; the drawing changes -- a pair of ISO item 26.1 C2005 legs under the standard vessel shell, where this one has its own drawn in, so use Vessel(supports='leg')
+    return cls("X-1", variant=variant, outputs=faces)
+
+tests/test_symbol_invariants.py: 27 warnings
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_symbol_invariants.py:1929: DeprecationWarning: X-1: Vessel(variant='skirted') is deprecated and is removed in pandid 0.2.0; the drawing changes -- ISO item 26.3 C2007's skirt under the standard vessel shell, where this one has its own drawn in, so use Vessel(supports='skirt')
+    return cls("X-1", variant=variant, inputs=faces)
+
+tests/test_symbol_invariants.py: 27 warnings
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_symbol_invariants.py:1930: DeprecationWarning: X-1: Vessel(variant='skirted') is deprecated and is removed in pandid 0.2.0; the drawing changes -- ISO item 26.3 C2007's skirt under the standard vessel shell, where this one has its own drawn in, so use Vessel(supports='skirt')
+    return cls("X-1", variant=variant, outputs=faces)
+
+tests/test_symbol_invariants.py::test_a_supported_body_keeps_the_wall_its_body_declares[vessel/legs]
+tests/test_symbol_invariants.py::test_a_supported_body_keeps_the_wall_its_body_declares[vessel/legs]
+tests/test_symbol_invariants.py::test_a_supported_body_keeps_the_wall_its_body_declares[vessel/legs]
+tests/test_symbol_invariants.py::test_a_supported_body_keeps_the_wall_its_body_declares[vessel/legs]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_symbol_invariants.py:2183: DeprecationWarning: X-1: Vessel(variant='legs') is deprecated and is removed in pandid 0.2.0; the drawing changes -- a pair of ISO item 26.1 C2005 legs under the standard vessel shell, where this one has its own drawn in, so use Vessel(supports='leg')
+    units.Vessel("X-1", variant=variant, supports=supports)
+
+tests/test_symbol_invariants.py::test_a_supported_body_keeps_the_wall_its_body_declares[vessel/skirted]
+tests/test_symbol_invariants.py::test_a_supported_body_keeps_the_wall_its_body_declares[vessel/skirted]
+tests/test_symbol_invariants.py::test_a_supported_body_keeps_the_wall_its_body_declares[vessel/skirted]
+tests/test_symbol_invariants.py::test_a_supported_body_keeps_the_wall_its_body_declares[vessel/skirted]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_symbol_invariants.py:2183: DeprecationWarning: X-1: Vessel(variant='skirted') is deprecated and is removed in pandid 0.2.0; the drawing changes -- ISO item 26.3 C2007's skirt under the standard vessel shell, where this one has its own drawn in, so use Vessel(supports='skirt')
+    units.Vessel("X-1", variant=variant, supports=supports)
+
+tests/test_units.py::test_a_separator_that_collects_dust_draws_an_overflow_and_an_underflow[gravity]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_units.py:769: DeprecationWarning: V-101: Separator(variant='gravity') is deprecated and is removed in pandid 0.2.0; use Separator(characteristic='gravity')
+    assert _nozzles(U.Separator("V-101", variant=variant)) == _COLLECTOR_NOZZLES
+
+tests/test_units.py::test_a_separator_that_collects_dust_draws_an_overflow_and_an_underflow[electrostatic]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_units.py:769: DeprecationWarning: V-101: Separator(variant='electrostatic') is deprecated and is removed in pandid 0.2.0; use Separator(characteristic='electrostatic')
+    assert _nozzles(U.Separator("V-101", variant=variant)) == _COLLECTOR_NOZZLES
+
+tests/test_units.py::test_a_collectors_old_draw_name_no_longer_reaches_a_nozzle[vapor-gravity]
+tests/test_units.py::test_a_collectors_old_draw_name_no_longer_reaches_a_nozzle[liquid-gravity]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_units.py:781: DeprecationWarning: CY-401: Separator(variant='gravity') is deprecated and is removed in pandid 0.2.0; use Separator(characteristic='gravity')
+    sep = U.Separator("CY-401", variant=variant)
+
+tests/test_units.py::test_a_collectors_old_draw_name_no_longer_reaches_a_nozzle[vapor-electrostatic]
+tests/test_units.py::test_a_collectors_old_draw_name_no_longer_reaches_a_nozzle[liquid-electrostatic]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_units.py:781: DeprecationWarning: CY-401: Separator(variant='electrostatic') is deprecated and is removed in pandid 0.2.0; use Separator(characteristic='electrostatic')
+    sep = U.Separator("CY-401", variant=variant)
+
+tests/test_units.py::test_a_mechanical_separator_draws_an_overflow_and_an_underflow[electromagnetic]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_units.py:812: DeprecationWarning: S-1: Separator(variant='electromagnetic') is deprecated and is removed in pandid 0.2.0; use Separator(characteristic='electromagnetic')
+    sep = U.Separator("S-1", variant=variant)
+
+tests/test_validate.py::test_every_registered_symbol_is_quiet_on_a_nozzle_pinned_run[reactor-mixing]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_validate.py:1084: DeprecationWarning: U-1: Reactor(variant='mixing') is deprecated and is removed in pandid 0.2.0; the drawing changes -- ISO item 1.27 X8006's dished-end shell with a group-28 stirrer and the motor that turns it, in place of this one's cone-bottomed box and the capsule on top of it; the cone goes, and the stirrer becomes one you can choose and route a drive to, so use Reactor(agitator='disc')
+    unit = cls("U-1", variant=variant)
+
+tests/test_validate.py::test_every_registered_symbol_is_quiet_on_a_nozzle_pinned_run[reactor-plain]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_validate.py:1084: DeprecationWarning: U-1: Reactor(variant='plain') is deprecated and is removed in pandid 0.2.0; the drawing changes -- ISO item 27.8 X8141's crossed bed on the standard vessel shell, in place of this one's diagonal hatch, so use Reactor(internals='packing')
+    unit = cls("U-1", variant=variant)
+
+tests/test_validate.py::test_every_registered_symbol_is_quiet_on_a_nozzle_pinned_run[separator-electromagnetic]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_validate.py:1084: DeprecationWarning: U-1: Separator(variant='electromagnetic') is deprecated and is removed in pandid 0.2.0; use Separator(characteristic='electromagnetic')
+    unit = cls("U-1", variant=variant)
+
+tests/test_validate.py::test_every_registered_symbol_is_quiet_on_a_nozzle_pinned_run[separator-electrostatic]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_validate.py:1084: DeprecationWarning: U-1: Separator(variant='electrostatic') is deprecated and is removed in pandid 0.2.0; use Separator(characteristic='electrostatic')
+    unit = cls("U-1", variant=variant)
+
+tests/test_validate.py::test_every_registered_symbol_is_quiet_on_a_nozzle_pinned_run[separator-gravity]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_validate.py:1084: DeprecationWarning: U-1: Separator(variant='gravity') is deprecated and is removed in pandid 0.2.0; use Separator(characteristic='gravity')
+    unit = cls("U-1", variant=variant)
+
+tests/test_validate.py::test_every_registered_symbol_is_quiet_on_a_nozzle_pinned_run[vessel-legs]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_validate.py:1084: DeprecationWarning: U-1: Vessel(variant='legs') is deprecated and is removed in pandid 0.2.0; the drawing changes -- a pair of ISO item 26.1 C2005 legs under the standard vessel shell, where this one has its own drawn in, so use Vessel(supports='leg')
+    unit = cls("U-1", variant=variant)
+
+tests/test_validate.py::test_every_registered_symbol_is_quiet_on_a_nozzle_pinned_run[vessel-skirted]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_validate.py:1084: DeprecationWarning: U-1: Vessel(variant='skirted') is deprecated and is removed in pandid 0.2.0; the drawing changes -- ISO item 26.3 C2007's skirt under the standard vessel shell, where this one has its own drawn in, so use Vessel(supports='skirt')
+    unit = cls("U-1", variant=variant)
+
+tests/test_variants.py::test_every_shipped_variant_still_constructs[Separator-electromagnetic]
+tests/test_variants.py::test_a_shipped_variant_resolves_the_nozzles_it_always_did[Separator-electromagnetic]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_variants.py:114: DeprecationWarning: X-1: Separator(variant='electromagnetic') is deprecated and is removed in pandid 0.2.0; use Separator(characteristic='electromagnetic')
+    return cls("X-1", variant=variant)
+
+tests/test_variants.py::test_every_shipped_variant_still_constructs[Separator-electrostatic]
+tests/test_variants.py::test_a_shipped_variant_resolves_the_nozzles_it_always_did[Separator-electrostatic]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_variants.py:114: DeprecationWarning: X-1: Separator(variant='electrostatic') is deprecated and is removed in pandid 0.2.0; use Separator(characteristic='electrostatic')
+    return cls("X-1", variant=variant)
+
+tests/test_variants.py::test_every_shipped_variant_still_constructs[Separator-gravity]
+tests/test_variants.py::test_a_shipped_variant_resolves_the_nozzles_it_always_did[Separator-gravity]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_variants.py:114: DeprecationWarning: X-1: Separator(variant='gravity') is deprecated and is removed in pandid 0.2.0; use Separator(characteristic='gravity')
+    return cls("X-1", variant=variant)
+
+tests/test_variants.py::test_every_shipped_variant_still_constructs[Reactor-mixing]
+tests/test_variants.py::test_a_shipped_variant_resolves_the_nozzles_it_always_did[Reactor-mixing]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_variants.py:114: DeprecationWarning: X-1: Reactor(variant='mixing') is deprecated and is removed in pandid 0.2.0; the drawing changes -- ISO item 1.27 X8006's dished-end shell with a group-28 stirrer and the motor that turns it, in place of this one's cone-bottomed box and the capsule on top of it; the cone goes, and the stirrer becomes one you can choose and route a drive to, so use Reactor(agitator='disc')
+    return cls("X-1", variant=variant)
+
+tests/test_variants.py::test_every_shipped_variant_still_constructs[Reactor-plain]
+tests/test_variants.py::test_a_shipped_variant_resolves_the_nozzles_it_always_did[Reactor-plain]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_variants.py:114: DeprecationWarning: X-1: Reactor(variant='plain') is deprecated and is removed in pandid 0.2.0; the drawing changes -- ISO item 27.8 X8141's crossed bed on the standard vessel shell, in place of this one's diagonal hatch, so use Reactor(internals='packing')
+    return cls("X-1", variant=variant)
+
+tests/test_variants.py::test_every_shipped_variant_still_constructs[Vessel-legs]
+tests/test_variants.py::test_a_shipped_variant_resolves_the_nozzles_it_always_did[Vessel-legs]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_variants.py:114: DeprecationWarning: X-1: Vessel(variant='legs') is deprecated and is removed in pandid 0.2.0; the drawing changes -- a pair of ISO item 26.1 C2005 legs under the standard vessel shell, where this one has its own drawn in, so use Vessel(supports='leg')
+    return cls("X-1", variant=variant)
+
+tests/test_variants.py::test_every_shipped_variant_still_constructs[Vessel-skirted]
+tests/test_variants.py::test_a_shipped_variant_resolves_the_nozzles_it_always_did[Vessel-skirted]
+  /tmp/pe-cad-pandid-fork-20260909/tests/test_variants.py:114: DeprecationWarning: X-1: Vessel(variant='skirted') is deprecated and is removed in pandid 0.2.0; the drawing changes -- ISO item 26.3 C2007's skirt under the standard vessel shell, where this one has its own drawn in, so use Vessel(supports='skirt')
+    return cls("X-1", variant=variant)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_block.py::test_a_spec_refuses_connection_faces_on_anything_but_a_block_a_tank_or_a_vessel
+FAILED tests/test_gallery.py::test_the_committed_sheet_is_what_the_example_draws_today[03_distillation_train]
+FAILED tests/test_gallery.py::test_the_committed_sheet_is_what_the_example_draws_today[08_from_data]
+FAILED tests/test_gallery.py::test_the_committed_sheet_is_what_the_example_draws_today[09_line_numbers]
+FAILED tests/test_gallery.py::test_the_committed_sheet_is_what_the_example_draws_today[15_condensing_turbine]
+FAILED tests/test_gallery.py::test_the_committed_sheet_is_what_the_example_draws_today[18_fixed_bed_recycle]
+FAILED tests/test_gallery.py::test_the_committed_sheet_is_what_the_example_draws_today[21_alumina_refinery]
+FAILED tests/test_golden.py::test_golden_svg[03_distillation_train] - Failed:...
+FAILED tests/test_golden.py::test_golden_svg[08_from_data] - Failed: 08_from_...
+FAILED tests/test_golden.py::test_golden_svg[09_line_numbers] - Failed: 09_li...
+FAILED tests/test_golden.py::test_golden_svg[15_condensing_turbine] - Failed:...
+FAILED tests/test_golden.py::test_golden_svg[18_fixed_bed_recycle] - Failed: ...
+FAILED tests/test_golden.py::test_golden_svg[21_alumina_refinery] - Failed: 2...
+FAILED tests/test_golden.py::test_a_version_bump_does_not_move_a_fixture - Fa...
+FAILED tests/test_golden.py::test_the_example_draws_the_same_sheet_as_its_fixture[03_distillation_train]
+FAILED tests/test_golden.py::test_the_example_draws_the_same_sheet_as_its_fixture[08_from_data]
+FAILED tests/test_golden.py::test_the_example_draws_the_same_sheet_as_its_fixture[09_line_numbers]
+FAILED tests/test_golden.py::test_the_example_draws_the_same_sheet_as_its_fixture[15_condensing_turbine]
+FAILED tests/test_golden.py::test_the_example_draws_the_same_sheet_as_its_fixture[18_fixed_bed_recycle]
+FAILED tests/test_golden.py::test_the_example_draws_the_same_sheet_as_its_fixture[21_alumina_refinery]
+FAILED tests/test_line_weight.py::test_every_symbol_declares_a_pen_centred_on_the_sheet_weight
+FAILED tests/test_show.py::test_the_window_draws_the_sheet_scaled_to_the_window
+FAILED tests/test_symbol_invariants.py::test_svg_is_well_formed_and_declares_stroke_width[junction/default]
+FAILED tests/test_symbol_invariants.py::test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from[airlift/default-2.0x1.0]
+FAILED tests/test_symbol_invariants.py::test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from[airlift/default-1.0x2.5]
+FAILED tests/test_symbol_invariants.py::test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from[airlift/default-3.0x0.5]
+FAILED tests/test_symbol_invariants.py::test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from[airlift/default-0.4x1.7]
+FAILED tests/test_symbol_invariants.py::test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from[junction/default-2.0x1.0]
+FAILED tests/test_symbol_invariants.py::test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from[junction/default-1.0x2.5]
+FAILED tests/test_symbol_invariants.py::test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from[junction/default-3.0x0.5]
+FAILED tests/test_symbol_invariants.py::test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from[junction/default-0.4x1.7]
+FAILED tests/test_symbol_invariants.py::test_ports_lie_on_drawn_geometry[airlift/default]
+FAILED tests/test_symbol_invariants.py::test_port_faces_lie_on_drawn_geometry[airlift/default]
+FAILED tests/test_symbol_invariants.py::test_ports_land_on_drawn_ink_at_any_box_shape[airlift/default]
+FAILED tests/test_symbol_invariants.py::test_variants_lists_a_kinds_catalogue_default_first
+FAILED tests/test_symbol_invariants.py::test_every_drawing_survives_being_scaled[airlift/default]
+FAILED tests/test_symbol_invariants.py::test_every_vendored_kind_is_named_in_the_module_docstring
+FAILED tests/test_tee.py::test_the_junction_is_the_only_symbol_drawn_as_bare_pipe
+38 failed, 17293 passed, 726 skipped, 251 warnings in 864.97s (0:14:24)
+EXIT=1

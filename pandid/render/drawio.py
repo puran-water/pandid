@@ -2961,14 +2961,16 @@ class DrawioRenderer:
             target = index.get(id(inst))
             if target is None:  # not on the sheet; nothing to hang a line off
                 continue
-            entry = self._fraction(inst, self.registry.for_unit(inst), centre)
+            ends_on_balloon = centre == (inst.frame.cx, inst.frame.cy)
+            entry = self._fraction(inst, self.registry.for_unit(inst), centre) if ends_on_balloon else None
             host = getattr(inst, "host", None)
-            source = index.get(id(host)) if getattr(host, "frame", None) is not None else None
+            source = (index.get(id(host)) if getattr(host, "frame", None) is not None
+                      and tap == inst.tap else None)
             exit_at = (self._fraction(host, self.registry.for_unit(host), tap)
                        if source is not None else None)
             keys = [
                 "html=1", "edgeStyle=none", "rounded=0",
-                *self._ends(exit_at, (entry[0], entry[1])),
+                *self._ends(exit_at, (entry[0], entry[1]) if entry is not None else None),
                 f"strokeColor={_LINE_INK}",
                 # ISO 15519-2 Annex A.1.02 puts an instrument connection
                 # on the 0,25 rung, alongside the signal line and half
@@ -2986,14 +2988,20 @@ class DrawioRenderer:
             keys += ["endArrow=none", "startArrow=none", _NO_HOP.rstrip(";")]
             style = ";".join(keys) + ";"
             terminals = f' source="{self._id(source)}"' if source is not None else ""
-            geometry = ['          <mxGeometry relative="1" as="geometry">',
-                        f'            <mxPoint x="{_num(fit.at(*tap)[0])}" '
-                        f'y="{_num(fit.at(*tap)[1])}" as="sourcePoint" />',
-                        '          </mxGeometry>'] if source is None else [
-                '          <mxGeometry relative="1" as="geometry" />']
+            if ends_on_balloon:
+                terminals += f' target="{self._id(target)}"'
+            geometry = []
+            for missing, point, role in ((source is None, tap, "sourcePoint"),
+                                         (not ends_on_balloon, centre, "targetPoint")):
+                if missing:
+                    geometry.append(f'            <mxPoint x="{_num(fit.at(*point)[0])}" '
+                                    f'y="{_num(fit.at(*point)[1])}" as="{role}" />')
+            geometry = (['          <mxGeometry relative="1" as="geometry">',
+                         *geometry, '          </mxGeometry>'] if geometry else
+                        ['          <mxGeometry relative="1" as="geometry" />'])
             out += [
                 f'        <mxCell id="t{n}" value="" style={_attr(style)} '
-                f'edge="1" parent="1"{terminals} target="{self._id(target)}">',
+                f'edge="1" parent="1"{terminals}>',
                 *geometry,
                 '        </mxCell>',
             ]

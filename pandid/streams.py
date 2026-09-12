@@ -22,6 +22,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from pandid.geometry import Route
+from pandid.tapping import TapHost
 
 if TYPE_CHECKING:
     from pandid.ports import Port
@@ -149,7 +150,7 @@ def check_dasharray(value: str, stream: "Stream | None" = None) -> None:
 
 
 @dataclass
-class Stream:
+class Stream(TapHost):
     name: str
     source: Port
     dest: Port

@@ -141,10 +141,23 @@ reaches, rail approaches and nozzle escape allowances. Absolute pins keep their
 arrangement; a single column or protected station cannot be stretched to fill a
 page. The generic option defaults to false.
 
-Instruments declaring the same sensing host, tap and perpendicular offset share
-a straight stem. Halo reservation includes the full stack depth; 44-unit bubbles
-at offset 60 resolve to 60, 126, 192 and 258 units with replacement clearance.
-Actuator and placement relations keep their own leaders. Template control
+A stem represents one process connection. Independent field instruments use
+separate taps: `Instrument.attach(..., at="N", along=.2)` and `along=.8`, for
+example, select different points across the same face. `along` defaults to the
+centre; it runs left to right on N/S and top to bottom on E/W in sheet
+coordinates. Stream taps continue to use `at` and refuse `along`.
+
+One insertion with several channels is declared on its host with
+`host.declare_multi_channel(a, b)`. The bubbles sit side by side on one stem;
+halo reservation includes their full horizontal width. Matching coordinates
+alone never group instruments. Checked exports reject undeclared coincident
+process taps with `instrument-tap-undeclared`, including coincidences reached
+from different faces. A field instrument's panel function remains attached to
+that field instrument. Actuator and placement relations keep their own leaders.
+Template host rows can declare `multi_channel_elements: [["a", "b"]]` using
+member keys, and instrument attachment rows pass `along` through unchanged.
+The [correction and rendered evidence](instrument-tapping-20260911.md) supersede
+the previous shared-stack rule. Template control
 placement and routing use the 16-pass `control_passes` limit and report whether
 they converge.
 
