@@ -51,7 +51,14 @@ def _unit(row, incoming, outgoing):
         function = row['instrument_function']
         loop = row['instrument_loop']
         full_tag = label if re.fullmatch(r'\d+-[A-Za-z]+-.+', label) else function + '-' + loop
-        return Instrument(full_tag, variant=variant)
+        unit = Instrument(full_tag, variant=variant)
+        if row.get('measured_variable'):
+            unit.annotate(variable=row.get('measured_variable'))
+            # The house reference puts analyser descriptors at upper right.
+            # This departs from ISO 15519-2 5.1.3's quadrant b for U tags;
+            # it is a house convention, not a claim of general conformance.
+            unit.quadrants['c'] = unit.quadrants.pop('b')
+        return unit
     if symbol in {'boundary', 'boundary.reference'}:
         cls = Feed if not incoming else Product
         return cls(key, reference=row.get('reference', ''), width=190 if row.get('connector') else None, height=85 if row.get('connector') else None)

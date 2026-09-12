@@ -85,12 +85,14 @@ def balloon_pads(fs: "Flowsheet") -> dict["Unit", Pad]:
     placed against it.
     """
     from pandid.layout.stages import is_control
+    from pandid.layout.attach import shared_tap_stacks
 
     pads: dict["Unit", Pad] = {}
+    stacks = shared_tap_stacks(fs)
     for inst in fs.units:
         if not is_control(inst) or getattr(inst, "host", None) is None:
             continue
-        charge = _charge(inst)
+        charge = _charge(inst, stacks)
         if charge is None:
             continue
         reach, girth, face, hosts = charge
@@ -99,7 +101,7 @@ def balloon_pads(fs: "Flowsheet") -> dict["Unit", Pad]:
     return pads
 
 
-def _charge(inst: "Unit") -> tuple[float, float, str, list["Unit"]] | None:
+def _charge(inst: "Unit", stacks: dict | None = None) -> tuple[float, float, str, list["Unit"]] | None:
     """How far this balloon reaches, how wide it is, and who pays."""
     from pandid.layout.attach import _rotate_ccw
     from pandid.layout.stages import is_control
@@ -124,7 +126,11 @@ def _charge(inst: "Unit") -> tuple[float, float, str, list["Unit"]] | None:
             return None
         seen.add(id(node))
         w, h = resolve_size(node)
-        reach += float(getattr(node, "offset", 0.0)) + max(w, h) / 2.0
+        # Pad.widened takes a maximum, so siblings must be charged at their
+        # cumulative depth before that maximum is taken. Counting only each
+        # declared offset reserves one balloon's paper for the whole stack.
+        offset = (stacks or {}).get(node, float(getattr(node, "offset", 0.0)))
+        reach += offset + max(w, h) / 2.0
         girth = max(girth, max(w, h) / 2.0)
         # ``host`` lives on Instrument rather than on Unit, and what the
         # walk holds is whatever the last host was -- a balloon, a unit

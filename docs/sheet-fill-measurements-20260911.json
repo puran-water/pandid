@@ -1,0 +1,1756 @@
+{
+  "baseline_commit": "841e299a43ff1556f4733de11abe29daa08611b5",
+  "source_inputs": "/tmp/lbtex-library-final-ec2e15f-20260910/render/drawio-review-7075076e6f0def36/inputs.json",
+  "source_inputs_sha256": "3453da533e5c5a004bae8df8ec0d7ff6c1af33efa2b4b8648e3a023ebbf6fb57",
+  "engine_inputs": "/tmp/pandid-corpus-inputs.json",
+  "engine_inputs_sha256": "d00a34b298ea3acb2797148d3526110779d4debffe7e5ff152574b337156ab84",
+  "fixture": "tests/fixtures/house_permeation.json",
+  "fixture_sha256": "83ad7eae58ae06e13e7b7cafb06527823cc3d8c5c772f20d7a4e7cb24f2a1b9b",
+  "physical_units": {
+    "drawing_scale": 0.44,
+    "print_scale": 2.7,
+    "drawing_unit_mm": 0.314325,
+    "native_unit_mm": 0.254
+  },
+  "definition": "Band width is fitted_band(A1); core extent is the min/max process-unit box excluding boundary flags and instruments. Shortfall is symmetric spare width, not a claim that asymmetric actual margins are equal. Allocatable core width subtracts flag reaches and the unchanged 110-unit approaches on each side.",
+  "before": {
+    "converged": 38,
+    "exported": 37,
+    "sheet_count": 38,
+    "sheets": [
+      {
+        "index": 0,
+        "name": "104 Headworks Screening",
+        "kind": "pfd",
+        "units": 7,
+        "streams": 5,
+        "band_units": 2448.3019168058536,
+        "core_units": 80.0,
+        "band_fill_percent": 3.2675708600665967,
+        "shortfall_per_side_mm": 372.20824999999996,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 4.328297193904995,
+        "core_shortfall_per_side_mm": 277.91075,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 1,
+        "name": "104 Headworks Screening \u2014 Screening",
+        "kind": "p&id",
+        "units": 14,
+        "streams": 14,
+        "band_units": 2448.3019168058536,
+        "core_units": 230.0,
+        "band_fill_percent": 9.394266222691465,
+        "shortfall_per_side_mm": 348.633875,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 12.443854432476861,
+        "core_shortfall_per_side_mm": 254.33637499999998,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 2,
+        "name": "106 Collection Tank",
+        "kind": "pfd",
+        "units": 13,
+        "streams": 11,
+        "band_units": 2448.3019168058536,
+        "core_units": 796.5999999999999,
+        "band_fill_percent": 32.53683683911313,
+        "shortfall_per_side_mm": 259.5856025,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 43.09901930830898,
+        "core_shortfall_per_side_mm": 165.28810249999998,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 3,
+        "name": "106 Collection Tank \u2014 Pumping",
+        "kind": "p&id",
+        "units": 17,
+        "streams": 15,
+        "band_units": 2448.3019168058536,
+        "core_units": 645.1,
+        "band_fill_percent": 26.34887452286202,
+        "shortfall_per_side_mm": 283.39572125,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 34.902306497351404,
+        "core_shortfall_per_side_mm": 189.09822125,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 4,
+        "name": "106 Collection Tank \u2014 Basin",
+        "kind": "p&id",
+        "units": 8,
+        "streams": 6,
+        "band_units": 2448.3019168058536,
+        "core_units": 454.5,
+        "band_fill_percent": 18.563886948753353,
+        "shortfall_per_side_mm": 313.35089375,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 24.590138432872756,
+        "core_shortfall_per_side_mm": 219.05339374999997,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 5,
+        "name": "110 Cooling",
+        "kind": "pfd",
+        "units": 8,
+        "streams": 5,
+        "band_units": 2448.3019168058536,
+        "core_units": 351.0,
+        "band_fill_percent": 14.336467148542193,
+        "shortfall_per_side_mm": 329.6172125,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 18.990403938258165,
+        "core_shortfall_per_side_mm": 235.31971249999998,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 6,
+        "name": "110 Cooling \u2014 Process",
+        "kind": "p&id",
+        "units": 10,
+        "streams": 7,
+        "band_units": 2448.3019168058536,
+        "core_units": 440.0,
+        "band_fill_percent": 17.97163973036628,
+        "shortfall_per_side_mm": 315.62975,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 23.805634566477472,
+        "core_shortfall_per_side_mm": 221.33225,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 7,
+        "name": "120 Equalisation",
+        "kind": "pfd",
+        "units": 15,
+        "streams": 11,
+        "band_units": 2448.3019168058536,
+        "core_units": 620.0,
+        "band_fill_percent": 25.323674165516124,
+        "shortfall_per_side_mm": 287.34049999999996,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 33.54430325276371,
+        "core_shortfall_per_side_mm": 193.04299999999998,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": [
+          {
+            "attachment": {
+              "at": "N",
+              "kind": "unit",
+              "offset": 60.0,
+              "target": "tank-1"
+            },
+            "members": [
+              "basin-level",
+              "dissolved-oxygen"
+            ],
+            "centres": [
+              [
+                940.0,
+                254.0
+              ],
+              [
+                888.0384757729337,
+                284.0
+              ]
+            ]
+          }
+        ]
+      },
+      {
+        "index": 8,
+        "name": "120 Equalisation \u2014 Basins",
+        "kind": "p&id",
+        "units": 17,
+        "streams": 13,
+        "band_units": 2448.3019168058536,
+        "core_units": 930.5,
+        "band_fill_percent": 38.0059335661496,
+        "shortfall_per_side_mm": 238.54154375,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 50.34350673660747,
+        "core_shortfall_per_side_mm": 144.24404374999997,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": [
+          {
+            "attachment": {
+              "at": "N",
+              "kind": "unit",
+              "offset": 60.0,
+              "target": "tank-1"
+            },
+            "members": [
+              "basin-level",
+              "dissolved-oxygen"
+            ],
+            "centres": [
+              [
+                984.5,
+                254.0
+              ],
+              [
+                932.5384757729337,
+                284.0
+              ]
+            ]
+          }
+        ]
+      },
+      {
+        "index": 9,
+        "name": "121 Flash Mixing",
+        "kind": "pfd",
+        "units": 9,
+        "streams": 7,
+        "band_units": 2448.3019168058536,
+        "core_units": 496.0,
+        "band_fill_percent": 20.2589393324129,
+        "shortfall_per_side_mm": 306.82865,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 26.83544260221097,
+        "core_shortfall_per_side_mm": 212.53114999999997,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 10,
+        "name": "121 Flash Mixing \u2014 Process",
+        "kind": "p&id",
+        "units": 11,
+        "streams": 9,
+        "band_units": 2448.3019168058536,
+        "core_units": 642.5,
+        "band_fill_percent": 26.242678469909855,
+        "shortfall_per_side_mm": 283.80434375,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 34.76163683854949,
+        "core_shortfall_per_side_mm": 189.50684374999997,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 11,
+        "name": "122 Flocculation",
+        "kind": "pfd",
+        "units": 9,
+        "streams": 7,
+        "band_units": 2448.3019168058536,
+        "core_units": 496.0,
+        "band_fill_percent": 20.2589393324129,
+        "shortfall_per_side_mm": 306.82865,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 26.83544260221097,
+        "core_shortfall_per_side_mm": 212.53114999999997,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 12,
+        "name": "122 Flocculation \u2014 Process",
+        "kind": "p&id",
+        "units": 11,
+        "streams": 9,
+        "band_units": 2448.3019168058536,
+        "core_units": 642.5,
+        "band_fill_percent": 26.242678469909855,
+        "shortfall_per_side_mm": 283.80434375,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 34.76163683854949,
+        "core_shortfall_per_side_mm": 189.50684374999997,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 13,
+        "name": "130 Primary Clarification",
+        "kind": "pfd",
+        "units": 8,
+        "streams": 6,
+        "band_units": 2448.3019168058536,
+        "core_units": 598.0,
+        "band_fill_percent": 24.425092178997808,
+        "shortfall_per_side_mm": 290.798075,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 32.35402152443984,
+        "core_shortfall_per_side_mm": 196.50057499999997,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 14,
+        "name": "130 Primary Clarification \u2014 Basins",
+        "kind": "p&id",
+        "units": 11,
+        "streams": 9,
+        "band_units": 2448.3019168058536,
+        "core_units": 666.5,
+        "band_fill_percent": 27.222949727929834,
+        "shortfall_per_side_mm": 280.03244374999997,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 36.06012599672099,
+        "core_shortfall_per_side_mm": 185.73494374999999,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 15,
+        "name": "205 Membrane Fine Screening",
+        "kind": "pfd",
+        "units": 7,
+        "streams": 5,
+        "band_units": 2448.3019168058536,
+        "core_units": 80.0,
+        "band_fill_percent": 3.2675708600665967,
+        "shortfall_per_side_mm": 372.20824999999996,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 4.328297193904995,
+        "core_shortfall_per_side_mm": 277.91075,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 16,
+        "name": "205 Membrane Fine Screening \u2014 Screening",
+        "kind": "p&id",
+        "units": 14,
+        "streams": 14,
+        "band_units": 2448.3019168058536,
+        "core_units": 230.0,
+        "band_fill_percent": 9.394266222691465,
+        "shortfall_per_side_mm": 348.633875,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 12.443854432476861,
+        "core_shortfall_per_side_mm": 254.33637499999998,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 17,
+        "name": "220 Anoxic Tank",
+        "kind": "pfd",
+        "units": 9,
+        "streams": 7,
+        "band_units": 2448.3019168058536,
+        "core_units": 504.0,
+        "band_fill_percent": 20.58569641841956,
+        "shortfall_per_side_mm": 305.57135,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 27.26827232160147,
+        "core_shortfall_per_side_mm": 211.27384999999998,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 18,
+        "name": "220 Anoxic Tank \u2014 Basins",
+        "kind": "p&id",
+        "units": 12,
+        "streams": 11,
+        "band_units": 2448.3019168058536,
+        "core_units": 426.0,
+        "band_fill_percent": 17.399814829854627,
+        "shortfall_per_side_mm": 317.830025,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 23.0481825575441,
+        "core_shortfall_per_side_mm": 223.53252499999996,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 19,
+        "name": "230 Aeration Tank",
+        "kind": "pfd",
+        "units": 12,
+        "streams": 8,
+        "band_units": 2448.3019168058536,
+        "core_units": 730.3,
+        "band_fill_percent": 29.828837488832942,
+        "shortfall_per_side_mm": 270.00547625,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 39.51194300886023,
+        "core_shortfall_per_side_mm": 175.70797624999997,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": [
+          {
+            "attachment": {
+              "at": "N",
+              "kind": "unit",
+              "offset": 60.0,
+              "target": "tank-1"
+            },
+            "members": [
+              "basin-level",
+              "dissolved-oxygen"
+            ],
+            "centres": [
+              [
+                910.3,
+                152.0
+              ],
+              [
+                858.3384757729336,
+                182.0
+              ]
+            ]
+          }
+        ]
+      },
+      {
+        "index": 20,
+        "name": "230 Aeration Tank \u2014 Basins",
+        "kind": "p&id",
+        "units": 14,
+        "streams": 12,
+        "band_units": 2448.3019168058536,
+        "core_units": 332.0,
+        "band_fill_percent": 13.560419069276376,
+        "shortfall_per_side_mm": 332.6033,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 17.96243335470573,
+        "core_shortfall_per_side_mm": 238.30579999999998,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": [
+          {
+            "attachment": {
+              "at": "N",
+              "kind": "unit",
+              "offset": 60.0,
+              "target": "tank-1"
+            },
+            "members": [
+              "basin-level",
+              "dissolved-oxygen"
+            ],
+            "centres": [
+              [
+                488.0,
+                152.0
+              ],
+              [
+                436.0384757729337,
+                182.0
+              ]
+            ]
+          }
+        ]
+      },
+      {
+        "index": 21,
+        "name": "230 Aeration Tank \u2014 Air",
+        "kind": "p&id",
+        "units": 10,
+        "streams": 9,
+        "band_units": 2448.3019168058536,
+        "core_units": 266.79999999999995,
+        "band_fill_percent": 10.897348818322099,
+        "shortfall_per_side_mm": 342.85029499999996,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 14.434871141673158,
+        "core_shortfall_per_side_mm": 248.55279499999997,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 22,
+        "name": "250 Membrane Bioreactor",
+        "kind": "pfd",
+        "units": 34,
+        "streams": 34,
+        "band_units": 2448.3019168058536,
+        "core_units": 2052.3,
+        "band_fill_percent": 83.82544595143347,
+        "shortfall_per_side_mm": 62.23665124999994,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 111.03705413814029,
+        "core_shortfall_per_side_mm": -32.06084875000007,
+        "export": "error",
+        "error": "FIXED_SCALE_CAPACITY: drawing needs 1167.0 x 736.0; available 1077.3 x 586.5; rearrange the sheet without shrinking lettering",
+        "route_converged": true,
+        "stacks": [
+          {
+            "attachment": {
+              "at": "N",
+              "kind": "unit",
+              "offset": 60.0,
+              "target": "tank-1"
+            },
+            "members": [
+              "level-1",
+              "level-2"
+            ],
+            "centres": [
+              [
+                1346.3,
+                416.0
+              ],
+              [
+                1294.3384757729336,
+                446.0
+              ]
+            ]
+          }
+        ]
+      },
+      {
+        "index": 23,
+        "name": "250 Membrane Bioreactor \u2014 Recycle",
+        "kind": "p&id",
+        "units": 10,
+        "streams": 9,
+        "band_units": 2448.3019168058536,
+        "core_units": 113.5,
+        "band_fill_percent": 4.635866157719484,
+        "shortfall_per_side_mm": 366.94330625,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 6.140771643852712,
+        "core_shortfall_per_side_mm": 272.64580624999996,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 24,
+        "name": "250 Membrane Bioreactor \u2014 Tank 1",
+        "kind": "p&id",
+        "units": 17,
+        "streams": 17,
+        "band_units": 2448.3019168058536,
+        "core_units": 680.0,
+        "band_fill_percent": 27.774352310566073,
+        "shortfall_per_side_mm": 277.91075,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 36.79052614819246,
+        "core_shortfall_per_side_mm": 183.61324999999997,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 25,
+        "name": "250 Membrane Bioreactor \u2014 Permeation",
+        "kind": "p&id",
+        "units": 25,
+        "streams": 23,
+        "band_units": 2448.3019168058536,
+        "core_units": 962.0,
+        "band_fill_percent": 39.29253959230083,
+        "shortfall_per_side_mm": 233.59092499999997,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 52.04777375670757,
+        "core_shortfall_per_side_mm": 139.29342499999998,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 26,
+        "name": "250 Membrane Bioreactor \u2014 Tank 2",
+        "kind": "p&id",
+        "units": 15,
+        "streams": 15,
+        "band_units": 2448.3019168058536,
+        "core_units": 680.0,
+        "band_fill_percent": 27.774352310566073,
+        "shortfall_per_side_mm": 277.91075,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 36.79052614819246,
+        "core_shortfall_per_side_mm": 183.61324999999997,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 27,
+        "name": "250 Membrane Bioreactor \u2014 Scour Air",
+        "kind": "p&id",
+        "units": 17,
+        "streams": 16,
+        "band_units": 2448.3019168058536,
+        "core_units": 335.29999999999995,
+        "band_fill_percent": 13.69520636725412,
+        "shortfall_per_side_mm": 332.08466374999995,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 18.140975613954307,
+        "core_shortfall_per_side_mm": 237.78716375,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 28,
+        "name": "301 Batch Softener",
+        "kind": "pfd",
+        "units": 11,
+        "streams": 8,
+        "band_units": 2448.3019168058536,
+        "core_units": 496.0,
+        "band_fill_percent": 20.2589393324129,
+        "shortfall_per_side_mm": 306.82865,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 26.83544260221097,
+        "core_shortfall_per_side_mm": 212.53114999999997,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": [
+          {
+            "attachment": {
+              "at": "N",
+              "kind": "unit",
+              "offset": 60.0,
+              "target": "batch-tank"
+            },
+            "members": [
+              "ph",
+              "level"
+            ],
+            "centres": [
+              [
+                466.0,
+                170.0
+              ],
+              [
+                414.0384757729337,
+                200.0
+              ]
+            ]
+          }
+        ]
+      },
+      {
+        "index": 29,
+        "name": "301 Batch Softener \u2014 Process",
+        "kind": "p&id",
+        "units": 13,
+        "streams": 10,
+        "band_units": 2448.3019168058536,
+        "core_units": 642.5,
+        "band_fill_percent": 26.242678469909855,
+        "shortfall_per_side_mm": 283.80434375,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 34.76163683854949,
+        "core_shortfall_per_side_mm": 189.50684374999997,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": [
+          {
+            "attachment": {
+              "at": "N",
+              "kind": "unit",
+              "offset": 60.0,
+              "target": "batch-tank"
+            },
+            "members": [
+              "ph",
+              "level"
+            ],
+            "centres": [
+              [
+                466.0,
+                170.0
+              ],
+              [
+                414.0384757729337,
+                200.0
+              ]
+            ]
+          }
+        ]
+      },
+      {
+        "index": 30,
+        "name": "340 Degassing",
+        "kind": "pfd",
+        "units": 11,
+        "streams": 9,
+        "band_units": 2448.3019168058536,
+        "core_units": 338.29999999999995,
+        "band_fill_percent": 13.817740274506617,
+        "shortfall_per_side_mm": 331.61317625,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 18.303286758725744,
+        "core_shortfall_per_side_mm": 237.31567625,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 31,
+        "name": "340 Degassing \u2014 Process",
+        "kind": "p&id",
+        "units": 10,
+        "streams": 8,
+        "band_units": 2448.3019168058536,
+        "core_units": 456.0,
+        "band_fill_percent": 18.6251539023796,
+        "shortfall_per_side_mm": 313.11514999999997,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 24.671294005258474,
+        "core_shortfall_per_side_mm": 218.81765,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 32,
+        "name": "340 Degassing \u2014 Air",
+        "kind": "p&id",
+        "units": 3,
+        "streams": 2,
+        "band_units": 2448.3019168058536,
+        "core_units": 72.30000000000001,
+        "band_fill_percent": 2.953067164785187,
+        "shortfall_per_side_mm": 373.41840124999993,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 3.91169858899164,
+        "core_shortfall_per_side_mm": 279.12090125,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 33,
+        "name": "601 Sludge Thickening",
+        "kind": "pfd",
+        "units": 6,
+        "streams": 4,
+        "band_units": 2448.3019168058536,
+        "core_units": 286.0,
+        "band_fill_percent": 11.681565824738083,
+        "shortfall_per_side_mm": 339.83277499999997,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 15.473662468210359,
+        "core_shortfall_per_side_mm": 245.53527499999998,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 34,
+        "name": "601 Sludge Thickening \u2014 Separation",
+        "kind": "p&id",
+        "units": 6,
+        "streams": 4,
+        "band_units": 2448.3019168058536,
+        "core_units": 286.0,
+        "band_fill_percent": 11.681565824738083,
+        "shortfall_per_side_mm": 339.83277499999997,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 15.473662468210359,
+        "core_shortfall_per_side_mm": 245.53527499999998,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 35,
+        "name": "610 Sludge Dewatering",
+        "kind": "pfd",
+        "units": 15,
+        "streams": 13,
+        "band_units": 2448.3019168058536,
+        "core_units": 632.6,
+        "band_fill_percent": 25.838316575976613,
+        "shortfall_per_side_mm": 285.3602525,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 34.22601006080375,
+        "core_shortfall_per_side_mm": 191.0627525,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 36,
+        "name": "610 Sludge Dewatering \u2014 Feed",
+        "kind": "p&id",
+        "units": 17,
+        "streams": 16,
+        "band_units": 2448.3019168058536,
+        "core_units": 587.6,
+        "band_fill_percent": 24.00030796718915,
+        "shortfall_per_side_mm": 292.432565,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 31.79134288923219,
+        "core_shortfall_per_side_mm": 198.135065,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 37,
+        "name": "610 Sludge Dewatering \u2014 Separation",
+        "kind": "p&id",
+        "units": 7,
+        "streams": 5,
+        "band_units": 2448.3019168058536,
+        "core_units": 330.0,
+        "band_fill_percent": 13.478729797774712,
+        "shortfall_per_side_mm": 332.917625,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 17.854225924858106,
+        "core_shortfall_per_side_mm": 238.62012499999997,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      }
+    ],
+    "permeation_station_gaps": {
+      "duty-pump-1": {
+        "inlet_drawing_units": 20.0,
+        "outlet_drawing_units": 20.0
+      },
+      "duty-pump-2": {
+        "inlet_drawing_units": 20.0,
+        "outlet_drawing_units": 20.0
+      },
+      "standby-pump": {
+        "inlet_drawing_units": 20.0,
+        "outlet_drawing_units": 20.0
+      }
+    }
+  },
+  "after": {
+    "converged": 38,
+    "exported": 37,
+    "sheet_count": 38,
+    "sheets": [
+      {
+        "index": 0,
+        "name": "104 Headworks Screening",
+        "kind": "pfd",
+        "units": 7,
+        "streams": 5,
+        "band_units": 2448.3019168058536,
+        "core_units": 80.0,
+        "band_fill_percent": 3.2675708600665967,
+        "shortfall_per_side_mm": 372.20824999999996,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 4.328297193904995,
+        "core_shortfall_per_side_mm": 277.91075,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 1,
+        "name": "104 Headworks Screening \u2014 Screening",
+        "kind": "p&id",
+        "units": 14,
+        "streams": 14,
+        "band_units": 2448.3019168058536,
+        "core_units": 1696.301916805841,
+        "band_fill_percent": 69.28483391537348,
+        "shortfall_per_side_mm": 118.18620000000197,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 91.77623533157983,
+        "core_shortfall_per_side_mm": 23.88870000000197,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 2,
+        "name": "106 Collection Tank",
+        "kind": "pfd",
+        "units": 13,
+        "streams": 11,
+        "band_units": 2448.3019168058536,
+        "core_units": 1696.3019168058381,
+        "band_fill_percent": 69.28483391537335,
+        "shortfall_per_side_mm": 118.18620000000244,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 91.77623533157967,
+        "core_shortfall_per_side_mm": 23.88870000000243,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 3,
+        "name": "106 Collection Tank \u2014 Pumping",
+        "kind": "p&id",
+        "units": 17,
+        "streams": 15,
+        "band_units": 2448.3019168058536,
+        "core_units": 1798.3019168058497,
+        "band_fill_percent": 73.45098676195875,
+        "shortfall_per_side_mm": 102.15562500000061,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 97.29481425380916,
+        "core_shortfall_per_side_mm": 7.858125000000608,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 4,
+        "name": "106 Collection Tank \u2014 Basin",
+        "kind": "p&id",
+        "units": 8,
+        "streams": 6,
+        "band_units": 2448.3019168058536,
+        "core_units": 1696.3019168058504,
+        "band_fill_percent": 69.28483391537387,
+        "shortfall_per_side_mm": 118.18620000000051,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 91.77623533158034,
+        "core_shortfall_per_side_mm": 23.8887000000005,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 5,
+        "name": "110 Cooling",
+        "kind": "pfd",
+        "units": 8,
+        "streams": 5,
+        "band_units": 2448.3019168058536,
+        "core_units": 1594.3019168058424,
+        "band_fill_percent": 65.11868106878863,
+        "shortfall_per_side_mm": 134.21677500000175,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 86.25765640935104,
+        "core_shortfall_per_side_mm": 39.919275000001754,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 6,
+        "name": "110 Cooling \u2014 Process",
+        "kind": "p&id",
+        "units": 10,
+        "streams": 7,
+        "band_units": 2448.3019168058536,
+        "core_units": 1594.3019168058536,
+        "band_fill_percent": 65.11868106878909,
+        "shortfall_per_side_mm": 134.216775,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 86.25765640935164,
+        "core_shortfall_per_side_mm": 39.919275000000006,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 7,
+        "name": "120 Equalisation",
+        "kind": "pfd",
+        "units": 15,
+        "streams": 11,
+        "band_units": 2448.3019168058536,
+        "core_units": 1594.3019168058509,
+        "band_fill_percent": 65.11868106878897,
+        "shortfall_per_side_mm": 134.21677500000044,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 86.2576564093515,
+        "core_shortfall_per_side_mm": 39.91927500000043,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": [
+          {
+            "attachment": {
+              "at": "N",
+              "kind": "unit",
+              "offset": 60.0,
+              "target": "tank-1"
+            },
+            "members": [
+              "basin-level",
+              "dissolved-oxygen"
+            ],
+            "centres": [
+              [
+                2401.4528752087763,
+                254.0
+              ],
+              [
+                2401.4528752087763,
+                188.0
+              ]
+            ]
+          }
+        ]
+      },
+      {
+        "index": 8,
+        "name": "120 Equalisation \u2014 Basins",
+        "kind": "p&id",
+        "units": 17,
+        "streams": 13,
+        "band_units": 2448.3019168058536,
+        "core_units": 1798.3019168058304,
+        "band_fill_percent": 73.45098676195795,
+        "shortfall_per_side_mm": 102.15562500000365,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 97.29481425380811,
+        "core_shortfall_per_side_mm": 7.858125000003645,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": [
+          {
+            "attachment": {
+              "at": "N",
+              "kind": "unit",
+              "offset": 60.0,
+              "target": "tank-1"
+            },
+            "members": [
+              "basin-level",
+              "dissolved-oxygen"
+            ],
+            "centres": [
+              [
+                1852.3019168058306,
+                254.0
+              ],
+              [
+                1852.3019168058306,
+                188.0
+              ]
+            ]
+          }
+        ]
+      },
+      {
+        "index": 9,
+        "name": "121 Flash Mixing",
+        "kind": "pfd",
+        "units": 9,
+        "streams": 7,
+        "band_units": 2448.3019168058536,
+        "core_units": 1696.3019168058463,
+        "band_fill_percent": 69.2848339153737,
+        "shortfall_per_side_mm": 118.18620000000115,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 91.77623533158011,
+        "core_shortfall_per_side_mm": 23.888700000001144,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 10,
+        "name": "121 Flash Mixing \u2014 Process",
+        "kind": "p&id",
+        "units": 11,
+        "streams": 9,
+        "band_units": 2448.3019168058536,
+        "core_units": 1798.3019168058458,
+        "band_fill_percent": 73.45098676195859,
+        "shortfall_per_side_mm": 102.15562500000122,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 97.29481425380897,
+        "core_shortfall_per_side_mm": 7.858125000001215,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 11,
+        "name": "122 Flocculation",
+        "kind": "pfd",
+        "units": 9,
+        "streams": 7,
+        "band_units": 2448.3019168058536,
+        "core_units": 1696.3019168058463,
+        "band_fill_percent": 69.2848339153737,
+        "shortfall_per_side_mm": 118.18620000000115,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 91.77623533158011,
+        "core_shortfall_per_side_mm": 23.888700000001144,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 12,
+        "name": "122 Flocculation \u2014 Process",
+        "kind": "p&id",
+        "units": 11,
+        "streams": 9,
+        "band_units": 2448.3019168058536,
+        "core_units": 1798.3019168058458,
+        "band_fill_percent": 73.45098676195859,
+        "shortfall_per_side_mm": 102.15562500000122,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 97.29481425380897,
+        "core_shortfall_per_side_mm": 7.858125000001215,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 13,
+        "name": "130 Primary Clarification",
+        "kind": "pfd",
+        "units": 8,
+        "streams": 6,
+        "band_units": 2448.3019168058536,
+        "core_units": 1798.3019168058463,
+        "band_fill_percent": 73.4509867619586,
+        "shortfall_per_side_mm": 102.15562500000115,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 97.29481425380898,
+        "core_shortfall_per_side_mm": 7.858125000001144,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 14,
+        "name": "130 Primary Clarification \u2014 Basins",
+        "kind": "p&id",
+        "units": 11,
+        "streams": 9,
+        "band_units": 2448.3019168058536,
+        "core_units": 1798.301916805849,
+        "band_fill_percent": 73.45098676195872,
+        "shortfall_per_side_mm": 102.15562500000073,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 97.29481425380914,
+        "core_shortfall_per_side_mm": 7.858125000000715,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 15,
+        "name": "205 Membrane Fine Screening",
+        "kind": "pfd",
+        "units": 7,
+        "streams": 5,
+        "band_units": 2448.3019168058536,
+        "core_units": 80.0,
+        "band_fill_percent": 3.2675708600665967,
+        "shortfall_per_side_mm": 372.20824999999996,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 4.328297193904995,
+        "core_shortfall_per_side_mm": 277.91075,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 16,
+        "name": "205 Membrane Fine Screening \u2014 Screening",
+        "kind": "p&id",
+        "units": 14,
+        "streams": 14,
+        "band_units": 2448.3019168058536,
+        "core_units": 1696.301916805841,
+        "band_fill_percent": 69.28483391537348,
+        "shortfall_per_side_mm": 118.18620000000197,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 91.77623533157983,
+        "core_shortfall_per_side_mm": 23.88870000000197,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 17,
+        "name": "220 Anoxic Tank",
+        "kind": "pfd",
+        "units": 9,
+        "streams": 7,
+        "band_units": 2448.3019168058536,
+        "core_units": 1696.301916805852,
+        "band_fill_percent": 69.28483391537394,
+        "shortfall_per_side_mm": 118.18620000000026,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 91.77623533158042,
+        "core_shortfall_per_side_mm": 23.888700000000252,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 18,
+        "name": "220 Anoxic Tank \u2014 Basins",
+        "kind": "p&id",
+        "units": 12,
+        "streams": 11,
+        "band_units": 2448.3019168058536,
+        "core_units": 1798.3019168058436,
+        "band_fill_percent": 73.4509867619585,
+        "shortfall_per_side_mm": 102.15562500000158,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 97.29481425380884,
+        "core_shortfall_per_side_mm": 7.858125000001573,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 19,
+        "name": "230 Aeration Tank",
+        "kind": "pfd",
+        "units": 12,
+        "streams": 8,
+        "band_units": 2448.3019168058536,
+        "core_units": 1696.3019168058463,
+        "band_fill_percent": 69.2848339153737,
+        "shortfall_per_side_mm": 118.18620000000115,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 91.77623533158011,
+        "core_shortfall_per_side_mm": 23.888700000001144,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": [
+          {
+            "attachment": {
+              "at": "N",
+              "kind": "unit",
+              "offset": 60.0,
+              "target": "tank-1"
+            },
+            "members": [
+              "basin-level",
+              "dissolved-oxygen"
+            ],
+            "centres": [
+              [
+                2198.3025557411283,
+                218.0
+              ],
+              [
+                2198.3025557411283,
+                152.0
+              ]
+            ]
+          }
+        ]
+      },
+      {
+        "index": 20,
+        "name": "230 Aeration Tank \u2014 Basins",
+        "kind": "p&id",
+        "units": 14,
+        "streams": 12,
+        "band_units": 2448.3019168058536,
+        "core_units": 1798.301916805841,
+        "band_fill_percent": 73.45098676195839,
+        "shortfall_per_side_mm": 102.15562500000198,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 97.2948142538087,
+        "core_shortfall_per_side_mm": 7.858125000001966,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": [
+          {
+            "attachment": {
+              "at": "N",
+              "kind": "unit",
+              "offset": 60.0,
+              "target": "tank-1"
+            },
+            "members": [
+              "basin-level",
+              "dissolved-oxygen"
+            ],
+            "centres": [
+              [
+                1954.3019168058413,
+                218.0
+              ],
+              [
+                1954.3019168058413,
+                152.0
+              ]
+            ]
+          }
+        ]
+      },
+      {
+        "index": 21,
+        "name": "230 Aeration Tank \u2014 Air",
+        "kind": "p&id",
+        "units": 10,
+        "streams": 9,
+        "band_units": 2448.3019168058536,
+        "core_units": 1696.301916805845,
+        "band_fill_percent": 69.28483391537364,
+        "shortfall_per_side_mm": 118.18620000000136,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 91.77623533158004,
+        "core_shortfall_per_side_mm": 23.88870000000136,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 22,
+        "name": "250 Membrane Bioreactor",
+        "kind": "pfd",
+        "units": 34,
+        "streams": 34,
+        "band_units": 2448.3019168058536,
+        "core_units": 2052.3,
+        "band_fill_percent": 83.82544595143347,
+        "shortfall_per_side_mm": 62.23665124999994,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 111.03705413814029,
+        "core_shortfall_per_side_mm": -32.06084875000007,
+        "export": "error",
+        "error": "FIXED_SCALE_CAPACITY: drawing needs 1167.0 x 765.0; available 1077.3 x 586.5; rearrange the sheet without shrinking lettering",
+        "route_converged": true,
+        "stacks": [
+          {
+            "attachment": {
+              "at": "N",
+              "kind": "unit",
+              "offset": 60.0,
+              "target": "tank-1"
+            },
+            "members": [
+              "level-1",
+              "level-2"
+            ],
+            "centres": [
+              [
+                1346.3,
+                482.0
+              ],
+              [
+                1346.3,
+                416.0
+              ]
+            ]
+          }
+        ]
+      },
+      {
+        "index": 23,
+        "name": "250 Membrane Bioreactor \u2014 Recycle",
+        "kind": "p&id",
+        "units": 10,
+        "streams": 9,
+        "band_units": 2448.3019168058536,
+        "core_units": 1804.8019168058518,
+        "band_fill_percent": 73.71647689433924,
+        "shortfall_per_side_mm": 101.1340687500003,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 97.64648840081406,
+        "core_shortfall_per_side_mm": 6.8365687500002865,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 24,
+        "name": "250 Membrane Bioreactor \u2014 Tank 1",
+        "kind": "p&id",
+        "units": 17,
+        "streams": 17,
+        "band_units": 2448.3019168058536,
+        "core_units": 1798.301916805846,
+        "band_fill_percent": 73.45098676195859,
+        "shortfall_per_side_mm": 102.15562500000118,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 97.29481425380897,
+        "core_shortfall_per_side_mm": 7.85812500000118,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 25,
+        "name": "250 Membrane Bioreactor \u2014 Permeation",
+        "kind": "p&id",
+        "units": 25,
+        "streams": 23,
+        "band_units": 2448.3019168058536,
+        "core_units": 1798.3019168058236,
+        "band_fill_percent": 73.45098676195768,
+        "shortfall_per_side_mm": 102.15562500000472,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 97.29481425380776,
+        "core_shortfall_per_side_mm": 7.858125000004717,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 26,
+        "name": "250 Membrane Bioreactor \u2014 Tank 2",
+        "kind": "p&id",
+        "units": 15,
+        "streams": 15,
+        "band_units": 2448.3019168058536,
+        "core_units": 1798.301916805846,
+        "band_fill_percent": 73.45098676195859,
+        "shortfall_per_side_mm": 102.15562500000118,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 97.29481425380897,
+        "core_shortfall_per_side_mm": 7.85812500000118,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 27,
+        "name": "250 Membrane Bioreactor \u2014 Scour Air",
+        "kind": "p&id",
+        "units": 17,
+        "streams": 16,
+        "band_units": 2448.3019168058536,
+        "core_units": 1696.301916805847,
+        "band_fill_percent": 69.28483391537371,
+        "shortfall_per_side_mm": 118.18620000000105,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 91.77623533158014,
+        "core_shortfall_per_side_mm": 23.888700000001037,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 28,
+        "name": "301 Batch Softener",
+        "kind": "pfd",
+        "units": 11,
+        "streams": 8,
+        "band_units": 2448.3019168058536,
+        "core_units": 1696.3019168058463,
+        "band_fill_percent": 69.2848339153737,
+        "shortfall_per_side_mm": 118.18620000000115,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 91.77623533158011,
+        "core_shortfall_per_side_mm": 23.888700000001144,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": [
+          {
+            "attachment": {
+              "at": "N",
+              "kind": "unit",
+              "offset": 60.0,
+              "target": "batch-tank"
+            },
+            "members": [
+              "ph",
+              "level"
+            ],
+            "centres": [
+              [
+                1666.3019168058463,
+                235.5
+              ],
+              [
+                1666.3019168058463,
+                169.5
+              ]
+            ]
+          }
+        ]
+      },
+      {
+        "index": 29,
+        "name": "301 Batch Softener \u2014 Process",
+        "kind": "p&id",
+        "units": 13,
+        "streams": 10,
+        "band_units": 2448.3019168058536,
+        "core_units": 1798.3019168058458,
+        "band_fill_percent": 73.45098676195859,
+        "shortfall_per_side_mm": 102.15562500000122,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 97.29481425380897,
+        "core_shortfall_per_side_mm": 7.858125000001215,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": [
+          {
+            "attachment": {
+              "at": "N",
+              "kind": "unit",
+              "offset": 60.0,
+              "target": "batch-tank"
+            },
+            "members": [
+              "ph",
+              "level"
+            ],
+            "centres": [
+              [
+                1621.8019168058458,
+                235.5
+              ],
+              [
+                1621.8019168058458,
+                169.5
+              ]
+            ]
+          }
+        ]
+      },
+      {
+        "index": 30,
+        "name": "340 Degassing",
+        "kind": "pfd",
+        "units": 11,
+        "streams": 9,
+        "band_units": 2448.3019168058536,
+        "core_units": 1696.301916805851,
+        "band_fill_percent": 69.2848339153739,
+        "shortfall_per_side_mm": 118.1862000000004,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 91.77623533158038,
+        "core_shortfall_per_side_mm": 23.888700000000394,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 31,
+        "name": "340 Degassing \u2014 Process",
+        "kind": "p&id",
+        "units": 10,
+        "streams": 8,
+        "band_units": 2448.3019168058536,
+        "core_units": 1696.3019168058454,
+        "band_fill_percent": 69.28483391537365,
+        "shortfall_per_side_mm": 118.18620000000129,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 91.77623533158007,
+        "core_shortfall_per_side_mm": 23.88870000000129,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 32,
+        "name": "340 Degassing \u2014 Air",
+        "kind": "p&id",
+        "units": 3,
+        "streams": 2,
+        "band_units": 2448.3019168058536,
+        "core_units": 72.30000000000001,
+        "band_fill_percent": 2.953067164785187,
+        "shortfall_per_side_mm": 373.41840124999993,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 3.91169858899164,
+        "core_shortfall_per_side_mm": 279.12090125,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 33,
+        "name": "601 Sludge Thickening",
+        "kind": "pfd",
+        "units": 6,
+        "streams": 4,
+        "band_units": 2448.3019168058536,
+        "core_units": 1696.3019168058527,
+        "band_fill_percent": 69.28483391537395,
+        "shortfall_per_side_mm": 118.18620000000016,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 91.77623533158047,
+        "core_shortfall_per_side_mm": 23.888700000000146,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 34,
+        "name": "601 Sludge Thickening \u2014 Separation",
+        "kind": "p&id",
+        "units": 6,
+        "streams": 4,
+        "band_units": 2448.3019168058536,
+        "core_units": 1696.3019168058527,
+        "band_fill_percent": 69.28483391537395,
+        "shortfall_per_side_mm": 118.18620000000016,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 91.77623533158047,
+        "core_shortfall_per_side_mm": 23.888700000000146,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 35,
+        "name": "610 Sludge Dewatering",
+        "kind": "pfd",
+        "units": 15,
+        "streams": 13,
+        "band_units": 2448.3019168058536,
+        "core_units": 1696.3019168058327,
+        "band_fill_percent": 69.28483391537314,
+        "shortfall_per_side_mm": 118.1862000000033,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 91.77623533157937,
+        "core_shortfall_per_side_mm": 23.88870000000329,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 36,
+        "name": "610 Sludge Dewatering \u2014 Feed",
+        "kind": "p&id",
+        "units": 17,
+        "streams": 16,
+        "band_units": 2448.3019168058536,
+        "core_units": 1696.301916805837,
+        "band_fill_percent": 69.28483391537331,
+        "shortfall_per_side_mm": 118.18620000000261,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 91.77623533157961,
+        "core_shortfall_per_side_mm": 23.88870000000261,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      },
+      {
+        "index": 37,
+        "name": "610 Sludge Dewatering \u2014 Separation",
+        "kind": "p&id",
+        "units": 7,
+        "streams": 5,
+        "band_units": 2448.3019168058536,
+        "core_units": 330.0,
+        "band_fill_percent": 13.478729797774712,
+        "shortfall_per_side_mm": 332.917625,
+        "usable_core_units": 1848.3019168058536,
+        "core_fill_percent": 17.854225924858106,
+        "core_shortfall_per_side_mm": 238.62012499999997,
+        "export": "ok",
+        "route_converged": true,
+        "stacks": []
+      }
+    ],
+    "permeation_station_gaps": {
+      "duty-pump-1": {
+        "inlet_drawing_units": 20.0,
+        "outlet_drawing_units": 20.0
+      },
+      "duty-pump-2": {
+        "inlet_drawing_units": 20.0,
+        "outlet_drawing_units": 20.0
+      },
+      "standby-pump": {
+        "inlet_drawing_units": 20.0,
+        "outlet_drawing_units": 20.0
+      }
+    }
+  },
+  "desktop": {
+    "cli": "/home/hvksh/.local/lib/puran/drawio/31.4.4/drawio",
+    "version": "31.4.4",
+    "platform": "linux-x86_64",
+    "binary_sha256": "9622b3685e675561cf937887a80961c3b72ceb6a16ec2c588eec5c92083fc1e6",
+    "app_asar_sha256": "7c4b63d21ed356b8055c2f977fc99865755ed461949af439d2da2d098aea682b"
+  },
+  "artifacts": {
+    "stems-before.pdf": "e5d2a78485f79ab1cd34c38a234e9ceb32e6b51d653f94ff251fb45d3c17b14a",
+    "permeation-before.pdf": "58b2a2c6629c4edfb56873ba3cc2858c2636f2cff1955341defac00819a06da1",
+    "permeation-after.pdf": "b8717f5586f1314d5fb766794032fe2ea6ecae37d846b92b2835babcdd94ae86",
+    "stems-after.pdf": "79986506c2678c327f1c7b3c867e5c95faf5cb89c12e82dcbe8b579f8a3a00bf"
+  },
+  "pdf_text": {
+    "before_words": 329,
+    "after_words": 329,
+    "same_word_multiplicities": true,
+    "max_word_dimension_delta_points_allowing_quarter_turns": 1.0000003385357559e-06
+  },
+  "final_replay": {
+    "sheet_count": 38,
+    "converged": 38,
+    "exported": 37,
+    "differences_from_after_run": [],
+    "log": "/tmp/pandid-corpus-final.log"
+  },
+  "native_text": {
+    "font_changes": [],
+    "added_cell_ids": [],
+    "removed_cell_ids": [],
+    "filled_dot_contract_restored_pdf_sources_identical": true
+  },
+  "unchanged_station_relative_xy": [
+    {
+      "pump": "duty-pump-1",
+      "valve": "iso-031",
+      "relative_xy": [
+        -44.5,
+        12.5
+      ]
+    },
+    {
+      "pump": "duty-pump-1",
+      "valve": "iso-033",
+      "relative_xy": [
+        80.0,
+        12.5
+      ]
+    },
+    {
+      "pump": "duty-pump-2",
+      "valve": "iso-037",
+      "relative_xy": [
+        -44.5,
+        12.5
+      ]
+    },
+    {
+      "pump": "duty-pump-2",
+      "valve": "iso-039",
+      "relative_xy": [
+        80.0,
+        12.5
+      ]
+    },
+    {
+      "pump": "standby-pump",
+      "valve": "iso-043",
+      "relative_xy": [
+        -44.5,
+        12.5
+      ]
+    },
+    {
+      "pump": "standby-pump",
+      "valve": "iso-045",
+      "relative_xy": [
+        80.0,
+        12.5
+      ]
+    }
+  ]
+}

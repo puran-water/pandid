@@ -15,6 +15,7 @@ class LayoutOptions:
     control_grid: float = 0.0
     parallel_trains: bool = False
     aligned_boundaries: bool = False
+    fill_columns: bool = False
     #: Page whose fitted band the boundary columns are placed against, resolved
     #: when layout runs. ``None`` keeps the historical behaviour of hanging the
     #: rails off the core's own extent, which leaves them wherever the content
@@ -35,7 +36,7 @@ class LayoutOptions:
             raise ValueError("layout_options.stream_label_bands must be a positive integer")
         for field in fields(self):
             value = getattr(self, field.name)
-            if field.name in {'parallel_trains', 'aligned_boundaries', 'strict_label_clearance'}:
+            if field.name in {'parallel_trains', 'aligned_boundaries', 'fill_columns', 'strict_label_clearance'}:
                 if type(value) is not bool:
                     raise ValueError(f'layout_options.{field.name} must be boolean')
                 continue

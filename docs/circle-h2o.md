@@ -95,7 +95,7 @@ It accepts only fewer body intersections without increasing parallel overlaps.
 When the full track spacing cannot clear a narrow corridor, it can reduce that
 clearance to half spacing or four drawing units. Terminal approaches follow the
 actual nozzle normal, including when an earlier separation pass overshot a goal.
-The template profile uses 20-unit column gaps; measured label and instrument
+The template profile uses 20-unit minimum column gaps; measured label and instrument
 halos still reserve their own space. Sheet capacity and native ink checks remain
 the publication caller's gates.
 
@@ -133,6 +133,26 @@ native title strip retains its own paper scale. Fixed-scale overflow raises
 lettering. `profiles.process.inspect_drawio()` checks repeated printed sizes and
 boundary columns across a process/legend set. Legacy general Flowsheet callers
 retain automatic fitting unless they explicitly select a fixed `drawing_scale`.
+
+The process profile enables `layout_options.fill_columns`. Each band spends
+its spare width between columns while inline valve/pump stations retain their
+minimum spacing. The target is the band named by `boundary_page`, after flag
+reaches, rail approaches and nozzle escape allowances. Absolute pins keep their
+arrangement; a single column or protected station cannot be stretched to fill a
+page. The generic option defaults to false.
+
+Instruments declaring the same sensing host, tap and perpendicular offset share
+a straight stem. Halo reservation includes the full stack depth; 44-unit bubbles
+at offset 60 resolve to 60, 126, 192 and 258 units with replacement clearance.
+Actuator and placement relations keep their own leaders. Template control
+placement and routing use the 16-pass `control_passes` limit and report whether
+they converge.
+
+Template instrument rows may supply `measured_variable`, independently of the
+function and loop fields. It uses `Instrument.annotate(variable=...)` and the
+house upper-right quadrant convention, explicitly a departure from ISO
+15519-2's quadrant-b scope for U tags. The field is optional. Measurements and
+regression evidence are in [the completion report](sheet-fill-workstream-20260911.md).
 
 The profile reserves four drawing units around unrelated instrument balloons
 through `layout_options.instrument_clearance`. Route repair preserves this

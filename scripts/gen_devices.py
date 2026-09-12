@@ -107,6 +107,13 @@ REFUSED_KINDS = {
 # for*: its own, and the one ``Cyclone("S-1")`` with no variant= asks for.
 DEVICES = {
     # --- Pumps -------------------------------------------------------------
+    # A rotary-lobe pump is a scheduled machine, not a body style of a
+    # centrifugal pump; the house drawing therefore has a device owner.
+    ("pump", "rotary_lobe"): ("RotaryLobePump", """Rotary-lobe positive-displacement pump.
+
+    Two counter-rotating lobes carry liquid between suction and discharge.
+    Reversible service is declared by the process model, not by this symbol.
+"""),
     #
     # Every pump variant is a distinct scheduled item: a gear pump and a
     # centrifugal are different machines with different curves, bought
@@ -874,6 +881,7 @@ OWNS = {
     # Two bodies of one device: the bonnet-on-a-stem PRV and the spring-loaded
     # angle PSV. Body style, which the rule leaves a variant.
     "ReliefValve": {"default": "relief", "psv": "psv"},
+    "CheckValve": {"default": "check", "check_2": "check_2"},
     # The twelve primary elements, all from flow_sensors.xml. The metering
     # principle is the variant; being a flow element is the class.
     "FlowElement": {
@@ -882,7 +890,7 @@ OWNS = {
         "turbine_meter": "turbine_meter",
         "positive_displacement": "positive_displacement",
         "v_cone": "v_cone", "wedge": "wedge", "target": "target",
-        "pitot": "pitot", "averaging_pitot": "averaging_pitot",
+        "pitot": "pitot", "averaging_pitot": "averaging_pitot", "magnetic": "magnetic",
     },
 }
 
@@ -920,6 +928,22 @@ PORT_ANCHORS: dict[str, dict[str, str]] = {}
 # :func:`claims` refuses to generate if one is missing: a new stencil has to be
 # classified before it can be drawn from this layer.
 STAYS_ON_BASE = {
+    # House families already have typed base classes. Their variants describe
+    # artwork or channel duty, and do not create a second equipment identity.
+    ("air_diffuser", "default"): "AirDiffuser's own drawing",
+    ("airlift", "default"): "Airlift's own drawing",
+    ("basin_agitator", "default"): "BasinAgitator's own drawing",
+    ("concrete_basin", "default"): "ConcreteBasin's own drawing",
+    ("membrane_cage", "default"): "MembraneCage's own drawing",
+    ("submersible_mixer", "default"): "SubmersibleMixer's own drawing",
+    ("junction", "default"): "Junction's own pipe connection drawing",
+    ("liquid_screen", "default"): "LiquidScreen's own channel drawing",
+    ("liquid_screen", "coarse_rake"): "coarse rake in the same liquid channel",
+    ("liquid_screen", "fine_rake"): "fine rake in the same liquid channel",
+    ("blower", "gas"): "gas-service casing on the same blower",
+    ("tank", "concrete"): "concrete shell construction",
+    ("tank", "vertical"): "vertical shell arrangement",
+    ("valve", "butterfly_2"): "alternative butterfly body artwork",
     # The base classes' own drawings. A class already exists; naming it twice
     # would be the layer's first duplicate.
     ("block", "default"): "Block's own drawing",

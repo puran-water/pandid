@@ -269,20 +269,57 @@ def _standoff_box(tap: Point, ref: Point, distance: float, angle: float,
     return (cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2)
 
 
+def shared_tap_stacks(fs: "Flowsheet") -> dict:
+    """Declared siblings on one process tap, with room for their full depth.
+
+    A perpendicular leader alone says nothing about sharing. The host, tap,
+    offset and sensing relation must agree; an actuator or a balloon hosted by
+    another balloon is a different connection and keeps its own branch.
+    """
+    from collections import defaultdict
+    from pandid.layout.stages import is_control
+    from pandid.portgeom import resolve_size
+    from pandid.streams import Stream
+
+    groups = defaultdict(list)
+    for inst in fs.units:
+        host = getattr(inst, 'host', None)
+        pin = inst.pin_
+        if (host is None or is_control(host)
+                or isinstance(host, Stream) and host.kind not in {'material', 'energy'}
+                or getattr(inst, 'relation', None) != 'sensing'
+                or inst.angle != 90.0 or inst.offset <= 0
+                or pin is not None and (pin.x is not None or pin.y is not None)):
+            continue
+        groups[(id(host), inst.at, inst.offset, inst.angle)].append(inst)
+    stacks = {}
+    for group in groups.values():
+        if len(group) < 2:
+            continue
+        distance, previous = group[0].offset, None
+        for inst in group:
+            diameter = max(resolve_size(inst))
+            if previous is not None:
+                pitch = (previous + diameter) / 2 + RESOLVED_CLEARANCE
+                distance += math.ceil(pitch / STANDOFF_STEP) * STANDOFF_STEP
+            stacks[inst] = distance
+            previous = diameter
+    return stacks
+
+
 def _clear_standoff(inst: "Instrument", tap: Point, ref: Point,
                     w: float, h: float,
                     obstacles: list[Box],
-                    keepouts: list[Box]) -> tuple[float, float]:
+                    keepouts: list[Box], *, stack_distance: float | None = None) -> tuple[float, float]:
     """``(distance, angle)`` to hang *inst* at: what it asked for, or the
     nearest standoff out from it that nothing else is standing in.
 
     The anchor does not move. Only the standoff does, and only outward:
     the balloon is swung about the tap at one distance, and *then* the
-    distance grows -- never the reverse. That is what makes a pass
-    monotone, which is what makes the placement/routing fixed point in
-    :meth:`pandid.flowsheet.Flowsheet.route` terminate rather than
-    trading two arrangements back and forth until
-    :data:`MAX_PLACEMENT_PASSES` trips.
+    distance grows. Declared siblings on a shared process tap instead stay
+    collinear and start at their reserved stack depth. The bounded search
+    guarantees termination, not convergence of placement and routing; the
+    caller reports a fixed point only when no balloon moves.
 
     *obstacles* is every drawn box already on the sheet -- the ranked
     units, and the balloons this sweep has placed before this one. Not
@@ -305,11 +342,11 @@ def _clear_standoff(inst: "Instrument", tap: Point, ref: Point,
     from pandid.streams import Stream
 
     on_a_line = isinstance(inst.host, Stream)
-    angles = _branch_angles(inst.angle)
+    angles = _branch_angles(inst.angle) if stack_distance is None else [inst.angle]
     asked = (inst.offset, inst.angle)
     fallback, least = asked, None
     for ring in range(STANDOFF_STEPS + 1):
-        distance = inst.offset + ring * STANDOFF_STEP
+        distance = (inst.offset if stack_distance is None else stack_distance) + ring * STANDOFF_STEP
         for angle in angles:
             box = _standoff_box(tap, ref, distance, angle, w, h)
             if (distance, angle) == asked:
@@ -365,6 +402,7 @@ def place_attached(fs: "Flowsheet") -> bool:
                  if u.frame is not None and not is_attached(u)
                  and not (fs.layout_options.control_grid and u.kind == 'instrument' and u.pin_ is None)]
     keepouts = _nozzle_keepouts(fs)
+    stacks = shared_tap_stacks(fs)
     # Balloons chain (an interlock hung under a controller hung off a
     # transmitter), so resolve a host before whatever hangs on it,
     # sweeping until nothing new can be placed.
@@ -380,7 +418,8 @@ def place_attached(fs: "Flowsheet") -> bool:
             (tx, ty), ref = anchor
             w, h = resolve_size(inst)
             distance, angle = _clear_standoff(
-                inst, (tx, ty), ref, w, h, obstacles, keepouts)
+                inst, (tx, ty), ref, w, h, obstacles, keepouts,
+                stack_distance=stacks.get(inst))
             ux, uy = _rotate_ccw(ref[0], ref[1], angle)
             cx, cy = tx + ux * distance - w / 2, ty + uy * distance - h / 2
             # An absolute pin supersedes the standoff on the axis it

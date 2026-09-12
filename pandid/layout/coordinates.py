@@ -258,7 +258,9 @@ def _refill(order: list[int], bands: list[list[int]]) -> list[list[int]]:
 
 
 def _lay_columns(columns: dict[int, _Column], band: list[int],
-                 pads: dict["Unit", Pad], place: bool = False) -> float:
+                 pads: dict["Unit", Pad], place: bool = False, *,
+                 gap: float | None = None, core: bool = False,
+                 fixed_gaps: set[int] | None = None) -> float:
     """How wide this run of columns comes out, and optionally place it.
 
     The balloon demand is settled **per row**, the way the rows settle
@@ -273,26 +275,110 @@ def _lay_columns(columns: dict[int, _Column], band: list[int],
     # column starts on the margin, and a boundary flag whose pennant
     # reaches back past its own origin reaches into the margin rather
     # than pushing the whole sheet right.
-    gap = for_units(u for c in band for u in columns[c].units).column_gap
+    minimum = for_units(u for c in band for u in columns[c].units).column_gap
+    if gap is None:
+        gap = minimum
     wall: dict[int, float] = {}
+    extents = []
     cursor = float(MARGIN_X)
-    for column in band:
+    for index, column in enumerate(band):
         held = columns[column]
-        x = cursor
+        before = minimum if column in (fixed_gaps or ()) else gap
+        x = cursor + (before if index else 0.0)
         for u in held.units:
             behind = wall.get(slot(u).row or 0)
             if behind is not None:
-                x = max(x, behind + gap + _west(u, pads))
+                x = max(x, behind + before + _west(u, pads))
         if place:
             for u in held.units:
                 if slot(u).x is None:
                     slot(u).x = x
-        cursor = x + held.body + gap
+        for u in held.units:
+            if u.kind not in {'feed', 'product'}:
+                extents.append((x - _west(u, pads),
+                                x + slot(u).w + pads.get(u, Pad()).east))
+        cursor = x + held.body
         for u in held.units:
             row = slot(u).row or 0
             wall[row] = max(wall.get(row, 0.0),
                             x + slot(u).w + pads.get(u, Pad()).east)
-    return max([cursor - gap, *wall.values()], default=cursor) - MARGIN_X
+    if core:
+        return max((b for a, b in extents), default=0.0) - min(
+            (a for a, b in extents), default=0.0)
+    return max([cursor, *wall.values()], default=cursor) - MARGIN_X
+
+
+def _station_gaps(columns: dict[int, _Column], band: list[int]) -> set[int]:
+    """Column seams inside an inline station retain their authored spacing.
+
+    A valve and its pump can occupy adjacent columns. They must translate
+    together, just as two units in one column do; otherwise a larger column
+    gap would dismantle the station without ever scaling a coordinate.
+    Headers and boundaries separate stations and leave the gaps we may spend.
+    """
+    from pandid.layout.stages import process_streams
+
+    members = [u for c in band for u in columns[c].units]
+    placed = set(members)
+    fixed = set()
+    for stream in process_streams(members[0].flowsheet):
+        a, b = stream.source.owner, stream.dest.owner
+        if a not in placed or b not in placed:
+            continue
+        if a.kind in {'feed', 'product', 'junction'} or b.kind in {'feed', 'product', 'junction'}:
+            continue
+        if not {a.kind, b.kind} & {'valve', 'fitting', 'reducer'}:
+            continue
+        lo, hi = sorted((slot(a).col or 0, slot(b).col or 0))
+        fixed.update(c for c in band if lo < c <= hi)
+    return fixed
+
+
+def _filled_gap(columns: dict[int, _Column], band: list[int],
+                pads: dict["Unit", Pad], fixed_gaps: set[int]) -> float:
+    """Spend a band's spare paper between columns, never within a station."""
+    members = [u for c in band for u in columns[c].units]
+    options = for_units(members)
+    minimum = options.column_gap
+    if not options.fill_columns or not options.boundary_page:
+        return minimum
+    fs = members[0].flowsheet
+    # An absolute placement is an author's arrangement, not a grid to spread.
+    if not _wrappable(fs, list(fs.units)):
+        return minimum
+    core_columns = [c for c in band if any(u.kind not in {'feed', 'product'}
+                                         for u in columns[c].units)]
+    if len(core_columns) < 2:
+        return minimum
+    if all(c in fixed_gaps for c in band if core_columns[0] < c <= core_columns[-1]):
+        return minimum
+    from pandid.render.drawio import fitted_band
+
+    # A pipe's turn and its lettering may extend beyond the equipment box.
+    # Keep one nozzle escape lane at either end; the export still measures
+    # all final ink and refuses a sheet whose fixed-size content cannot fit.
+    target = fitted_band(fs, options.boundary_page)[0] - 50
+    boundaries = [u for u in fs.units if u.kind in {'feed', 'product'}]
+    if boundaries and options.aligned_boundaries:
+        # align_boundaries owns the rails. Leave their flags and the two
+        # 110-unit approaches intact, and fill the paper between those runs.
+        target -= 220 + sum(max((slot(u).w for u in boundaries if u.kind == kind),
+                                default=0.0) for kind in ('feed', 'product'))
+    def width(gap):
+        return _lay_columns(columns, band, pads, gap=gap, core=True, fixed_gaps=fixed_gaps)
+
+    if width(minimum) >= target:
+        return minimum  # The fixed-scale export reports capacity; type never shrinks.
+    lo, hi = minimum, max(minimum, target)
+    # Row-specific halo demand makes the width piecewise linear. Measure it
+    # with the placement pass itself rather than assuming every gap is active.
+    for _ in range(48):
+        mid = (lo + hi) / 2
+        if width(mid) <= target:
+            lo = mid
+        else:
+            hi = mid
+    return lo
 
 
 def _lay_band(columns: dict[int, _Column], band: list[int], top: float,
@@ -303,7 +389,9 @@ def _lay_band(columns: dict[int, _Column], band: list[int], top: float,
         return top
 
     options = for_units(members)
-    _lay_columns(columns, band, pads, place=True)
+    fixed_gaps = _station_gaps(columns, band) if options.fill_columns else set()
+    _lay_columns(columns, band, pads, place=True, fixed_gaps=fixed_gaps,
+                 gap=_filled_gap(columns, band, pads, fixed_gaps))
 
     # Bands are built for every row the sheet names between the band's
     # own first and last, and a pin can name one above row 0:

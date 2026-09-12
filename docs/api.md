@@ -605,7 +605,7 @@ from pandid import units
 sifter = units.Separator("SC-101", variant="sifter")
 ```
 
-`units.Kind(variant=…)` is the escape hatch. 132 of the 229 registered drawings
+`units.Kind(variant=…)` is the escape hatch. 146 of the 246 registered drawings
 get no class of their own, and this is how you reach them; see
 [Variants](#variants) for the list. Where a class exists, name it.
 
@@ -1136,6 +1136,7 @@ base has not, `-` one it drops. The bases are in the [Port table](#port-table).
 
 | Class | `kind` | Base | Ports that differ |
 |---|---|---|---|
+| `RotaryLobePump` | `pump` | `Pump` | |
 | `CentrifugalPump` | `pump` | `Pump` | |
 | `GearPump` | `pump` | `Pump` | |
 | `ScrewPump` | `pump` | `Pump` | |
@@ -1732,6 +1733,7 @@ first listed is what the class draws when it is built by name alone.
 
 | Class | `kind` | Drawings it owns |
 |---|---|---|
+| `RotaryLobePump` | `pump` | `rotary_lobe` (as `default`) |
 | `CentrifugalPump` | `pump` | `default` |
 | `GearPump` | `pump` | `gear` (as `default`) |
 | `ScrewPump` | `pump` | `screw` (as `default`) |
@@ -1813,16 +1815,16 @@ first listed is what the class draws when it is built by name alone.
 | `ReliefValve` | `valve` | `relief` (as `default`), `psv` |
 | `PressureRegulator` | `valve` | `regulator` (as `default`) |
 | `MotorOperatedValve` | `valve` | `motor` (as `default`) |
-| `CheckValve` | `valve` | `check` (as `default`) |
-| `Valve` | `valve` | bodies: `default` (gate), `gate`, `globe`, `ball`, `butterfly`, `needle`, `saunders`, `plug`, `pinch`, `angle`, `bleed`<br>with a drawn operator: `hydraulic`, `manual`, `knife`<br>which of them take a [`normal_position`](#normally-closed-valves) and which a [`fail`](#fail-position) are two different lists |
+| `CheckValve` | `valve` | `check` (as `default`), `check_2` |
+| `Valve` | `valve` | bodies: `default` (gate), `gate`, `globe`, `ball`, `butterfly`, `butterfly_2`, `needle`, `saunders`, `plug`, `pinch`, `angle`, `bleed`<br>with a drawn operator: `hydraulic`, `manual`, `knife`<br>which of them take a [`normal_position`](#normally-closed-valves) and which a [`fail`](#fail-position) are two different lists |
 | `SpectacleBlind` | `fitting` | `blind` (as `default`) |
 | `SteamTrap` | `fitting` | `steam_trap` (as `default`) (ISO item 24.15, registered 2181) |
-| `FlowElement` | `fitting` | `venturi` (as `default`), `flow_nozzle`, `coriolis`, `vortex`, `ultrasonic`, `turbine_meter`, `positive_displacement`, `v_cone`, `wedge`, `target`, `pitot`, `averaging_pitot` |
+| `FlowElement` | `fitting` | `venturi` (as `default`), `flow_nozzle`, `coriolis`, `vortex`, `ultrasonic`, `turbine_meter`, `positive_displacement`, `v_cone`, `wedge`, `target`, `pitot`, `averaging_pitot`, `magnetic` |
 | `Fitting` | `fitting` | `default` (flanged connection), `flange`, `strainer`, `strainer_cone`, `strainer_y`, `strainer_basket`, `strainer_duplex`, `orifice`, `rotameter`, `rupture_disc`, `sight_glass`, `sight_glass_lit`, `silencer`, `expansion_joint`, `bellows`, `damper`, `spool`, `static_mixer` (ISO item 12.2 X2673), `rotary_mixer` (item 12.1 X2672), `mixing_path` (item 12.3 X8184), `hose`, `coupling`, `clamped_coupling`, `flame_arrestor`, `flame_arrestor_explosion_proof`, `flame_arrestor_detonation_proof`, `flame_arrestor_fire_resistant` |
 | `StirredTankReactor` | `reactor` | `default` |
 | `Reactor` | `reactor` | bodies: `plain` (a charge vessel with a packed bed hatched into it), `mixing` (a conical-bottomed mixing vessel with the stirrer drawn on top of it), `jacketed` (the dished-end shell inside a heating/cooling jacket), `tubular` (a horizontal shell with a tube pass: a PFR)<br>what is *inside* a reactor is [`agitator=` and `internals=`](#what-a-body-carries) rather than a variant, so a packed bed and a fluidised bed are the plain stirred body with a group-27 internal in it. `plain` and `mixing` are both [deprecated](#deprecated-api) for saying what is inside with the word that chooses the body |
 | `Vessel` | `vessel` | `default`, `dished`, `jacketed`, `skirted`, `legs`, `insulated`, `electrical_heating`, `swaged`, `dome`, `horizontal`<br>`dished`, `skirted` and `legs` are one shell on brackets, a skirt or a pair of legs; `jacketed` and `insulated` are that shell clad, and offer the same nozzles in the same places, so swapping one for another moves no run. `swaged` is the vessel drawn in two diameters, the wider one below |
-| `Tank` | `tank` | named for the roof: `default` (dished), `conical`, `floating_roof`, plus `sphere`<br>and for the bottom where it is a cone rather than a floor: `conical_bottom` (under a flat roof), `conical_ends` (a cone at each end), `dished_roof_conical_bottom`. On those three the `outlet` is on the cone's apex, which is where the tank actually drains |
+| `Tank` | `tank` | `vertical` (upright shell), `concrete` (construction), and named for the roof: `default` (dished), `conical`, `floating_roof`, plus `sphere`<br>and for the bottom where it is a cone rather than a floor: `conical_bottom` (under a flat roof), `conical_ends` (a cone at each end), `dished_roof_conical_bottom`. On those three the `outlet` is on the cone's apex, which is where the tank actually drains |
 | `GasHolder` | `tank` | `gas_holder` (as `default`) |
 | `CoolingTower` | `cooling_tower` | `default` (induced draft: the fan on the stack), `induced_draft`, `forced_draft` (the fan in a housing at the foot of each side)<br>and the eight ISO 10628-2 group-5 drawings: `general` (5.1, 2521, the bare outline), `dry_natural` (5.2 X8109), `dry_forced` (5.3 X8110), `dry_induced` (5.4 X8111), `wet_natural` (5.5 X8112), `wet_forced` (5.6 X8113), `wet_induced` (5.7 X8114), `wet_dry_natural` (5.8 X8115) |
 | `Column` | `column` | `default` (plain shell), `packed` |
@@ -1834,7 +1836,16 @@ first listed is what the class draws when it is built by name alone.
 | `Instrument` | `instrument` | `default` (a circle), `shared` (a circle in a square), `computer` (a hexagon), `sis` (a diamond in a square, also spelled `logic`), `interlock` (a plain diamond). Where the information is available is the separate [`display`](#where-the-information-is) axis; `panel` and `aux` are that axis in this column and are reached as `display="central"` and `display="subsidiary"` |
 | `SprayNozzle` | `spray_nozzle` | `default` — ISO item 19.5 2037. A terminal fitting rather than a variant of `Fitting`: the one nozzle it has is ticked on both faces, not a pair of them |
 | `Kneader` | `kneader` | `default` — ISO item 12.4 X8134 |
-| `Heater`, `Cooler`, `Furnace`, `Turbine`, `Blower`, `Ejector`, `Funnel`, `Conveyor`, `Mixer`, `Splitter`, `Tee`, `Block`, `Feed`, `Product` | each its own | `default` only |
+| `Blower` | `blower` | `default`, `gas` (gas-service casing) |
+| `LiquidScreen` | `liquid_screen` | `default`, `coarse_rake`, `fine_rake` (rake duty in a liquid channel) |
+| `Junction` | `junction` | `default` (a pipe connection or expanded header) |
+| `ConcreteBasin` | `concrete_basin` | `default` (an open basin with separately declared internals) |
+| `BasinAgitator` | `basin_agitator` | `default` (a basin-mounted agitator) |
+| `SubmersibleMixer` | `submersible_mixer` | `default` (a submerged mixer) |
+| `MembraneCage` | `membrane_cage` | `default` (a submerged membrane cage) |
+| `Airlift` | `airlift` | `default` (a liquid riser with air injection) |
+| `AirDiffuser` | `air_diffuser` | `default` (a dispersed-air grid) |
+| `Heater`, `Cooler`, `Furnace`, `Turbine`, `Ejector`, `Funnel`, `Conveyor`, `Mixer`, `Splitter`, `Tee`, `Block`, `Feed`, `Product` | each its own | `default` only |
 
 `HeatExchanger(variant="kettle")` carries a fifth nozzle, `bottoms`. It is the
 draw at the weir end of the shell, where what does not boil leaves as the

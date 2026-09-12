@@ -1898,7 +1898,7 @@ class Flowsheet:
 
         Attached instruments are placed and the sheet re-routed until
         the two agree, up to
-        :data:`~pandid.layout.attach.MAX_PLACEMENT_PASSES`. A sheet that
+        ``layout_options.control_passes``. A sheet that
         never settles leaves ``route_converged`` false, which
         :meth:`validate` reports as a warning.
         """
@@ -1907,7 +1907,6 @@ class Flowsheet:
         if router is None:
             from pandid.routing import DefaultRouter
             router = DefaultRouter()
-        from pandid.layout.attach import MAX_PLACEMENT_PASSES
         from pandid.layout.control import place_control
         router.route(self)
         # An attached balloon hangs off its host's *routed* path, so

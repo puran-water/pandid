@@ -89,7 +89,6 @@ class ConstraintLayoutEngine:
     """
 
     def layout(self, fs: "Flowsheet") -> None:
-        from pandid.layout.attach import MAX_PLACEMENT_PASSES
         from pandid.layout.control import place_control
         from pandid.layout.coordinates import assign_coordinates, assign_labels
         from pandid.layout.cycles import break_cycles
@@ -118,7 +117,7 @@ class ConstraintLayoutEngine:
         # model and not of what the last run left behind. Every sheet in
         # the corpus settles in one pass and 04 in two; the cap is
         # ``route()``'s own, for the same reason it has one.
-        for _ in range(MAX_PLACEMENT_PASSES):
+        for _ in range(fs.layout_options.control_passes):
             select_faces(fs)
             if not place_control(fs):
                 break

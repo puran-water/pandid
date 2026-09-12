@@ -71,6 +71,7 @@ from pandid.units import (
 )
 
 __all__ = [
+    "RotaryLobePump",
     "CentrifugalPump",
     "GearPump",
     "ScrewPump",
@@ -147,6 +148,22 @@ __all__ = [
     "StirredTankReactor",
     "GasHolder",
 ]
+
+
+class RotaryLobePump(Pump):
+    """Rotary-lobe positive-displacement pump.
+
+    Two counter-rotating lobes carry liquid between suction and discharge.
+    Reversible service is declared by the process model, not by this symbol.
+    """
+
+    kind = "pump"
+    VARIANTS = ("default", "rotary_lobe")
+    VARIANT_ALIASES = {"default": "rotary_lobe"}
+    PORTS = [("suction", "inlet", "process"), ("discharge", "outlet", "process")]
+
+    suction: Port
+    discharge: Port
 
 
 class CentrifugalPump(Pump):
@@ -2550,7 +2567,7 @@ class CheckValve(Valve):
     """
 
     kind = "valve"
-    VARIANTS = ("default", "check")
+    VARIANTS = ("default", "check_2", "check")
     VARIANT_ALIASES = {"default": "check"}
     PORTS = [("inlet", "inlet", "process"), ("outlet", "outlet", "process")]
 
@@ -2650,6 +2667,7 @@ class FlowElement(Fitting):
         "target",
         "pitot",
         "averaging_pitot",
+        "magnetic",
     )
     VARIANT_ALIASES = {"default": "venturi"}
     PORTS = [("inlet", "inlet", "process"), ("outlet", "outlet", "process")]
