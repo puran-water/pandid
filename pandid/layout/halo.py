@@ -22,12 +22,14 @@ nothing and finding out afterwards -- is the defect this exists to stop.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import TYPE_CHECKING, NamedTuple
 
 from pandid.layout.stages import slot
 
 if TYPE_CHECKING:
     from pandid.flowsheet import Flowsheet
+    from pandid.geometry import Frame, _Slot
     from pandid.units import Unit
 
 #: How much clear paper a balloon wants around it. Not a hairline: what
@@ -74,6 +76,35 @@ class Pad(NamedTuple):
             e = max(e, reach) if face == "E" else e
             w = max(w, reach) if face == "W" else w
         return Pad(n, s, e, w)
+
+
+def is_core(unit: Unit) -> bool:
+    """Equipment inside the rails; attached instruments are charged as pads.
+
+    Control geometry is placed after the rails and may still hold a previous
+    layout's frames. Its reserved footprint belongs to its process host instead.
+    """
+    from pandid.layout.stages import is_control
+
+    return unit.kind not in {"feed", "product"} and not is_control(unit)
+
+
+def core_extent(placements: Iterable[tuple[Unit, Frame | _Slot | None]],
+                pads: dict[Unit, Pad]) -> tuple[float, float] | None:
+    """Horizontal equipment envelope, including its instrument reservations.
+
+    Column fill supplies candidate slots; boundary alignment supplies final
+    frames. Both measure the same footprint: a non-boundary process box plus
+    its west/east halo. Instruments on the outermost equipment therefore count,
+    without reading control frames that have not been placed yet.
+    """
+    extents = [(frame.x - pads.get(unit, Pad()).west,
+                frame.x + frame.w + pads.get(unit, Pad()).east)
+               for unit, frame in placements
+               if is_core(unit) and frame is not None and frame.x is not None]
+    if not extents:
+        return None
+    return min(a for a, _ in extents), max(b for _, b in extents)
 
 
 def balloon_pads(fs: "Flowsheet") -> dict["Unit", Pad]:

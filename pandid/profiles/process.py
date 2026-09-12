@@ -14,6 +14,8 @@ PAGE = "A1"
 #: ``layout/coordinates.py`` reserves when it fills a band's columns, so the
 #: two agree about how much of the band is actually spendable.
 ESCAPE_LANE = 50.0
+#: Clear pipe run between the padded core and each flag's nozzle rail.
+BOUNDARY_APPROACH = 110.0
 UNIT_SIZES = {"membrane_cage": (100, 134), "air_diffuser": (128, 64),
               "basin_agitator": (64, 180), "submersible_mixer": (100, 70)}
 
@@ -43,13 +45,13 @@ def align_boundaries(fs):
     placed so the pennants' outer edges meet the band instead.
     """
     from dataclasses import replace
-    from pandid.portgeom import unit_box
+    from pandid.layout.halo import balloon_pads, core_extent
     boundaries = [u for u in fs.units if u.kind in {"feed", "product"}]
-    core = [u for u in fs.units if u.kind not in {"feed", "product", "instrument"} and u.frame]
-    if not core or not boundaries:
+    extent = core_extent(((u, u.frame) for u in fs.units), balloon_pads(fs))
+    if extent is None or not boundaries:
         return
-    left = min(unit_box(u, u.frame)[0] for u in core) - 110
-    right = max(unit_box(u, u.frame)[2] for u in core) + 110
+    left = extent[0] - BOUNDARY_APPROACH
+    right = extent[1] + BOUNDARY_APPROACH
     page = getattr(fs.layout_options, "boundary_page", None)
     if page:
         from pandid.render.drawio import fitted_band

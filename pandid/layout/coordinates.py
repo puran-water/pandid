@@ -23,9 +23,10 @@ faces, since a label dodges the faces the nozzles actually leave from.
 from __future__ import annotations
 
 from collections import defaultdict
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
-from pandid.layout.halo import Pad
+from pandid.layout.halo import Pad, core_extent, is_core
 from pandid.layout.options import for_units
 from pandid.layout.stages import slot
 
@@ -279,7 +280,7 @@ def _lay_columns(columns: dict[int, _Column], band: list[int],
     if gap is None:
         gap = minimum
     wall: dict[int, float] = {}
-    extents = []
+    placements = []
     cursor = float(MARGIN_X)
     for index, column in enumerate(band):
         held = columns[column]
@@ -293,18 +294,16 @@ def _lay_columns(columns: dict[int, _Column], band: list[int],
             for u in held.units:
                 if slot(u).x is None:
                     slot(u).x = x
-        for u in held.units:
-            if u.kind not in {'feed', 'product'}:
-                extents.append((x - _west(u, pads),
-                                x + slot(u).w + pads.get(u, Pad()).east))
+        if core:
+            placements.extend((u, replace(slot(u), x=x)) for u in held.units)
         cursor = x + held.body
         for u in held.units:
             row = slot(u).row or 0
             wall[row] = max(wall.get(row, 0.0),
                             x + slot(u).w + pads.get(u, Pad()).east)
     if core:
-        return max((b for a, b in extents), default=0.0) - min(
-            (a for a, b in extents), default=0.0)
+        extent = core_extent(placements, pads)
+        return extent[1] - extent[0] if extent else 0.0
     return max([cursor, *wall.values()], default=cursor) - MARGIN_X
 
 
@@ -346,24 +345,25 @@ def _filled_gap(columns: dict[int, _Column], band: list[int],
     # An absolute placement is an author's arrangement, not a grid to spread.
     if not _wrappable(fs, list(fs.units)):
         return minimum
-    core_columns = [c for c in band if any(u.kind not in {'feed', 'product'}
-                                         for u in columns[c].units)]
+    core_columns = [c for c in band if any(is_core(u) for u in columns[c].units)]
     if len(core_columns) < 2:
         return minimum
     if all(c in fixed_gaps for c in band if core_columns[0] < c <= core_columns[-1]):
         return minimum
+    from pandid.profiles.process import BOUNDARY_APPROACH, ESCAPE_LANE
     from pandid.render.drawio import fitted_band
 
     # A pipe's turn and its lettering may extend beyond the equipment box.
     # Keep one nozzle escape lane at either end; the export still measures
     # all final ink and refuses a sheet whose fixed-size content cannot fit.
-    target = fitted_band(fs, options.boundary_page)[0] - 50
+    target = fitted_band(fs, options.boundary_page)[0] - ESCAPE_LANE
     boundaries = [u for u in fs.units if u.kind in {'feed', 'product'}]
     if boundaries and options.aligned_boundaries:
         # align_boundaries owns the rails. Leave their flags and the two
         # 110-unit approaches intact, and fill the paper between those runs.
-        target -= 220 + sum(max((slot(u).w for u in boundaries if u.kind == kind),
-                                default=0.0) for kind in ('feed', 'product'))
+        target -= 2 * BOUNDARY_APPROACH + sum(
+            max((slot(u).w for u in boundaries if u.kind == kind), default=0.0)
+            for kind in ('feed', 'product'))
     def width(gap):
         return _lay_columns(columns, band, pads, gap=gap, core=True, fixed_gaps=fixed_gaps)
 
@@ -578,7 +578,20 @@ def _straighten(fs: "Flowsheet", units: list["Unit"], band_of: dict["Unit", int]
             slot(v).y = (slot(v).y or 0.0) + shift
         settled.update(group)
 
+    # A filled band has already spent its spare paper. Straightening may use
+    # that envelope, but may not widen it: the rails would then have to move
+    # outside their allocation to clear the core. This is an optional routing
+    # improvement, so keep the original position when its nudge will not fit.
+    limits = {}
+    options = for_units(units)
+    if options.fill_columns and options.boundary_page and _wrappable(fs, list(fs.units)):
+        for band in set(band_of.values()):
+            limits[band] = core_extent(((u, slot(u)) for u in units if band_of[u] == band), pads)
     for u, new_x in _stack_offsets(fs, units, band_of):
+        limit = limits.get(band_of[u])
+        candidate = core_extent([(u, replace(slot(u), x=new_x))], pads) if limit else None
+        if candidate and (candidate[0] < limit[0] - 1e-9 or candidate[1] > limit[1] + 1e-9):
+            continue
         if not _overlaps_x(u, new_x, units):
             slot(u).x = new_x
 

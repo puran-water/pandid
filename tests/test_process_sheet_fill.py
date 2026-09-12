@@ -5,9 +5,9 @@ import xml.etree.ElementTree as ET
 
 import pytest
 
-from pandid import Flowsheet, Instrument, Tank, Valve
+from pandid import Feed, Flowsheet, Instrument, Product, Tank, Valve
 from pandid.layout.attach import _anchor, place_attached, shared_tap_stacks
-from pandid.layout.halo import balloon_pads
+from pandid.layout.halo import balloon_pads, core_extent
 from pandid.portgeom import unit_box
 from pandid.profiles.templates import from_template
 from pandid.render.drawio import fitted_band
@@ -188,3 +188,81 @@ def test_a_shared_process_tap_on_a_valve_is_distinct_from_its_actuator():
     assert a.frame.cy == pytest.approx(b.frame.cy)
     assert b.frame.cx - a.frame.cx == pytest.approx(50)
     assert actuator.angle == 30
+
+
+def recycle():
+    # Exact ten-unit recycle sheet from the shared MBR recipe, with metadata
+    # reduced to what the engine consumes. The 4-unit return junction used to
+    # move 6.5 west after fill and push each exported flag 4.021875 units out.
+    data = json.loads((Path(__file__).parent / 'fixtures/house_recycle.json').read_text())
+    fs = from_template(data['name'], data['nodes'], data['edges'],
+                       metadata=data['metadata'], pins=data['pins'])
+    fs.title_block = _read_title_block(data['title_block'], 'title_block')
+    fs.equipment_data = data['equipment_data']
+    return fs
+
+
+def test_recycle_straightening_keeps_the_core_inside_its_filled_allocation():
+    from pandid.layout.coordinates import _columns, _filled_gap, _lay_columns, _station_gaps
+    from pandid.layout.stages import process_units
+    from pandid.profiles.process import BOUNDARY_APPROACH, ESCAPE_LANE
+
+    fs = recycle()
+    fs.layout()
+    pads = balloon_pads(fs)
+    columns = _columns(process_units(fs), pads)
+    band = sorted(columns)
+    fixed = _station_gaps(columns, band)
+    gap = _filled_gap(columns, band, pads, fixed)
+    predicted = _lay_columns(columns, band, pads, gap=gap, core=True, fixed_gaps=fixed)
+    left, right = core_extent(((u, u.frame) for u in fs.units), pads)
+    assert right - left == pytest.approx(predicted)
+    flags = [u for u in fs.units if u.kind in {'feed', 'product'}]
+    assert len(flags) == 5
+    reaches = sum(max(u.frame.w for u in flags if u.kind == kind) for kind in ('feed', 'product'))
+    assert right - left + 2 * BOUNDARY_APPROACH == pytest.approx(
+        fitted_band(fs, 'A1')[0] - ESCAPE_LANE - reaches)
+    boxes = [unit_box(u, u.frame) for u in flags]
+    assert max(b[2] for b in boxes) - min(b[0] for b in boxes) == pytest.approx(
+        fitted_band(fs, 'A1')[0] - ESCAPE_LANE)
+
+    xml = ET.fromstring(fs.to_drawio(diagram='p&id', page_size='A1', border='zone'))
+    assert xml.find('diagram') is not None and fs.route_converged
+    before = [u.frame for u in fs.units]
+    fs.layout()
+    fs.route()
+    assert [u.frame for u in fs.units] == before
+
+
+@pytest.mark.parametrize('escape_lane', [50.0, 80.0])
+def test_fill_and_rails_reserve_instruments_on_both_outer_equipment_faces(monkeypatch, escape_lane):
+    from pandid.geometry import Frame
+    from pandid.profiles import process
+
+    monkeypatch.setattr(process, 'ESCAPE_LANE', escape_lane)
+    fs = process.apply(Flowsheet('Instrumented outer equipment'))
+    feed = fs.add(Feed('feed'))
+    left = fs.add(Tank('T-1'))
+    right = fs.add(Tank('T-2'))
+    product = fs.add(Product('product'))
+    fs.connect(feed.outlet, left.inlet)
+    fs.connect(left.outlet, right.inlet)
+    fs.connect(right.outlet, product.inlet)
+    west = fs.add(Instrument('LT-1')).attach(left, at='W', offset=60)
+    east = fs.add(Instrument('LT-2')).attach(right, at='E', offset=60)
+    fs.layout()
+    pads = balloon_pads(fs)
+    lo, hi = core_extent(((u, u.frame) for u in fs.units), pads)
+    assert lo == pytest.approx(left.frame.x - pads[left].west)
+    assert hi == pytest.approx(right.frame.x_max + pads[right].east)
+    assert pads[left].west > 0 and pads[right].east > 0
+    assert feed.frame.x + 50 == pytest.approx(lo - process.BOUNDARY_APPROACH)
+    assert product.frame.x == pytest.approx(hi + process.BOUNDARY_APPROACH)
+    assert unit_box(product, product.frame)[2] - unit_box(feed, feed.frame)[0] == pytest.approx(
+        fitted_band(fs, 'A1')[0] - escape_lane)
+    # A second layout must not read yesterday's control frames as today's core.
+    frames = [u.frame for u in fs.units]
+    west.frame = Frame(-10000, 0, 44, 44)
+    east.frame = Frame(10000, 0, 44, 44)
+    fs.layout()
+    assert [u.frame for u in fs.units] == frames
