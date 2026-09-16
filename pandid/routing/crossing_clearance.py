@@ -23,7 +23,7 @@ def _overlaps(lines, clearance=0):
     return total
 
 
-def repair(fs, *, radius=5, max_passes=8):
+def repair(fs, *, radius=5, max_passes=None):
     from pandid.portgeom import unit_box
     from pandid.routing.terminal_clearance import anchored_waypoints
     from pandid.render.svg import stream_polyline
@@ -31,6 +31,14 @@ def repair(fs, *, radius=5, max_passes=8):
     from pandid.drawing_regions import captions
 
     lines = {i: stream_polyline(s) for i, s in enumerate(fs.streams) if s.route}
+    # Each pass accepts only ONE track adjustment across the whole sheet.
+    # Eight passes therefore cap the number of repairs, not convergence
+    # rounds. Dense sheets can have more than eight independent defects even
+    # when every remaining move is legal and strictly improves the geometry.
+    # Scale the default finite budget with the routed stream count; retain an
+    # explicit caller limit and the unchanged fail-closed crossing gate.
+    if max_passes is None:
+        max_passes = max(8, len(lines))
     lost = crossing_order(lines, radius)[1]
     spacing = max(fs.layout_options.stream_spacing, 2*radius+2)
     if not lost and not _overlaps(lines, spacing):

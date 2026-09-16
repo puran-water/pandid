@@ -84,3 +84,41 @@ def test_residual_parallel_overlap_is_repaired_with_or_without_a_lost_crossing_g
             assert points[0] == before[i][0] and points[-1] == before[i][-1]
         repair(fs)
         assert after == {i: stream_polyline(s) for i, s in enumerate(fs.streams)}
+
+
+def many_independent_overlaps():
+    """Ten disconnected pairs need ten accepted moves, regardless of order."""
+    fs = Flowsheet("Independent service tracks")
+    fs.layout_options.stream_spacing = 14
+    for pair in range(10):
+        for offset in (0, 40):
+            y = pair * 400 + offset
+            source = fs.add(Feed(f"source-{pair}-{offset}"))
+            target = fs.add(Product(f"target-{pair}-{offset}"))
+            source.frame = Frame(x=-50, y=y-10, w=50, h=20)
+            target.frame = Frame(x=200, y=y+90, w=50, h=20)
+            stream = fs.connect(source.outlet, target.inlet)
+            stream.route = Route(waypoints=[(0, y), (100, y), (100, y+100), (200, y+100)])
+    return fs
+
+
+def test_default_repair_budget_handles_more_than_eight_independent_defects():
+    fs = many_independent_overlaps()
+    before = {i: stream_polyline(s) for i, s in enumerate(fs.streams)}
+    assert _overlaps(before, 14) == 600
+    repair(fs)
+    after = {i: stream_polyline(s) for i, s in enumerate(fs.streams)}
+    assert _overlaps(after, 14) == 0
+    assert not crossing_order(after, 5)[1]
+    for i, points in after.items():
+        assert points[0] == before[i][0] and points[-1] == before[i][-1]
+        assert all(a[0] == b[0] or a[1] == b[1] for a, b in zip(points, points[1:]))
+    repair(fs)
+    assert after == {i: stream_polyline(s) for i, s in enumerate(fs.streams)}
+
+
+def test_explicit_repair_budget_still_limits_work_and_leaves_residual_defects():
+    fs = many_independent_overlaps()
+    repair(fs, max_passes=8)
+    after = {i: stream_polyline(s) for i, s in enumerate(fs.streams)}
+    assert _overlaps(after, 14) == 120
