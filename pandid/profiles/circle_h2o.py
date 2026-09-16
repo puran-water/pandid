@@ -6,6 +6,7 @@ All geometry is produced by pandid's units, layout, routing and exporters.
 
 from __future__ import annotations
 
+import math
 import textwrap
 
 from pandid import Annotation, Block, Flowsheet
@@ -17,11 +18,43 @@ STREAM_INK = {
     "brine": ("#B9770E", "none"), "reject": ("#B9770E", "none"),
     "concentrate": ("#B9770E", "none"), "regeneration_waste": ("#B9770E", "none"),
 }
+_PX_PER_MM = 96.0 / 25.4
+
+
+def _paper_mm_in_nominal_units(value, print_scale, name):
+    if (isinstance(value, bool) or not isinstance(value, (int, float))
+            or not math.isfinite(value) or value <= 0):
+        raise ValueError(f'{name} must be positive and finite')
+    if (isinstance(print_scale, bool) or not isinstance(print_scale, (int, float))
+            or not math.isfinite(print_scale) or print_scale <= 0):
+        raise ValueError('print_scale must be positive and finite')
+    return value * _PX_PER_MM / print_scale
+
+
+def plan_block_diagram(blocks, streams, lanes, *, print_scale: float = 2.7,
+                       band_width: float = 2100.0,
+                       column_gap_mm: float = 12.0,
+                       row_gap_mm: float = 10.0,
+                       band_gap_mm: float = 14.0):
+    """Return the measured lane plan used by :func:`block_diagram`.
+
+    ``band_width`` and the returned extents are nominal CSS-pixel units.
+    Clearances are stated on paper and converted through ``print_scale``.
+    """
+    from pandid.layout.block_lanes import plan_details
+    return plan_details(
+        blocks, streams, lanes, band_width=band_width,
+        column_gap=_paper_mm_in_nominal_units(
+            column_gap_mm, print_scale, 'column_gap_mm'),
+        row_gap=_paper_mm_in_nominal_units(row_gap_mm, print_scale, 'row_gap_mm'),
+        band_gap=_paper_mm_in_nominal_units(band_gap_mm, print_scale, 'band_gap_mm'))
 
 
 def block_diagram(name: str, blocks: list[dict], streams: list[dict], *,
                   title_block, page_id: str, graph_attributes: dict,
                   print_scale: float = 2.7, band_width: float = 2100.0,
+                  column_gap_mm: float = 12.0, row_gap_mm: float = 10.0,
+                  band_gap_mm: float = 14.0,
                   lanes=None) -> Flowsheet:
     """Build canonical blocks, retaining numbers, names and every stream.
 
@@ -36,9 +69,12 @@ def block_diagram(name: str, blocks: list[dict], streams: list[dict], *,
     # its white plate through a process block. Use the existing clear-paper
     # fallback, with a leader and with text included in the sheet envelope.
     fs.layout_options.strict_label_clearance = True
-    fs.layout_options.column_gap = 80.0
-    fs.layout_options.row_gap = 70.0
-    fs.layout_options.band_gap = 85.0
+    fs.layout_options.column_gap = _paper_mm_in_nominal_units(
+        column_gap_mm, print_scale, 'column_gap_mm')
+    fs.layout_options.row_gap = _paper_mm_in_nominal_units(
+        row_gap_mm, print_scale, 'row_gap_mm')
+    fs.layout_options.band_gap = _paper_mm_in_nominal_units(
+        band_gap_mm, print_scale, 'band_gap_mm')
     fs.layout_options.band_width = band_width
     fs.stream_labels.enclosure = "none"
     fs.stream_labels.font_size = 14.5
@@ -54,9 +90,12 @@ def block_diagram(name: str, blocks: list[dict], streams: list[dict], *,
     units = {}
     lane_plan = None
     if lanes:
-        from pandid.layout.block_lanes import plan
-        lane_plan = plan(blocks, streams, lanes, band_width=band_width)
-        pins, fs.regions, faces, labels, width, height = lane_plan
+        lane_plan = plan_block_diagram(
+            blocks, streams, lanes, print_scale=print_scale,
+            band_width=band_width, column_gap_mm=column_gap_mm,
+            row_gap_mm=row_gap_mm, band_gap_mm=band_gap_mm)
+        pins, fs.regions, faces, labels = (lane_plan.positions, lane_plan.regions,
+                                          lane_plan.faces, lane_plan.labels)
         fs.stream_labels.font_size = 22
     bindings = {"page_id": page_id, "graph": graph_attributes, "units": {}, "streams": {},
                 "cells": {
@@ -73,7 +112,8 @@ def block_diagram(name: str, blocks: list[dict], streams: list[dict], *,
         incoming, outgoing = ends[key]["in"], ends[key]["out"]
         block = Block(key, inputs=faces[key]['in'] if lane_plan else len(incoming),
                       outputs=faces[key]['out'] if lane_plan else len(outgoing), label_pos="center",
-                      width=width if lane_plan else None, height=height if lane_plan else None,
+                      width=lane_plan.sizes[key][0] if lane_plan else None,
+                      height=lane_plan.sizes[key][1] if lane_plan else None,
                       font_size=22 if lane_plan else 12)
         lines = []
         for line in row["label"].splitlines():

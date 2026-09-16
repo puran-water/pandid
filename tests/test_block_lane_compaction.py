@@ -1,4 +1,5 @@
 """Port-driven uniform height must not waste both sheet dimensions."""
+import pytest
 from pandid.layout.block_lanes import _plan, plan
 
 
@@ -55,6 +56,40 @@ def test_profile_passes_sheet_derived_band_width_to_lane_plan():
     assert fs.layout_options.band_width == 1260
     fs.layout()
     assert len({u.frame.y for u in fs.units}) == 2
+
+
+def test_profile_converts_paper_clearances_through_print_scale():
+    from pandid.profiles.circle_h2o import block_diagram, plan_block_diagram
+
+    lanes = [{'id': 'process', 'title': 'Process'}]
+    blocks = [{'key': key, 'id': key, 'lane': 'process', 'label': key,
+               'order': order, 'attributes': {}}
+              for order, key in enumerate(('a', 'b'))]
+    streams = [{'key': 's', 'id': 's', 'source': 'a', 'target': 'b',
+                'attributes': {}}]
+    scale = 1.25
+    fs = block_diagram('Paper gaps', blocks, streams, title_block=None,
+                       page_id='page', graph_attributes={}, lanes=lanes,
+                       print_scale=scale, band_width=4000,
+                       column_gap_mm=12, row_gap_mm=10, band_gap_mm=14)
+    px_per_mm = 96 / 25.4
+    assert fs.layout_options.column_gap == pytest.approx(12 * px_per_mm / scale)
+    assert fs.layout_options.row_gap == pytest.approx(10 * px_per_mm / scale)
+    assert fs.layout_options.band_gap == pytest.approx(14 * px_per_mm / scale)
+    measured = plan_block_diagram(blocks, streams, lanes, print_scale=scale,
+                                  band_width=4000)
+    assert measured.width > 0 and measured.height > 0
+    assert measured.sizes == {'a': (280, 150), 'b': (280, 150)}
+
+
+@pytest.mark.parametrize('name,value', [
+    ('column_gap_mm', 0), ('row_gap_mm', float('nan')), ('band_gap_mm', True)])
+def test_profile_rejects_invalid_paper_clearances(name, value):
+    from pandid.profiles.circle_h2o import plan_block_diagram
+
+    kwargs = {name: value}
+    with pytest.raises(ValueError, match=name):
+        plan_block_diagram([], [], [], **kwargs)
 
 
 def test_lane_heading_leaves_a_full_north_nozzle_arrow_approach():

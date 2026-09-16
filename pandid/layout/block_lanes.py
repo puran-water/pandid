@@ -6,8 +6,38 @@ No coordinates or legacy routes are accepted from a project drawing.
 """
 import math
 from collections import defaultdict
+from dataclasses import dataclass
 from pandid.drawing_regions import Region
 from pandid.render.furniture import text_width
+
+
+@dataclass(frozen=True)
+class BlockLanePlan:
+    """A measured block-lane plan in pandid's nominal CSS-pixel units."""
+
+    positions: dict
+    regions: list
+    faces: dict
+    labels: dict
+    sizes: dict
+
+    @property
+    def width(self):
+        return (max(r.x + r.w for r in self.regions) - min(r.x for r in self.regions)
+                if self.regions else 0.0)
+
+    @property
+    def height(self):
+        return (max(r.y + r.h for r in self.regions) - min(r.y for r in self.regions)
+                if self.regions else 0.0)
+
+    def legacy_tuple(self):
+        widths = {size[0] for size in self.sizes.values()}
+        heights = {size[1] for size in self.sizes.values()}
+        if len(widths) > 1 or len(heights) > 1:
+            raise ValueError('A per-lane block plan has no uniform legacy block size')
+        return (self.positions, self.regions, self.faces, self.labels,
+                next(iter(widths), 0.0), next(iter(heights), 0.0))
 
 
 def wrap_label(text, width=252, font_size=22):
@@ -25,7 +55,8 @@ def wrap_label(text, width=252, font_size=22):
     return "\n".join(lines)
 
 
-def plan(blocks, streams, lanes, *, band_width=2100.0):
+def plan_details(blocks, streams, lanes, *, band_width=2100.0,
+                 column_gap=130.0, row_gap=110.0, band_gap=10.0):
     """Prefer a smaller envelope when fewer columns also reduce its height.
 
     Nozzle counts can enlarge every uniform block. Filling all eight columns
@@ -44,13 +75,16 @@ def plan(blocks, streams, lanes, *, band_width=2100.0):
     # Establish the port-driven uniform block width before deciding how many
     # of those blocks fit on the paper.  The visible band has a 30-unit inset
     # on each side; 130 is the existing column pitch clearance.
-    provisional = _plan(blocks, streams, lanes, maximum)
+    provisional = _plan(blocks, streams, lanes, maximum,
+                        column_gap=column_gap, row_gap=row_gap, band_gap=band_gap)
     block_width = provisional[4]
-    fitting_columns = max(1, int((band_width - 60 + 130) // (block_width + 130)))
+    fitting_columns = max(
+        1, int((band_width - 60 + column_gap) // (block_width + column_gap)))
     maximum = min(maximum, fitting_columns)
     minimum = min(minimum, maximum)
     reserved = max((int(r.get('column') or 0) + 1 for r in blocks), default=1)
-    baseline = _plan(blocks, streams, lanes, max(maximum, reserved))
+    baseline = _plan(blocks, streams, lanes, max(maximum, reserved),
+                     column_gap=column_gap, row_gap=row_gap, band_gap=band_gap)
 
     def extent(result):
         regions = result[1]
@@ -60,15 +94,27 @@ def plan(blocks, streams, lanes, *, band_width=2100.0):
     width, height = extent(baseline)
     best, score = baseline, (width * height, height, width)
     for columns in range(minimum, maximum + 1):
-        candidate = _plan(blocks, streams, lanes, columns)
+        candidate = _plan(blocks, streams, lanes, columns,
+                          column_gap=column_gap, row_gap=row_gap, band_gap=band_gap)
         w, h = extent(candidate)
         rank = (w * h, h, w)
         if w <= width and h <= height and rank < score:
             best, score = candidate, rank
-    return best
+    positions, regions, faces, labels, width, height = best
+    return BlockLanePlan(positions, regions, faces, labels,
+                         {row['key']: (width, height) for row in blocks})
 
 
-def _plan(blocks, streams, lanes, columns):
+def plan(blocks, streams, lanes, *, band_width=2100.0,
+         column_gap=130.0, row_gap=110.0, band_gap=10.0):
+    """Compatibility tuple for callers that require one uniform block size."""
+    return plan_details(blocks, streams, lanes, band_width=band_width,
+                        column_gap=column_gap, row_gap=row_gap,
+                        band_gap=band_gap).legacy_tuple()
+
+
+def _plan(blocks, streams, lanes, columns, *, column_gap=130.0,
+          row_gap=110.0, band_gap=10.0):
     by_lane = defaultdict(list)
     for row in blocks:
         by_lane[row['lane']].append(row)
@@ -118,16 +164,18 @@ def _plan(blocks, streams, lanes, columns):
         count = lane_rows.get(lane['id'])
         if not count:
             continue
-        band_height = count * (height + 110) - 110 + 65
+        band_height = count * (height + row_gap) - row_gap + 65
         # A 22-unit heading occupies 33 units below its four-unit inset.
         # Reserve a full 24-unit north-nozzle arrow lead and four-unit gap
         # below it. Extend the band into its existing inter-lane whitespace;
         # block positions and lane pitch stay fixed, with ten units between
         # adjacent bands. The former 45-unit header left only eight units.
-        regions.append(Region('lane-' + lane['id'], -30, y - 65, extent_columns * (width + 130) - 130 + 60,
+        regions.append(Region('lane-' + lane['id'], -30, y - 65,
+                              extent_columns * (width + column_gap) - column_gap + 60,
                               band_height + 20, lane['title'], 22))
         for key, (lane_id, row, col) in logical.items():
             if lane_id == lane['id']:
-                positions[key] = {'x': col * (width + 130), 'y': y + row * (height + 110)}
-        y += band_height + 30
+                positions[key] = {'x': col * (width + column_gap),
+                                  'y': y + row * (height + row_gap)}
+        y += band_height + 20 + band_gap
     return positions, regions, faces, labels, width, height
