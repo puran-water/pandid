@@ -26,14 +26,49 @@ def wrap_label(text, width=252, font_size=22):
 
 
 def plan(blocks, streams, lanes):
+    """Prefer a smaller envelope when fewer columns also reduce its height.
+
+    Nozzle counts can enlarge every uniform block. Filling all eight columns
+    may therefore cost more width AND height than an arrangement with fewer
+    columns and the same row count. Retain the existing plan unless an
+    alternative improves its area without increasing either extent. Explicit
+    column/row reservations and logical order still go through the same planner.
+    """
+    counts = defaultdict(int)
+    for row in blocks:
+        counts[row['lane']] += 1
+    minimum = 4
+    maximum = max(minimum, min(8, max(counts.values())))
+    reserved = max((int(r.get('column') or 0) + 1 for r in blocks), default=1)
+    baseline = _plan(blocks, streams, lanes, max(maximum, reserved))
+
+    def extent(result):
+        regions = result[1]
+        return (max(r.x + r.w for r in regions) - min(r.x for r in regions),
+                max(r.y + r.h for r in regions) - min(r.y for r in regions))
+
+    width, height = extent(baseline)
+    best, score = baseline, (width * height, height, width)
+    for columns in range(minimum, maximum + 1):
+        candidate = _plan(blocks, streams, lanes, columns)
+        w, h = extent(candidate)
+        rank = (w * h, h, w)
+        if w <= width and h <= height and rank < score:
+            best, score = candidate, rank
+    return best
+
+
+def _plan(blocks, streams, lanes, columns):
     by_lane = defaultdict(list)
     for row in blocks:
         by_lane[row['lane']].append(row)
     definitions = {r['id']: r for r in lanes}
     if set(by_lane) - set(definitions):
         raise ValueError('BFD lane is absent from the ordered lane vocabulary')
-    columns = max(4, min(8, max(len(v) for v in by_lane.values())))
-    columns = max(columns, max((int(r.get('column') or 0) + 1 for r in blocks), default=1))
+    # An outlying reserved slot widens the visible bands, but need not force
+    # every other lane's automatic blocks to fill that many columns. Keep the
+    # pin and the band around it while evaluating a more compact auto grid.
+    extent_columns = max(columns, max((int(r.get('column') or 0) + 1 for r in blocks), default=1))
     positions, regions, y = {}, [], 0
     labels = {r['key']: wrap_label(r['label']) for r in blocks}
     width, height = 280, max(150, max(len(s.splitlines()) for s in labels.values()) * 26.4 + 18)
@@ -74,8 +109,13 @@ def plan(blocks, streams, lanes):
         if not count:
             continue
         band_height = count * (height + 110) - 110 + 65
-        regions.append(Region('lane-' + lane['id'], -30, y - 45, columns * (width + 130) - 130 + 60,
-                              band_height, lane['title'], 22))
+        # A 22-unit heading occupies 33 units below its four-unit inset.
+        # Reserve a full 24-unit north-nozzle arrow lead and four-unit gap
+        # below it. Extend the band into its existing inter-lane whitespace;
+        # block positions and lane pitch stay fixed, with ten units between
+        # adjacent bands. The former 45-unit header left only eight units.
+        regions.append(Region('lane-' + lane['id'], -30, y - 65, extent_columns * (width + 130) - 130 + 60,
+                              band_height + 20, lane['title'], 22))
         for key, (lane_id, row, col) in logical.items():
             if lane_id == lane['id']:
                 positions[key] = {'x': col * (width + 130), 'y': y + row * (height + 110)}
