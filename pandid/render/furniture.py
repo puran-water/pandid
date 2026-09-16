@@ -1603,14 +1603,38 @@ def undrawn_signatories(tb) -> "list[tuple[str, str, str]]":
     return out
 
 
-def _header_lines(tb) -> list[tuple[str, str]]:
+def _header_fields(tb) -> list[tuple[str, str]]:
     return [(label, value) for label, value
             in (("CLIENT", _stated(tb, "client")),
                 ("PROJECT", _stated(tb, "project")),
                 *getattr(tb, "extra_fields", {}).items()) if value]
 
 
-def _strip_widths(tb):
+def _header_lines(tb, max_width=None) -> list[tuple[str, str]]:
+    fields = _header_fields(tb)
+    if not getattr(tb, "fit_fields", False):
+        return fields
+    # Controlled prose needs more rows, not a title strip wider than the
+    # paper. Break only between words and retain the normal reading size.
+    # The unmodified TitleBlock still carries the exact supplied values.
+    info = _strip_widths(tb, max_width)[1]
+    result = []
+    for label, value in fields:
+        room = info - _header_value_x(tb, label) - 5
+        lines, line = [], ""
+        for word in value.split():
+            trial = (line + " " + word).strip()
+            if line and text_width(trial, _HDR_TYPE) > room:
+                lines.append(line)
+                line = word
+            else:
+                line = trial
+        lines.append(line)
+        result.extend((label if i == 0 else "", line) for i, line in enumerate(lines))
+    return result
+
+
+def _strip_widths(tb, max_width=None):
     """Keep the native ruling, widening fields when explicitly requested.
 
     This is useful for database document numbers and full signatory names:
@@ -1630,8 +1654,13 @@ def _strip_widths(tb):
                text_width(_stated(tb, "title"), _TITLE_TYPE, True) + 10 + _SHEET_W,
                text_width(_stated(tb, "subtitle"), _SUBTITLE_TYPE) + 12,
                text_width(_stated(tb, "status"), _VALUE_TYPE, True) + 12,
-               *(text_width(value, _HDR_TYPE) + _header_value_x(tb) + 5
-                 for _, value in _header_lines(tb)))
+               *(text_width(word, _HDR_TYPE) + _header_value_x(tb, label) + 6
+                 for label, value in _header_fields(tb) for word in value.split()))
+    if max_width is not None:
+        natural = max([info, *(text_width(value, _HDR_TYPE) + _header_value_x(tb, label) + 6
+                              for label, value in _header_fields(tb))])
+        room = max_width - sum(width for _, width, _ in columns) - _COMPANY_W
+        info = max(info, min(natural, room))
     return tuple(columns), info
 
 
@@ -1649,17 +1678,37 @@ def _information_minima(tb):
                  for i, (share, value) in enumerate(zip((.38, .21, .29, .12), values)))
 
 
-def _header_value_x(tb):
+def _header_value_x(tb, label=None):
+    # Fitted prose fields are independently ruled rows. A long caption such
+    # as CONTRACTOR must not take horizontal room from a short HOLD caption.
+    if label is not None and getattr(tb, "fit_fields", False):
+        return max(_HDR_VALUE_X, text_width(label, _CAPTION) + 12)
     return max([_HDR_VALUE_X, *(text_width(label, _CAPTION) + 12
-                               for label, _value in _header_lines(tb))])
+                               for label, _value in _header_fields(tb))])
 
 
-def measure_title_strip(tb) -> tuple[float, float]:
+def measure_title_strip(tb, *, max_width=None) -> tuple[float, float]:
     tb.validate_branding()
     n = len(tb.revisions)
-    h = max((n + 1) * _REV_ROW, _BODY_H) + _HDR_ROW * len(_header_lines(tb))
-    columns, info = _strip_widths(tb)
+    h = max((n + 1) * _REV_ROW, _BODY_H) + _HDR_ROW * len(_header_lines(tb, max_width))
+    columns, info = _strip_widths(tb, max_width)
     return sum(width for _, width, _ in columns) + _COMPANY_W + info, h
+
+
+def fit_title_strip_to_sheet(items, title, tb, sheet):
+    """Use free bottom-band width before spending drawing height on prose.
+
+    Keep the legend/table column and the dock's separation. Mandatory cells
+    and unbreakable words can still exceed this room; the dock then refuses.
+    Both native backends re-use the resulting width when drawing the strip.
+    """
+    if sheet is None or not getattr(tb, "fit_fields", False):
+        return items
+    left = max((w for obj, align, w, _ in items if align == "bottom-left"
+                and getattr(obj, "position", None) is None), default=0)
+    room = sheet.width - 2 * (OUTER_MARGIN + ZONE_BAND) - (left + SEP if left else 0) - 1
+    return [(obj, align, *measure_title_strip(tb, max_width=room)) if obj is title
+            else (obj, align, w, h) for obj, align, w, h in items]
 
 
 class RevGrid(NamedTuple):
@@ -1713,6 +1762,7 @@ class Strip(NamedTuple):
 
 def title_strip_layout(tb, name: str, date: str, right: float, bottom: float,
                        fit_scale: str = "", *,
+                       max_width=None,
                        report: "Reporter | None" = None) -> Strip:
     """Where every part of the title strip goes, its bottom-right corner
     at (``right``, ``bottom``).
@@ -1752,10 +1802,10 @@ def title_strip_layout(tb, name: str, date: str, right: float, bottom: float,
     # already thrown away, and a whitespace date with today's.
     name, date = str(name or "").strip(), str(date or "").strip()
     date = _stated(tb, "date") or date
-    columns, info_w = _strip_widths(tb)
+    columns, info_w = _strip_widths(tb, max_width)
     rev_w = sum(width for _, width, _ in columns)
     title_w = info_w - 10 - _SHEET_W
-    w, h = measure_title_strip(tb)
+    w, h = measure_title_strip(tb, max_width=max_width)
     x, y = right - w, bottom - h
     rx = x + rev_w
     cx2 = rx + _COMPANY_W
@@ -1829,7 +1879,7 @@ def title_strip_layout(tb, name: str, date: str, right: float, bottom: float,
 
     # --- Info block (right): client/project, title, status, dwg/rev
     ix = cx2
-    header = _header_lines(tb)
+    header = _header_lines(tb, max_width)
     header_value_x = _header_value_x(tb)
     top = y + _HDR_ROW * len(header)     # top of the title band
     body = h - _HDR_ROW * len(header)
@@ -1837,10 +1887,13 @@ def title_strip_layout(tb, name: str, date: str, right: float, bottom: float,
     band3 = band2 + body * _STATUS_BAND
     hy = y
     for i, (label, value) in enumerate(header):
-        if i:
+        if label:
+            header_value_x = _header_value_x(tb, label)
+        if i and label:
             parts.append(("rule", ix, hy, x + w, hy, _STRIP_HAIRLINE))
-        parts.append(("text", ix + 6, hy + _HDR_ROW - 4, label, _CAPTION,
-                      "start", False, CAPTION_INK))
+        if label:
+            parts.append(("text", ix + 6, hy + _HDR_ROW - 4, label, _CAPTION,
+                          "start", False, CAPTION_INK))
         parts.append(("text", ix + header_value_x, hy + _HDR_ROW - 4,
                       clip(value, info_w - header_value_x - 5, _HDR_TYPE,
                            field=label.lower(), report=report),
@@ -2047,6 +2100,7 @@ def _strip_part(part) -> str:
 
 def draw_title_strip(tb, name: str, date: str, right: float, bottom: float,
                      fit_scale: str = "", *,
+                     max_width=None,
                      report: "Reporter | None" = None) -> list[str]:
     """Draw the strip so its bottom-right corner sits at (right,
     bottom).
@@ -2055,7 +2109,7 @@ def draw_title_strip(tb, name: str, date: str, right: float, bottom: float,
     exactly as :func:`zone_frame` strokes :func:`zone_layout`.
     """
     strip = title_strip_layout(tb, name, date, right, bottom, fit_scale,
-                               report=report)
+                               max_width=max_width, report=report)
     x, y, w, h = strip.box
     L = [f'<rect x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{h:.1f}" '
          f'fill="white" stroke="black" stroke-width="{_STRIP_RULE:g}"/>']

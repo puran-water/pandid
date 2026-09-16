@@ -4084,6 +4084,7 @@ def table_sheet_plan(fs, sheet: "_Sheet | None") -> TableSheetPlan:
     block = table_sheet_block(fs.title_block, F._options(fs))
     ts_w, ts_h = F.measure_title_strip(block)
     items = [(TITLE, "bottom-right", ts_w, ts_h)]
+    items = F.fit_title_strip_to_sheet(items, TITLE, block, sheet)
     inner = (0.0, 0.0, table.w, table.h)
     if sheet is None:
         placed, frame, free = F.dock(items, inner)
@@ -4591,6 +4592,8 @@ class SvgRenderer:
         if st_layout:
             items.append((st_layout, "bottom-left", st_layout.w, st_layout.h))
 
+        items = F.fit_title_strip_to_sheet(items, TITLE, tb, sheet)
+
         placed, (ix, iy, iw, ih), free = F.dock(
             items, (dx0, dy0, dx1, dy1), sheet=sheet,
             too_small=lambda need_w, need_h, culprit: _too_small(
@@ -4605,7 +4608,7 @@ class SvgRenderer:
             if obj is TITLE:
                 furniture.extend(
                     F.draw_title_strip(tb, name, date, x + w, y + h, fit_scale=fit,
-                                       report=report))
+                                       max_width=w, report=report))
             elif isinstance(obj, F.StreamTable):
                 furniture.extend(F.draw_stream_table(obj, x, y))
             else:
@@ -4650,7 +4653,7 @@ class SvgRenderer:
                 part, bx, by, group=f"stream_table_{i + 1}"))
         sx, sy, sw, sh = plan.strip
         furniture.extend(F.draw_title_strip(plan.block, plan.name, plan.date,
-                                            sx + sw, sy + sh, report=report))
+                                            sx + sw, sy + sh, max_width=sw, report=report))
         if border == "zone":
             frame_lines, outer = F.zone_frame(*plan.frame)
             furniture[:0] = frame_lines  # the border sits behind the rest

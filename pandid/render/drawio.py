@@ -3138,6 +3138,8 @@ class DrawioRenderer:
         """
         items = dock_items(fs, show_stream_table)
 
+        items = F.fit_title_strip_to_sheet(items, fs.title_block, fs.title_block, sheet)
+
         inner = self._drawing_box(fs,text_boxes=text_boxes)
         if sheet is None:
             placed, frame, free = F.dock(items, inner)
@@ -3357,7 +3359,7 @@ class DrawioRenderer:
         since the cells were ruled; this says it too, in the same words.
         """
         strip = F.title_strip_layout(block, name, date, x + w, y + h, scale,
-                                     report=self._report)
+                                     max_width=w, report=self._report)
         bx, by, bw, bh = strip.box
         # Flush to the frame, exactly as the sheet's own strip is:
         # `_strip_size` reports the sheet's rectangle and `dock` puts
