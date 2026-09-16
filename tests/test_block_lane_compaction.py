@@ -147,6 +147,41 @@ def test_lane_vocabulary_can_compact_dosing_blocks_into_one_bottom_strip():
                for pin in utility_positions) <= utilities.x + utilities.w
 
 
+def test_compact_fanout_faces_keep_supply_and_eleven_doses_shallow():
+    lanes = [{
+        'id': 'utilities', 'title': 'Dosing Utilities',
+        'block_width_scale': .75, 'block_height_scale': .7,
+        'compact_fanout_faces': True,
+    }]
+    blocks = [
+        {'key': 'chem-bl', 'lane': 'utilities',
+         'label': '000\nChemical Supply', 'order': 0},
+        *[{'key': f'dose-{i}', 'lane': 'utilities',
+           'label': f'8{i:02}\nChemical Dosing\nReagent {i}', 'order': i + 1}
+          for i in range(11)],
+    ]
+    streams = [{'source': 'chem-bl', 'target': f'dose-{i}'} for i in range(11)]
+    gaps = dict(column_gap=12 * 96 / 25.4,
+                row_gap=10 * 96 / 25.4,
+                band_gap=14 * 96 / 25.4)
+    ordinary = plan_details(
+        blocks, streams,
+        [{key: value for key, value in lanes[0].items()
+          if key != 'compact_fanout_faces'}],
+        band_width=3300, **gaps)
+    compact = plan_details(blocks, streams, lanes, band_width=3300, **gaps)
+
+    assert len({pin['y'] for pin in compact.positions.values()}) == 1
+    assert compact.sizes['chem-bl'] == pytest.approx((210, 105))
+    assert ordinary.sizes['chem-bl'][1] == 330
+    assert compact.sizes['chem-bl'][1] < ordinary.sizes['chem-bl'][1]
+    supply_faces = compact.faces['chem-bl']['out']
+    assert set(supply_faces) == {'N', 'S'}
+    assert max(supply_faces.count('N'), supply_faces.count('S')) == 6
+    for row in blocks:
+        assert compact.labels[row['key']].replace('\n', ' ') == row['label'].replace('\n', ' ')
+
+
 def test_profile_builds_each_lane_at_its_planned_size():
     from pandid.profiles.circle_h2o import block_diagram
 
@@ -178,6 +213,15 @@ def test_lane_block_scales_are_bounded_finite_options(field, value):
     lanes = [{'id': 'utilities', 'title': 'Utilities', field: value}]
     blocks = [{'key': 'dose', 'lane': 'utilities', 'label': '810\nAcid'}]
     with pytest.raises(ValueError, match=field):
+        plan_details(blocks, [], lanes)
+
+
+@pytest.mark.parametrize('value', [0, 1, None, 'yes'])
+def test_compact_fanout_faces_is_a_boolean_lane_option(value):
+    lanes = [{'id': 'utilities', 'title': 'Utilities',
+              'compact_fanout_faces': value}]
+    blocks = [{'key': 'dose', 'lane': 'utilities', 'label': '810\nAcid'}]
+    with pytest.raises(ValueError, match='compact_fanout_faces'):
         plan_details(blocks, [], lanes)
 
 

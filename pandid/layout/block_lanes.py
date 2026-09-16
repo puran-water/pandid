@@ -12,6 +12,9 @@ from pandid.drawing_regions import Region
 from pandid.render.furniture import text_width
 
 
+_COMPACT_FANOUT_MIN_CONNECTIONS = 6
+
+
 @dataclass(frozen=True)
 class BlockLanePlan:
     """A measured block-lane plan in pandid's nominal CSS-pixel units."""
@@ -115,6 +118,13 @@ def _lane_scale(definition, name):
     return float(value)
 
 
+def _lane_boolean(definition, name):
+    value = definition.get(name, False)
+    if type(value) is not bool:
+        raise ValueError(f'BFD lane {name} must be boolean')
+    return value
+
+
 def _plan_details(blocks, streams, lanes, columns, *, column_gap=130.0,
                   row_gap=110.0, band_gap=10.0):
     by_lane = defaultdict(list)
@@ -123,6 +133,10 @@ def _plan_details(blocks, streams, lanes, columns, *, column_gap=130.0,
     definitions = {r['id']: r for r in lanes}
     if set(by_lane) - set(definitions):
         raise ValueError('BFD lane is absent from the ordered lane vocabulary')
+    compact_fanout_lanes = {
+        lane['id'] for lane in lanes
+        if _lane_boolean(lane, 'compact_fanout_faces')
+    }
     positions, regions, y = {}, [], 0
     logical = {}
     lane_rows = {}
@@ -146,11 +160,30 @@ def _plan_details(blocks, streams, lanes, columns, *, column_gap=130.0,
     # nozzles instead of crowding every stream onto one vertical face.
     faces = {r['key']: {'in': [], 'out': []} for r in blocks}
     rank = {r['id']: n for n, r in enumerate(lanes)}
-    for stream in streams:
+    fanout_incidents = defaultdict(list)
+    for index, stream in enumerate(streams):
+        a, b = logical[stream['source']], logical[stream['target']]
+        if a[0] == b[0] and a[0] in compact_fanout_lanes:
+            fanout_incidents[stream['source']].append(index)
+            fanout_incidents[stream['target']].append(index)
+    fanout_faces = {
+        (key, stream_index): ('S' if order % 2 == 0 else 'N')
+        for key, incidents in fanout_incidents.items()
+        if len(incidents) >= _COMPACT_FANOUT_MIN_CONNECTIONS
+        for order, stream_index in enumerate(incidents)
+    }
+    opposite = {'N': 'S', 'S': 'N'}
+    for index, stream in enumerate(streams):
         a, b = logical[stream['source']], logical[stream['target']]
         ya, yb = (rank[a[0]], a[1]), (rank[b[0]], b[1])
         if ya != yb:
             af, bf = ('S', 'N') if ya < yb else ('N', 'S')
+        elif (stream['source'], index) in fanout_faces:
+            af = fanout_faces[stream['source'], index]
+            bf = opposite[af]
+        elif (stream['target'], index) in fanout_faces:
+            bf = fanout_faces[stream['target'], index]
+            af = opposite[bf]
         else:
             af, bf = ('E', 'W') if a[2] <= b[2] else ('W', 'E')
         faces[stream['source']]['out'].append(af)
