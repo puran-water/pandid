@@ -5,7 +5,7 @@ import pytest
 from pandid.layout.block_lanes import _plan, plan, plan_details
 
 
-def test_fewer_columns_reduce_port_driven_height_without_moving_explicit_slots():
+def test_a_lane_uses_every_column_that_fits_despite_port_driven_height():
     lanes = [{'id': 'process', 'title': 'Process'}, {'id': 'utilities', 'title': 'Utilities'}]
     blocks = [{'key': 'process', 'lane': 'process', 'label': 'Process',
                'order': 0, 'column': 7, 'row': 0}]
@@ -14,9 +14,9 @@ def test_fewer_columns_reduce_port_driven_height_without_moving_explicit_slots()
     streams = [{'source': 'utility-0', 'target': f'utility-{i}'} for i in range(1, 14)]
     baseline = _plan(blocks, streams, lanes, 8)
     result = plan(blocks, streams, lanes, band_width=9999)
-    assert result[5] == 180 < baseline[5]
-    assert max(r.w for r in result[1]) <= max(r.w for r in baseline[1])
-    assert max(r.y + r.h for r in result[1]) < max(r.y + r.h for r in baseline[1])
+    assert {result[0][f'utility-{i}']['y'] for i in range(14)} == {
+        result[0]['utility-0']['y']}
+    assert result[5] > baseline[5]
     assert result[0]['process']['x'] == 7 * (result[4] + 130)
     assert result[0]['process']['y'] == 0
     assert set(result[0]) == {b['key'] for b in blocks}
@@ -25,7 +25,7 @@ def test_fewer_columns_reduce_port_driven_height_without_moving_explicit_slots()
     assert result[0]['process']['x'] + result[4] <= process_band.x + process_band.w
 
 
-def test_compaction_never_adds_height_to_save_width():
+def test_a_lane_that_fits_stays_on_one_row():
     lanes = [{'id': 'process', 'title': 'Process'}]
     blocks = [{'key': str(i), 'lane': 'process', 'label': str(i), 'order': i} for i in range(8)]
     baseline = _plan(blocks, [], lanes, 8)

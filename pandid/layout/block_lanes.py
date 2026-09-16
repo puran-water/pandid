@@ -58,13 +58,12 @@ def wrap_label(text, width=252, font_size=22):
 
 def plan_details(blocks, streams, lanes, *, band_width=2100.0,
                  column_gap=130.0, row_gap=110.0, band_gap=10.0):
-    """Prefer a smaller envelope when fewer columns also reduce its height.
+    """Use every column that fits the supplied paper-width band.
 
-    Nozzle counts can enlarge the full-size block. Filling every available column
-    may therefore cost more width AND height than an arrangement with fewer
-    columns and the same row count. Retain the existing plan unless an
-    alternative improves its area without increasing either extent. Explicit
-    column/row reservations and logical order still go through the same planner.
+    A lane folds only when its next block would exceed ``band_width``.
+    Explicit column/row reservations and logical order still go through the
+    same planner; an outlying reservation may therefore expose an overfull
+    plan for the caller's sheet-capacity gate rather than silently reflowing it.
     """
     counts = defaultdict(int)
     for row in blocks:
@@ -86,28 +85,9 @@ def plan_details(blocks, streams, lanes, *, band_width=2100.0,
         fitting = max(
             1, int((band_width - 60 + column_gap) // (block_width + column_gap)))
         maximum[lane_id] = min(count, fitting)
-    baseline = _plan_details(
+    return _plan_details(
         blocks, streams, lanes, maximum, column_gap=column_gap,
         row_gap=row_gap, band_gap=band_gap)
-
-    width, height = baseline.width, baseline.height
-    best, score = baseline, (width * height, height, width)
-    # A lower column count is considered lane by lane. It is accepted only
-    # when the whole drawing improves without consuming more of either sheet
-    # axis, preserving the dominated-arrangement rule.
-    for lane_id, lane_maximum in maximum.items():
-        minimum = min(4, lane_maximum)
-        for columns in range(minimum, lane_maximum + 1):
-            candidate_columns = dict(maximum)
-            candidate_columns[lane_id] = columns
-            candidate = _plan_details(
-                blocks, streams, lanes, candidate_columns,
-                column_gap=column_gap, row_gap=row_gap, band_gap=band_gap)
-            w, h = candidate.width, candidate.height
-            rank = (w * h, h, w)
-            if w <= width and h <= height and rank < score:
-                best, score = candidate, rank
-    return best
 
 
 def plan(blocks, streams, lanes, *, band_width=2100.0,
