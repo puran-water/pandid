@@ -25,7 +25,7 @@ def wrap_label(text, width=252, font_size=22):
     return "\n".join(lines)
 
 
-def plan(blocks, streams, lanes):
+def plan(blocks, streams, lanes, *, band_width=2100.0):
     """Prefer a smaller envelope when fewer columns also reduce its height.
 
     Nozzle counts can enlarge every uniform block. Filling all eight columns
@@ -38,7 +38,17 @@ def plan(blocks, streams, lanes):
     for row in blocks:
         counts[row['lane']] += 1
     minimum = 4
-    maximum = max(minimum, min(8, max(counts.values())))
+    if not isinstance(band_width, (int, float)) or not math.isfinite(band_width) or band_width <= 0:
+        raise ValueError('BFD lane band_width must be positive and finite')
+    maximum = max(1, max(counts.values()))
+    # Establish the port-driven uniform block width before deciding how many
+    # of those blocks fit on the paper.  The visible band has a 30-unit inset
+    # on each side; 130 is the existing column pitch clearance.
+    provisional = _plan(blocks, streams, lanes, maximum)
+    block_width = provisional[4]
+    fitting_columns = max(1, int((band_width - 60 + 130) // (block_width + 130)))
+    maximum = min(maximum, fitting_columns)
+    minimum = min(minimum, maximum)
     reserved = max((int(r.get('column') or 0) + 1 for r in blocks), default=1)
     baseline = _plan(blocks, streams, lanes, max(maximum, reserved))
 

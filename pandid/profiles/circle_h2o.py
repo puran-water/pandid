@@ -21,7 +21,8 @@ STREAM_INK = {
 
 def block_diagram(name: str, blocks: list[dict], streams: list[dict], *,
                   title_block, page_id: str, graph_attributes: dict,
-                  print_scale: float = 2.7, lanes=None) -> Flowsheet:
+                  print_scale: float = 2.7, band_width: float = 2100.0,
+                  lanes=None) -> Flowsheet:
     """Build canonical blocks, retaining numbers, names and every stream.
 
     Ordered lane membership is semantic input. Uniform block sizing, grid
@@ -38,7 +39,7 @@ def block_diagram(name: str, blocks: list[dict], streams: list[dict], *,
     fs.layout_options.column_gap = 80.0
     fs.layout_options.row_gap = 70.0
     fs.layout_options.band_gap = 85.0
-    fs.layout_options.band_width = 2100.0
+    fs.layout_options.band_width = band_width
     fs.stream_labels.enclosure = "none"
     fs.stream_labels.font_size = 14.5
     records = {row["key"]: row for row in blocks}
@@ -54,7 +55,7 @@ def block_diagram(name: str, blocks: list[dict], streams: list[dict], *,
     lane_plan = None
     if lanes:
         from pandid.layout.block_lanes import plan
-        lane_plan = plan(blocks, streams, lanes)
+        lane_plan = plan(blocks, streams, lanes, band_width=band_width)
         pins, fs.regions, faces, labels, width, height = lane_plan
         fs.stream_labels.font_size = 22
     bindings = {"page_id": page_id, "graph": graph_attributes, "units": {}, "streams": {},
