@@ -1,6 +1,6 @@
 """Port-driven uniform height must not waste both sheet dimensions."""
 import pytest
-from pandid.layout.block_lanes import _plan, plan
+from pandid.layout.block_lanes import _plan, plan, plan_details
 
 
 def test_fewer_columns_reduce_port_driven_height_without_moving_explicit_slots():
@@ -90,6 +90,67 @@ def test_profile_rejects_invalid_paper_clearances(name, value):
     kwargs = {name: value}
     with pytest.raises(ValueError, match=name):
         plan_block_diagram([], [], [], **kwargs)
+
+
+def test_lane_vocabulary_can_compact_dosing_blocks_into_one_bottom_strip():
+    lanes = [
+        {'id': 'process', 'title': 'Process'},
+        {'id': 'utilities', 'title': 'Dosing Utilities',
+         'block_width_scale': .7, 'block_height_scale': .7},
+    ]
+    blocks = [
+        {'key': 'process', 'lane': 'process', 'label': '200\nMain Process', 'order': 0},
+        *[{'key': f'dose-{i}', 'lane': 'utilities',
+           'label': f'8{i:02}\nReagent {i}', 'order': i} for i in range(11)],
+    ]
+    streams = [{'source': f'dose-{i}', 'target': 'process'} for i in range(11)]
+    result = plan_details(blocks, streams, lanes, band_width=3300,
+                          column_gap=12 * 96 / 25.4,
+                          row_gap=10 * 96 / 25.4,
+                          band_gap=14 * 96 / 25.4)
+    utility_positions = [result.positions[f'dose-{i}'] for i in range(11)]
+    assert len({pin['y'] for pin in utility_positions}) == 1
+    assert result.sizes['process'] == (330, 150)
+    assert result.sizes['dose-0'][0] < result.sizes['process'][0]
+    assert result.sizes['dose-0'][1] == pytest.approx(105)
+    utilities = next(region for region in result.regions
+                     if region.key == 'lane-utilities')
+    assert max(pin['x'] + result.sizes['dose-0'][0]
+               for pin in utility_positions) <= utilities.x + utilities.w
+
+
+def test_profile_builds_each_lane_at_its_planned_size():
+    from pandid.profiles.circle_h2o import block_diagram
+
+    lanes = [
+        {'id': 'process', 'title': 'Process'},
+        {'id': 'utilities', 'title': 'Utilities',
+         'block_width_scale': .7, 'block_height_scale': .7},
+    ]
+    blocks = [
+        {'key': 'process', 'id': 'process', 'lane': 'process',
+         'label': '200\nProcess', 'attributes': {}},
+        {'key': 'dose', 'id': 'dose', 'lane': 'utilities',
+         'label': '810\nAcid', 'attributes': {}},
+    ]
+    streams = [{'key': 'dose-process', 'id': 'dose-process',
+                'source': 'dose', 'target': 'process', 'attributes': {}}]
+    fs = block_diagram('Lane sizes', blocks, streams, title_block=None,
+                       page_id='page', graph_attributes={}, lanes=lanes,
+                       print_scale=1, band_width=3300)
+    by_name = {unit.name: unit for unit in fs.units}
+    assert by_name['dose'].width < by_name['process'].width
+    assert by_name['dose'].height == pytest.approx(.7 * by_name['process'].height)
+
+
+@pytest.mark.parametrize('field,value', [
+    ('block_width_scale', 0), ('block_height_scale', 1.01),
+    ('block_width_scale', float('nan')), ('block_height_scale', True)])
+def test_lane_block_scales_are_bounded_finite_options(field, value):
+    lanes = [{'id': 'utilities', 'title': 'Utilities', field: value}]
+    blocks = [{'key': 'dose', 'lane': 'utilities', 'label': '810\nAcid'}]
+    with pytest.raises(ValueError, match=field):
+        plan_details(blocks, [], lanes)
 
 
 def test_lane_heading_leaves_a_full_north_nozzle_arrow_approach():

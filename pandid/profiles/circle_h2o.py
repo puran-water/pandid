@@ -58,8 +58,9 @@ def block_diagram(name: str, blocks: list[dict], streams: list[dict], *,
                   lanes=None) -> Flowsheet:
     """Build canonical blocks, retaining numbers, names and every stream.
 
-    Ordered lane membership is semantic input. Uniform block sizing, grid
-    placement, nozzle faces and the visible lane bands are engine decisions.
+    Ordered lane membership and optional per-lane size scales are semantic
+    input. Grid placement, nozzle faces and visible lane bands are engine
+    decisions.
     """
     fs = Flowsheet(name)
     fs.title_block = title_block
