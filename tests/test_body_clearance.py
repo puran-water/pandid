@@ -90,3 +90,28 @@ def test_repair_can_correct_a_separated_track_that_overshot_its_destination():
     stream.route.waypoints = [(0, 0), (129, 0), (129, 100), (120, 100)]
     repair(fs)
     assert stream.route.waypoints == [(0, 0), (109, 0), (109, 100), (120, 100)]
+
+
+def test_inverted_departure_and_independent_body_collision_can_both_be_repaired():
+    from pandid.routing.visibility import Rect
+    fs, stream = fixture()
+    stream.route.waypoints = [(0, 0), (-8, 0), (-8, -40),
+                              (100, -40), (100, 100), (200, 100)]
+    endpoints = stream.route.waypoints[0], stream.route.waypoints[-1]
+    repair(fs)
+    points = stream.route.waypoints
+    assert (points[0], points[-1]) == endpoints
+    assert points[1][0] > points[0][0]
+    assert points[-2][0] < points[-1][0]
+    for box in (Rect(-50, 0, -10, 10), Rect(95, 115, 40, 60)):
+        assert not any(box.intersects_segment(*a, *b) for a, b in zip(points, points[1:]))
+    repair(fs)
+    assert stream.route.waypoints == points
+
+
+def test_authored_inverted_departure_remains_an_author_hold():
+    fs, stream = fixture(manual=True)
+    points = [(0, 0), (-8, 0), (-8, -40), (100, -40), (100, 100), (200, 100)]
+    stream.route.waypoints = points[:]
+    repair(fs)
+    assert stream.route.waypoints == points

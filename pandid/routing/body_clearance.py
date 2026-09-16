@@ -42,8 +42,6 @@ def repair(fs, *, max_passes=8):
             if stream.route.manual:
                 continue
             before = hits(key, points)
-            if not before:
-                continue
             old_overlap = _overlaps(lines)
             source_normal = COMPASS[
                 port_anchor(stream.source.owner, stream.source.owner.frame, stream.source.name)[2]
@@ -51,12 +49,23 @@ def repair(fs, *, max_passes=8):
             dest_normal = COMPASS[
                 port_anchor(stream.dest.owner, stream.dest.owner.frame, stream.dest.name)[2]
             ]
+            def wrong_ends(path):
+                return {end for end, a, b, normal in (
+                    (0, path[0], path[1], source_normal),
+                    (-1, path[-1], path[-2], dest_normal),
+                ) if sum((b[n] - a[n]) * normal[n] for n in (0, 1)) <= 0}
+
+            bad_ends = wrong_ends(points)
+            if not before and not bad_ends:
+                continue
+            affected = before | {stream.source.owner if end == 0 else stream.dest.owner
+                                 for end in bad_ends}
             candidates = []
             for j in range(1, len(points) - 2):
                 a, b = points[j : j + 2]
                 axis = 0 if a[0] == b[0] else 1
                 for unit in fs.units:
-                    if unit not in before:
+                    if unit not in affected:
                         continue
                     box = bodies[unit]
                     if not box.intersects_segment(*a, *b):
@@ -86,26 +95,23 @@ def repair(fs, *, max_passes=8):
                             )
                         ):
                             continue
-                        if (
-                            sum(
-                                (proposal[1][n] - proposal[0][n]) * source_normal[n] for n in (0, 1)
-                            )
-                            <= 0
-                            or sum(
-                                (proposal[-1][n] - proposal[-2][n]) * (-dest_normal[n])
-                                for n in (0, 1)
-                            )
-                            <= 0
-                        ):
-                            continue
+                        remaining_ends = wrong_ends(proposal)
                         after = hits(key, proposal)
+                        # A separated route can have an inverted nozzle lead
+                        # AND an independent body collision. Repair either
+                        # defect monotonically; requiring both ends already
+                        # correct prevented every move, including correction
+                        # of the inverted lead itself (end bodies were omitted).
                         if (
-                            not after < before
+                            not remaining_ends <= bad_ends
+                            or not after <= before
+                            or (after == before and remaining_ends == bad_ends)
                             or _overlaps({**lines, key: proposal}) > old_overlap + 1e-6
                         ):
                             continue
                         candidates.append(
-                            (len(after), priority, abs(track - points[j][axis]), j, track, proposal)
+                            (len(after) + len(remaining_ends), priority,
+                             abs(track - points[j][axis]), j, track, proposal)
                         )
             if candidates:
                 proposal = min(candidates, key=lambda row: row[:5])[-1]
