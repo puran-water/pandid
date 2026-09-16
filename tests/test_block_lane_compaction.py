@@ -1,4 +1,6 @@
 """Port-driven uniform height must not waste both sheet dimensions."""
+import xml.etree.ElementTree as ET
+
 import pytest
 from pandid.layout.block_lanes import _plan, plan, plan_details
 
@@ -73,6 +75,8 @@ def test_profile_converts_paper_clearances_through_print_scale():
                        print_scale=scale, band_width=4000,
                        column_gap_mm=12, row_gap_mm=10, band_gap_mm=14)
     px_per_mm = 96 / 25.4
+    assert fs.print_scale == 2.7
+    assert fs.drawing_scale == pytest.approx(scale / 2.7)
     assert fs.layout_options.column_gap == pytest.approx(12 * px_per_mm / scale)
     assert fs.layout_options.row_gap == pytest.approx(10 * px_per_mm / scale)
     assert fs.layout_options.band_gap == pytest.approx(14 * px_per_mm / scale)
@@ -80,6 +84,30 @@ def test_profile_converts_paper_clearances_through_print_scale():
                                   band_width=4000)
     assert measured.width > 0 and measured.height > 0
     assert measured.sizes == {'a': (280, 150), 'b': (280, 150)}
+
+    document = ET.fromstring(
+        fs.to_drawio(diagram='bfd', page_size='A1', border='zone'))
+    model = document.find('diagram/mxGraphModel')
+    assert (model.get('pageWidth'), model.get('pageHeight')) == ('3311', '2339')
+    objects = {element.get('id'): element for element in document.iter()
+               if element.get('id')}
+
+    def style(element):
+        return dict(item.split('=', 1) for item in element.get('style').split(';')
+                    if '=' in item)
+
+    # Zone furniture remains at its qualified 2.7 paper scale while BFD
+    # lettering and geometry use the caller's effective content scale.
+    assert float(style(objects['z0'].find('mxCell'))['fontSize']) == pytest.approx(25.3125)
+    assert float(style(objects['a'])['fontSize']) == pytest.approx(
+        22 * scale * 100 / 96, rel=1e-5)
+    assert float(objects['a'].find('mxGeometry').get('width')) == pytest.approx(
+        280 * scale * 100 / 96, rel=1e-4)
+
+    native = block_diagram('Native scale', blocks, streams, title_block=None,
+                           page_id='native', graph_attributes={}, lanes=lanes,
+                           band_width=4000)
+    assert (native.print_scale, native.drawing_scale) == (2.7, 1.0)
 
 
 @pytest.mark.parametrize('name,value', [

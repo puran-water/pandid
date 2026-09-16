@@ -19,6 +19,7 @@ STREAM_INK = {
     "concentrate": ("#B9770E", "none"), "regeneration_waste": ("#B9770E", "none"),
 }
 _PX_PER_MM = 96.0 / 25.4
+_FURNITURE_PRINT_SCALE = 2.7
 
 
 def _paper_mm_in_nominal_units(value, print_scale, name):
@@ -64,18 +65,25 @@ def block_diagram(name: str, blocks: list[dict], streams: list[dict], *,
     """
     fs = Flowsheet(name)
     fs.title_block = title_block
-    fs.print_scale = print_scale
+    column_gap = _paper_mm_in_nominal_units(
+        column_gap_mm, print_scale, 'column_gap_mm')
+    row_gap = _paper_mm_in_nominal_units(
+        row_gap_mm, print_scale, 'row_gap_mm')
+    band_gap = _paper_mm_in_nominal_units(
+        band_gap_mm, print_scale, 'band_gap_mm')
+    # Sheet furniture is qualified at this fixed paper scale.  The caller's
+    # fitted scale applies only to the content group; sharing it with the page
+    # would shrink title-strip, legend and zone lettering along with the BFD.
+    fs.print_scale = _FURNITURE_PRINT_SCALE
+    fs.drawing_scale = print_scale / _FURNITURE_PRINT_SCALE
     fs.layout_options.stream_spacing = 14
     # BFD reviews must not spend a congested caption's clearance by putting
     # its white plate through a process block. Use the existing clear-paper
     # fallback, with a leader and with text included in the sheet envelope.
     fs.layout_options.strict_label_clearance = True
-    fs.layout_options.column_gap = _paper_mm_in_nominal_units(
-        column_gap_mm, print_scale, 'column_gap_mm')
-    fs.layout_options.row_gap = _paper_mm_in_nominal_units(
-        row_gap_mm, print_scale, 'row_gap_mm')
-    fs.layout_options.band_gap = _paper_mm_in_nominal_units(
-        band_gap_mm, print_scale, 'band_gap_mm')
+    fs.layout_options.column_gap = column_gap
+    fs.layout_options.row_gap = row_gap
+    fs.layout_options.band_gap = band_gap
     fs.layout_options.band_width = band_width
     fs.stream_labels.enclosure = "none"
     fs.stream_labels.font_size = 14.5
