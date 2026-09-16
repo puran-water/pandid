@@ -31,6 +31,10 @@ def block_diagram(name: str, blocks: list[dict], streams: list[dict], *,
     fs.title_block = title_block
     fs.print_scale = print_scale
     fs.layout_options.stream_spacing = 14
+    # BFD reviews must not spend a congested caption's clearance by putting
+    # its white plate through a process block. Use the existing clear-paper
+    # fallback, with a leader and with text included in the sheet envelope.
+    fs.layout_options.strict_label_clearance = True
     fs.layout_options.column_gap = 80.0
     fs.layout_options.row_gap = 70.0
     fs.layout_options.band_gap = 85.0

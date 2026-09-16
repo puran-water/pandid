@@ -931,8 +931,11 @@ def _label_anchors(cx: float, cy: float, span: float, hw: float, hh: float,
             yield x, y, 0.0
     if on_run:
         return
-    for out in range(bands):
-        off = hh / 2 + _LABEL_GAP + out * hh
+    # Keep the same bounded reach, but sample between full-height bands.
+    # A clear corridor can be taller than the text yet lie between both
+    # neighbouring anchors. Skipping it needlessly overlaps another label.
+    for out in range(2 * bands - 1):
+        off = hh / 2 + _LABEL_GAP + out * hh / 2
         for side in (-1.0, 1.0):
             ax = cx + side * off if vertical else cx
             ay = cy if vertical else cy + side * off
