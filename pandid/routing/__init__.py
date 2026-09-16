@@ -372,3 +372,5 @@ class DefaultRouter:
             protect(fs)
             from pandid.routing.crossing_clearance import repair
             repair(fs)
+            from pandid.routing.terminal_clearance import square_interior_micro_jogs
+            square_interior_micro_jogs(fs)
