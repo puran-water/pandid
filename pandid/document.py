@@ -548,6 +548,42 @@ class StreamTableOptions:
     # True when title_block is already the independently controlled table face.
     standalone: bool = False
 
+    #: The streams this table carries, by name and in column order, or
+    #: ``None`` for every stream with something to tabulate, in sheet
+    #: order.
+    #:
+    #: **A selection is what makes a table set paginable.** One sheet
+    #: holds as many columns as its paper does, and a balance of sixty
+    #: streams under forty property rows is more than any one A1 sheet
+    #: holds at a legible size. The caller that owns the set splits the
+    #: streams and renders one table sheet per part, and each sheet has
+    #: to draw *its* part and nothing else -- including the boundary
+    #: streams :func:`~pandid.render.furniture._table_runs` otherwise
+    #: always keeps, because a feed repeated on every sheet of a set is
+    #: one stream heading three columns.
+    #:
+    #: **Stated, so it is exact.** Every name must be a stream on this
+    #: flowsheet and none may repeat; a name that matches nothing is a
+    #: column the author asked for and would silently not get, so it
+    #: raises. A listed stream with no properties keeps its column,
+    #: drawn as dashes: the author asked for it by name.
+    columns: tuple[str, ...] | None = None
+
+    #: Boxes docked on the table's **own** sheet -- the basis the
+    #: numbers came from, what a dash means, which columns were
+    #: excluded and why -- as :class:`Annotation` or :class:`TableBox`
+    #: objects, docked by their ``align`` exactly as ``fs.annotations``
+    #: dock on the diagram.
+    #:
+    #: Separate from ``fs.annotations`` for the reason
+    #: :func:`~pandid.render.svg.table_sheet_plan` gives for not
+    #: repeating those: an equipment list or a symbol legend is about
+    #: the diagram, and these are about the table. A cell cannot carry
+    #: them instead. Every stream column is ruled at the widest value
+    #: in the table, so one sentence explaining one column would widen
+    #: all sixty.
+    notes: list = field(default_factory=list)
+
 
 #: What a derived table-sheet drawing number puts after the diagram's.
 TABLE_SHEET_SUFFIX = "-ST"

@@ -573,7 +573,7 @@ def from_dict(spec: Mapping[str, Any]) -> Flowsheet:
                                             "stream_table_sections"))
     ]
     if "stream_table" in data:
-        fs.stream_table = _read_stream_table(data["stream_table"], "stream_table")
+        fs.stream_table = _read_stream_table(data["stream_table"], "stream_table", fs)
     if "stream_labels" in data:
         fs.stream_labels = _read_stream_labels(data["stream_labels"], "stream_labels")
     if "title_block" in data:
@@ -1207,7 +1207,7 @@ def _read_section(entry: Any, where: str) -> tuple[str, str]:
     return _text(pair[0], f"{where}[0]"), _text(pair[1], f"{where}[1]")
 
 
-def _read_stream_table(entry: Any, where: str) -> StreamTableOptions:
+def _read_stream_table(entry: Any, where: str, fs: "Flowsheet | None" = None) -> StreamTableOptions:
     """``stream_table:`` -- how the table is drawn, not what is in it.
 
     ``font_size`` takes ``null`` as itself, which is the field's own
@@ -1242,6 +1242,12 @@ def _read_stream_table(entry: Any, where: str) -> StreamTableOptions:
         if type(data['standalone']) is not bool:
             raise SpecError(f'{where}.standalone must be a boolean')
         options.standalone = data['standalone']
+    if data.get("columns") is not None:
+        options.columns = tuple(_text(name, f"{where}.columns")
+                                for name in _sequence(data["columns"], f"{where}.columns"))
+    if "notes" in data:
+        options.notes = [_read_annotation(fs, note, f"{where}.notes[{i}]")
+                         for i, note in enumerate(_sequence(data["notes"], f"{where}.notes"))]
     return options
 
 
@@ -1490,7 +1496,12 @@ def to_dict(fs: Flowsheet) -> dict:
     # table alone is the same file it was before these options existed.
     table = {f.name: getattr(fs.stream_table, f.name)
              for f in dataclass_fields(StreamTableOptions)
-             if getattr(fs.stream_table, f.name) != f.default}
+             if f.name not in ("columns", "notes")
+             and getattr(fs.stream_table, f.name) != f.default}
+    if fs.stream_table.columns is not None:
+        table["columns"] = list(fs.stream_table.columns)
+    if fs.stream_table.notes:
+        table["notes"] = [_write_annotation(note) for note in fs.stream_table.notes]
     if table:
         spec["stream_table"] = table
     labels = {f.name: getattr(fs.stream_labels, f.name)

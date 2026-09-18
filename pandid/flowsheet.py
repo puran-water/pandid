@@ -2119,7 +2119,7 @@ class Flowsheet:
         means nothing was found rather than nothing was looked for.
         """
         from pandid.render.svg import (check_render_arguments, draws_arrowheads,
-                                       tabulates_boundary_flows)
+                                       tabulates_boundary_flows, wants_table_sheet)
         from pandid.validate import geometry_issues, model_issues
 
         # First, and before a single attribute of this sheet is
@@ -2187,6 +2187,15 @@ class Flowsheet:
         if check:
             found = model_issues(self, tabulates=tabulates_boundary_flows(diagram))
             self._raise_on_errors(found)
+        if wants_table_sheet(arguments.get("show_stream_table", False)):
+            # The table's own sheet draws no diagram, so it has no geometry
+            # to resolve or to check. Routing a sheet only to throw the
+            # routes away cost a sixty-stream block diagram minutes per
+            # table sheet, and its detours and crossings are findings
+            # about a drawing this file is not.
+            if check:
+                self.warnings = [i for i in found if i.severity == "warning"]
+            return
         self._resolve_geometry()
         if check:
             found += geometry_issues(self, arrows=draws_arrowheads(diagram))

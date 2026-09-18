@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`fs.stream_table.columns`**: the streams a table carries, by name and in
+  column order. It is what lets a caller split a table too wide for one sheet
+  over several, each sheet drawing exactly its part -- boundary streams
+  included, which the table otherwise keeps on every sheet. A name that matches
+  no stream, a repeat, or an empty selection raises.
+- **`fs.stream_table.notes`**: `Annotation`/`TableBox` boxes docked on the
+  table's own sheet by their `align` (the basis of the numbers, what a dash
+  means, why a column is excluded). Both backends draw them; the title strip is
+  fitted after them, as it is after a diagram's legend. A pinned note is
+  refused. Both round-trip through the spec.
+- **`pandid.render.svg.PageTooSmall`**: the "does not fit page size" refusal as
+  a `ValueError` subclass of its own, so a caller that answers it by changing
+  the arrangement can catch exactly it.
+
+### Changed
+
+- **A table sheet no longer lays out or routes the diagram.** It draws none,
+  so `show_stream_table="sheet"` now numbers the streams and runs the model
+  checks but skips geometry and its findings -- which cost a sixty-stream block
+  diagram minutes per table sheet and reported the diagram's detours as the
+  table's.
+
 ## [0.1.5] - 2026-08-26
 
 ### Fixed

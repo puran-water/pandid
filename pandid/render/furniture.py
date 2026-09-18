@@ -842,8 +842,45 @@ def _table_runs(fs) -> list:
     reaches it on its last segment, and a run's properties are written
     wherever the author wrote them.
     """
-    return [run for run in fs._named_runs().values()
+    runs = fs._named_runs()
+    selected = _options(fs).columns
+    if selected is not None:
+        return _selected_runs(runs, selected)
+    return [run for run in runs.values()
             if any(s.properties for s in run) or any(s.at_boundary for s in run)]
+
+
+def _selected_runs(runs: dict, selected) -> list:
+    """The runs ``fs.stream_table.columns`` names, in the order it
+    names them.
+
+    Checked here rather than when the option is set, for the reason a
+    section key is: the streams it names may not exist yet when the
+    author sets it. Checked *hard* rather than warned about, unlike a
+    section key, because what is lost is not a heading but a column --
+    a stream the table set was split to carry and does not.
+    """
+    if isinstance(selected, (str, bytes)) or not all(
+            isinstance(name, str) for name in selected):
+        raise ValueError(
+            f"fs.stream_table.columns={selected!r}: the columns are a sequence "
+            f"of stream names")
+    names = list(selected)
+    repeated = sorted({name for name in names if names.count(name) > 1})
+    if repeated:
+        raise ValueError(
+            f"fs.stream_table.columns names {repeated} more than once; one "
+            f"stream heads one column")
+    missing = [name for name in names if name not in runs]
+    if missing:
+        raise ValueError(
+            f"fs.stream_table.columns names {missing}, which no stream on this "
+            f"flowsheet carries")
+    if not names:
+        raise ValueError(
+            "fs.stream_table.columns is empty: a table sheet with no columns "
+            "is not a table; use None for every stream")
+    return [runs[name] for name in names]
 
 
 def _table_streams(fs) -> list:

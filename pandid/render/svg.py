@@ -3823,6 +3823,17 @@ def fit_issue(field: str, text: str, drawn: str,
                  f"{text!r} {span}")
 
 
+class PageTooSmall(ValueError):
+    """A fixed page that cannot hold its own furniture or table.
+
+    A :class:`ValueError`, as it always was, and a type of its own so a
+    caller that answers it by changing the arrangement -- splitting a
+    stream table over more sheets -- can catch exactly this refusal
+    rather than every error the render can raise, and without reading
+    the sentence.
+    """
+
+
 def _too_small(sheet: _Sheet, need_w: float, need_h: float,
                cause: str = "") -> ValueError:
     """A sheet too small for its furniture.
@@ -3834,7 +3845,7 @@ def _too_small(sheet: _Sheet, need_w: float, need_h: float,
     fit" does not say which furniture.
     """
     blame = f" The widest piece is {cause}." if cause else ""
-    return ValueError(
+    return PageTooSmall(
         f"The sheet furniture does not fit page size {sheet.name}: the border, title strip "
         f"and docked boxes need at least {need_w:.0f}x{need_h:.0f}px of the "
         f"{sheet.width:.0f}x{sheet.height:.0f}px sheet.{blame} Use a larger page_size, or omit "
@@ -4028,6 +4039,10 @@ class TableSheetPlan(NamedTuple):
     left: float
     top: float
     findings: list
+    #: ``fs.stream_table.notes`` as placed: one
+    #: :class:`~pandid.render.furniture.Docked` apiece, in the order the
+    #: author listed them.
+    notes: list = []
 
 
 def table_sheet_plan(fs, sheet: "_Sheet | None") -> TableSheetPlan:
@@ -4084,9 +4099,28 @@ def table_sheet_plan(fs, sheet: "_Sheet | None") -> TableSheetPlan:
             "table, and this flowsheet has nothing to tabulate: no stream "
             "states a property and none crosses the sheet edge. Put properties "
             "on the streams (stream.properties = {...}), or drop the table sheet")
-    block = table_sheet_block(fs.title_block, F._options(fs))
+    from pandid.document import Annotation, TableBox
+
+    options = F._options(fs)
+    block = table_sheet_block(fs.title_block, options)
     ts_w, ts_h = F.measure_title_strip(block)
     items = [(TITLE, "bottom-right", ts_w, ts_h)]
+    notes = list(options.notes or [])
+    for i, note in enumerate(notes):
+        if not isinstance(note, (Annotation, TableBox)):
+            raise ValueError(
+                f"fs.stream_table.notes[{i}] is a {type(note).__name__}; a note "
+                f"on the table sheet is an Annotation or a TableBox")
+        if note.position is not None:
+            # A pinned box on a sheet whose body is laid out by the dock
+            # would be placed over the table it cannot see.
+            raise ValueError(
+                f"fs.stream_table.notes[{i}] is pinned at {note.position}; notes "
+                f"on the table sheet dock by their align")
+        w, h = F.measure_table(note) if isinstance(note, TableBox) else F.measure_annotation(note)
+        items.append((note, note.align, w, h))
+    # After the notes, because a note docked bottom-left is room the strip
+    # has to give up, exactly as a legend is on the diagram.
     items = F.fit_title_strip_to_sheet(items, TITLE, block, sheet)
     inner = (0.0, 0.0, table.w, table.h)
     if sheet is None:
@@ -4108,7 +4142,10 @@ def table_sheet_plan(fs, sheet: "_Sheet | None") -> TableSheetPlan:
             # value no page this size can hold.
             raise _too_small(page, page.width - fw + table.w,
                              page.height - fh + table.h, "the stream table")
-    _obj, sx, sy, sw, sh = placed[0]
+    # Found by identity: the dock lists what it places band by band, so
+    # a note docked bottom-left comes out ahead of the strip.
+    _obj, sx, sy, sw, sh = next(d for d in placed if d.obj is TITLE)
+    docked_notes = [next(d for d in placed if d.obj is note) for note in notes]
     left, top = F.table_sheet_origin(table, free)
     date = block.date or datetime.now().strftime("%Y-%m-%d")
     findings = []
@@ -4139,7 +4176,8 @@ def table_sheet_plan(fs, sheet: "_Sheet | None") -> TableSheetPlan:
             f"number the table sheet alone with "
             f"fs.stream_table.sheet_drawing_number"))
     return TableSheetPlan(table, block, block.title or fs.name, date,
-                          (sx, sy, sw, sh), frame, left, top, findings)
+                          (sx, sy, sw, sh), frame, left, top, findings,
+                          docked_notes)
 
 
 def reject_unknown_options(where: str, opts: dict) -> None:
@@ -4654,6 +4692,10 @@ class SvgRenderer:
         for i, part, bx, by in plan.table.at(plan.left, plan.top):
             furniture.extend(F.draw_stream_table(
                 part, bx, by, group=f"stream_table_{i + 1}"))
+        from pandid.document import TableBox
+        for note, nx, ny, _nw, _nh in plan.notes:
+            furniture.extend(F.draw_table(note, nx, ny) if isinstance(note, TableBox)
+                             else F.draw_annotation(note, nx, ny, report=report))
         sx, sy, sw, sh = plan.strip
         furniture.extend(F.draw_title_strip(plan.block, plan.name, plan.date,
                                             sx + sw, sy + sh, max_width=sw, report=report))

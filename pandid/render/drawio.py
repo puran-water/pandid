@@ -1758,6 +1758,8 @@ class DrawioRenderer:
         body = list(self._border(plan.frame, border))
         for i, part, bx, by in plan.table.at(plan.left, plan.top):
             body += _stream_table(f"st{i}", part, bx, by)
+        for i, (note, nx, ny, nw, nh) in enumerate(plan.notes):
+            body += self._furniture_cell(f"stn{i}", note, nx, ny, nw, nh)
         x, y, w, h = plan.strip
         # No scale: a table is not drawn to scale, and the cell is left
         # unruled where there is no ratio to report.

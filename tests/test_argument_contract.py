@@ -476,6 +476,19 @@ def _faulty_sheet() -> Flowsheet:
     return fs
 
 
+def _faulty_table_sheet() -> Flowsheet:
+    """:func:`_faulty_sheet` for a table sheet, whose error has to be the model's.
+
+    A table sheet draws no diagram, so it lays nothing out and routes nothing,
+    and two units on one point is not a finding about it. A tag side no
+    renderer places is: :func:`pandid.validate.model_issues` reports it from the
+    model alone, so ``check=`` still refuses the sheet.
+    """
+    fs = _faulty_sheet()
+    fs.units[1].label_pos = "nowhere"
+    return fs
+
+
 def _crossed_sheet() -> Flowsheet:
     """A sheet with two runs that cross, and nothing tabulated on it.
 
@@ -533,7 +546,7 @@ def _render_case(cid: str, method: str, **fixed: Any) -> Case:
 
     def run(**overrides: Any) -> str:
         kwargs: dict[str, Any] = {"check": False, **fixed, **overrides}
-        fs = _faulty_sheet()
+        fs = _faulty_table_sheet() if fixed.get("show_stream_table") == "sheet" else _faulty_sheet()
         if method == "render":
             with tempfile.TemporaryDirectory() as tmp:
                 path = kwargs.pop("path", str(Path(tmp) / f"sheet{fixed['_suffix']}"))
