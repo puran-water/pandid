@@ -173,7 +173,7 @@ ARTWORK.update({
             f'<move x="180" y="{y+10}"/><line x="180" y="{y+36}"/>'
             f'<line x="310" y="{y+36}"/></path><stroke/>' for y in (60, 180)
         )
-        + '<path><move x="310" y="96"/><line x="310" y="224"/><line x="180" y="224"/><line x="180" y="240"/></path><stroke/>',
+        + '<path><move x="310" y="96"/><line x="310" y="174"/><move x="310" y="186"/><line x="310" y="224"/><line x="180" y="224"/><line x="180" y="240"/></path><stroke/>',
         reference_document="DuPont FilmTec RO/NF Technical Manual, 45-D01504-en Rev.20, August 2026; https://www.dupont.com/content/dam/water/amer/us/en/water/public/documents/en/RO-NF-FilmTec-Manual-45-D01504-en.pdf.",
         reference_sha256="eb7c8d7f7829e2652fa26896b53618c82cd7d05037f759a3a1c9b647f681fa97",
         reference_pages=(82, 83, 106),
