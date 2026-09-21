@@ -23,6 +23,10 @@ class LayoutOptions:
     #: rather than retaining stale grid rows after inline trains are aligned.
     compact_boundary_rows: bool = False
     boundary_flag_gap: float = 24.0
+    #: Clear paper around displaced stream captions, supplied by the caller.
+    stream_label_gap: float = 8.0
+    #: Automatic inline stations may share spare column width for their tags.
+    expand_inline_stations: bool = False
     fill_columns: bool = False
     #: Page whose fitted band the boundary columns are placed against, resolved
     #: when layout runs. ``None`` keeps the historical behaviour of hanging the
@@ -46,7 +50,7 @@ class LayoutOptions:
             value = getattr(self, field.name)
             if field.name == 'parallel_train_clearance' and value is None:
                 continue
-            if field.name in {'parallel_trains', 'aligned_boundaries', 'fill_columns', 'strict_label_clearance', 'compact_boundary_rows'}:
+            if field.name in {'parallel_trains', 'aligned_boundaries', 'fill_columns', 'strict_label_clearance', 'compact_boundary_rows', 'expand_inline_stations'}:
                 if type(value) is not bool:
                     raise ValueError(f'layout_options.{field.name} must be boolean')
                 continue

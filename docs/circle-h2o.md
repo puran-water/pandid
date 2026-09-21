@@ -240,3 +240,16 @@ aligned. Ordered least-squares packing retains flag order and actual heights,
 with `boundary_flag_gap` clear between them; a rail with an authored vertical
 pin keeps its old placement. The generic default is off. PuranOS supplies the
 paper-space gap in its shared sheet policy as house drafting judgement.
+
+`expand_inline_stations` lets automatically placed valve/pump columns share
+the band's spare width. The old fill rule held every internal station seam at
+the minimum and spent the available paper outside it, crowding fixed-size tags
+around adjacent valve bodies. Explicit coordinates remain protected by the
+existing anchored-layout rule. The generic option defaults to false.
+
+When the strict caption search exhausts its local bands, it also considers
+empty interior rectangles induced by measured obstacle edges. This finds
+paper between columns that the old outside-the-entire-drawing fallback could
+not reach. `stream_label_gap` is caller-supplied clear paper; labels keep their
+full type size, and a displaced label keeps its leader to its own run. A
+crowded result still reaches the unchanged native collision gate.

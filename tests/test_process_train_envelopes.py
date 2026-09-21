@@ -8,10 +8,11 @@ from pandid.portgeom import port_point, unit_box
 from pandid.profiles.process import apply
 
 
-def bank(clearance):
+def bank(clearance, *, expand=False):
     fs = apply(Flowsheet('Synthetic six-station bank'))
     fs.layout_options.parallel_trains = True
     fs.layout_options.parallel_train_clearance = clearance
+    fs.layout_options.expand_inline_stations = expand
     source = fs.add(Feed('supply'))
     suction = fs.add(Junction('suction', outputs=6, header=True))
     delivery = fs.add(Junction('delivery', inputs=6, header=True))
@@ -55,6 +56,15 @@ def test_authored_train_pin_is_not_repacked():
     frames = [u.frame for u in fs.units]
     align(fs)
     assert [u.frame for u in fs.units] == frames
+
+
+def test_automatic_station_shares_available_paper_without_changing_body_sizes():
+    old, _, _ = bank(32)
+    fs, _, _ = bank(32, expand=True)
+    valve, pump = [next(u for u in fs.units if u.kind == k) for k in ('valve', 'pump')]
+    a, b = [next(u for u in old.units if u.kind == k) for k in ('valve', 'pump')]
+    assert pump.frame.x-valve.frame.x_max > b.frame.x-a.frame.x_max + 20
+    assert [(u.frame.w,u.frame.h) for u in fs.units] == [(u.frame.w,u.frame.h) for u in old.units]
 
 
 @pytest.mark.parametrize('bad', [0, -1, True, float('nan')])
@@ -119,3 +129,14 @@ def test_boundary_rows_follow_connected_ports_instead_of_old_tall_grid_rows():
     before = [u.frame for u in flags]
     align_boundaries(fs)
     assert [u.frame for u in flags] == before
+
+
+def test_caption_search_finds_interior_paper_when_outer_margins_are_occupied():
+    from pandid.render.svg import _interior_label_spot, _meets
+    region = (0, 0, 400, 200)
+    obstacles = [(0, 0, 90, 200), (310, 0, 400, 200),
+                 (90, 0, 310, 60), (90, 140, 310, 200)]
+    spot, box = _interior_label_spot(region, obstacles, 180, 24, (50, 100), 8)
+    assert spot == (188, 100)
+    assert not any(_meets(box, b) for b in obstacles)
+    assert _interior_label_spot(region, [region], 180, 24, (50, 100), 8) is None

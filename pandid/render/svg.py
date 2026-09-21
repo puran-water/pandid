@@ -1733,6 +1733,32 @@ def fitted_region(fs):
             max(b[2] for b in boxes), max(b[3] for b in boxes))
 
 
+def _interior_label_spot(region, protected, width, height, centre, gap):
+    """Nearest empty rectangular caption slot among existing obstacle edges.
+
+    Local bands and positions outside the entire drawing can miss large empty
+    spaces between equipment columns. Candidate coordinates are induced by
+    measured obstacle edges, not a second layout or a finer arbitrary grid.
+    """
+    if region is None:
+        return None
+    x0, y0, x1, y1 = region
+    cx, cy = centre
+    xs = {cx, x0 + width / 2, x1 - width / 2}
+    ys = {cy, y0 + height / 2, y1 - height / 2}
+    for a, b, c, d in protected:
+        xs.update((a - gap - width / 2, c + gap + width / 2))
+        ys.update((b - gap - height / 2, d + gap + height / 2))
+    xs = [x for x in xs if x0 <= x-width/2 and x+width/2 <= x1]
+    ys = [y for y in ys if y0 <= y-height/2 and y+height/2 <= y1]
+    for x, y in sorted(((x, y) for x in xs for y in ys),
+                       key=lambda p: ((p[0]-cx)**2 + (p[1]-cy)**2, p)):
+        box = (x-width/2, y-height/2, x+width/2, y+height/2)
+        if not any(_meets(box, b) for b in protected):
+            return (x, y), box
+    return None
+
+
 def stream_numbers(fs, placed: list, joints: "str | None",
                    direction: str,
                    region: "tuple[float, float, float, float] | None" = None) -> "list[StreamNumber]":
@@ -2037,6 +2063,13 @@ def stream_numbers(fs, placed: list, joints: "str | None",
                 leader,cut=_leader(box,seg,protected,keep)
                 spot,damage=(ux,uy),(0,0,0,cut)
                 break
+            if any(damage[:3]):
+                interior = _interior_label_spot(region, protected, bw, bh,
+                                                (cx, cy), fs.layout_options.stream_label_gap)
+                if interior is not None:
+                    spot, box = interior
+                    leader, cut = _leader(box, seg, protected, keep)
+                    damage = (0, 0, 0, cut)
             # No clear paper inside the drawing is a crowded sheet, not an
             # unrenderable one. The nearby search already chose the least
             # damaging spot on the run; keep it, and let `label_findings`
