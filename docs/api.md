@@ -605,7 +605,7 @@ from pandid import units
 sifter = units.Separator("SC-101", variant="sifter")
 ```
 
-`units.Kind(variant=…)` is the escape hatch. 146 of the 246 registered drawings
+`units.Kind(variant=…)` is the escape hatch. 149 of the 249 registered drawings
 get no class of their own, and this is how you reach them; see
 [Variants](#variants) for the list. Where a class exists, name it.
 
@@ -1843,6 +1843,9 @@ first listed is what the class draws when it is built by name alone.
 | `BasinAgitator` | `basin_agitator` | `default` (a basin-mounted agitator) |
 | `SubmersibleMixer` | `submersible_mixer` | `default` (a submerged mixer) |
 | `MembraneCage` | `membrane_cage` | `default` (a submerged membrane cage) |
+| `PressureMembrane` | `pressure_membrane` | `default` (a pressure membrane vessel) |
+| `PressureMembraneArray` | `pressure_membrane_array` | `default` (a pressure membrane array) |
+| `InjectionQuill` | `injection_quill` | `default` (a chemical injection quill) |
 | `Airlift` | `airlift` | `default` (a liquid riser with air injection) |
 | `AirDiffuser` | `air_diffuser` | `default` (a dispersed-air grid) |
 | `Heater`, `Cooler`, `Furnace`, `Turbine`, `Ejector`, `Funnel`, `Conveyor`, `Mixer`, `Splitter`, `Tee`, `Block`, `Feed`, `Product` | each its own | `default` only |
