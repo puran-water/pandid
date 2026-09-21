@@ -63,3 +63,32 @@ def test_clearance_policy_is_positive_and_finite(bad):
     fs.layout_options.parallel_train_clearance = bad
     with pytest.raises(ValueError, match='parallel_train_clearance'):
         fs.layout_options.validate()
+
+
+def test_caller_lettering_is_measured_and_never_capped_to_a_balloon():
+    import xml.etree.ElementTree as ET
+    from pandid import Instrument
+    from pandid.profiles.process import lettering
+    from pandid.render.svg import SvgRenderer, _unit_label_box
+    fs, _, _ = bank(32)
+    pump = next(u for u in fs.units if u.kind == 'pump')
+    instrument = fs.add(Instrument('801-LIT-01'))
+    instrument.attach(pump, at='N')
+    fs.equipment_data = {pump.name: {'tags': pump.name, 'rows': ['DUTY: synthetic']}}
+    lettering(fs, body=17, heading=24)
+    first = [(u.width, u.height) for u in fs.units]
+    lettering(fs, body=17, heading=24)
+    assert [(u.width, u.height) for u in fs.units] == first
+    assert fs.stream_labels.font_size == 17
+    assert fs.equipment_data[pump.name]['font_size'] == 17
+    xml = ET.fromstring(fs.to_drawio(diagram='p&id', page_size='A1'))
+    cell = xml.find(f".//mxCell[@id='u{fs.units.index(instrument)}']")
+    size = dict(p.split('=', 1) for p in cell.get('style').split(';') if '=' in p)['fontSize']
+    assert float(size) == pytest.approx(17 * fs.print_scale * fs.drawing_scale * 100 / 96, abs=.01)
+    renderer = SvgRenderer()
+    frame = pump.frame
+    small = renderer._unit_label_item(pump, frame, frame.x, frame.y, frame.w, frame.h, '801-P-01')
+    pump.font_size = 24
+    large = renderer._unit_label_item(pump, frame, frame.x, frame.y, frame.w, frame.h, '801-P-01')
+    a, b = _unit_label_box(small), _unit_label_box(large)
+    assert b[2]-b[0] > a[2]-a[0] and b[3]-b[1] > a[3]-a[1]

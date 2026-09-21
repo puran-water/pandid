@@ -39,12 +39,16 @@ def _wrap(text, width, font):
     return result + [line]
 
 
-def pages(entries, *, metadata_factory, title='SYMBOLS AND CONVENTIONS'):
+def pages(entries, *, metadata_factory, title='SYMBOLS AND CONVENTIONS', body_font_size=14):
     """Cover the complete admitted inventory in one multi-sheet document.
 
     Nanded informs the sectioned arrangement. Actual engine units and streams
     illustrate symbols and line types; no separate pictures or XML assemblies.
     """
+    # Lettering is supplied by the physical policy, not chosen to fit a panel.
+    flag_ratio = max(1.0, body_font_size / 12)
+    sample_width = max(220, 190 * flag_ratio + 24)
+    meaning_width = 660 - sample_width
     groups = OrderedDict((name, []) for name in ('PROCESS EQUIPMENT', 'VALVES AND ACTUATORS',
         'PIPING AND CONNECTIONS', 'INSTRUMENTATION', 'PROCESS AND SIGNAL LINES',
         'HOUSE TAGGING AND CONVENTIONS', 'EQUIPMENT DATA BLOCKS', 'ABBREVIATIONS'))
@@ -69,10 +73,10 @@ def pages(entries, *, metadata_factory, title='SYMBOLS AND CONVENTIONS'):
         for entry in items:
             symbol = entry['kind'] in {'symbol', 'line'}
             text = entry['meaning'] if symbol else entry['key'].replace('-', ' ').upper() + ' — ' + entry['meaning']
-            wrapped = _wrap(text, 446 if symbol else 646, 14)
-            row_height = max(78 if symbol else 30, len(wrapped) * 17 + 16)
+            wrapped = _wrap(text, meaning_width if symbol else 646, body_font_size)
+            row_height = max(78 if symbol else 30, len(wrapped) * body_font_size * 1.25 + 16)
             if entry['key'] in {'boundary', 'boundary.reference'}:
-                row_height = max(row_height, 94)
+                row_height = max(row_height, 85 * flag_ratio + 24)
             if entry['key'] in {'house.mixer.agitator', 'house.mbr.membrane_cage'}:
                 row_height = max(row_height, 210)
             if entry['key'] == 'stencil.pid.flow_sensors.magnetic':
@@ -99,9 +103,9 @@ def pages(entries, *, metadata_factory, title='SYMBOLS AND CONVENTIONS'):
                 is_symbol = entry['kind'] in {'symbol', 'line'}
                 reference = entry['key'] in {'boundary', 'boundary.reference'}
                 if reference:
-                    wrapped = _wrap(entry['meaning'], 446, 14)
-                descriptions.append(Caption(key, x + (220 if is_symbol else 12), y + 8,
-                    446 if is_symbol else 646, row_height - 12, '\n'.join(wrapped), 14))
+                    wrapped = _wrap(entry['meaning'], meaning_width, body_font_size)
+                descriptions.append(Caption(key, x + (sample_width if is_symbol else 12), y + 8,
+                    meaning_width if is_symbol else 646, row_height - 12, '\n'.join(wrapped), body_font_size))
                 meta['cells']['region-' + key] = {'id': entry['id'] + '-caption',
                     'attributes': {'puran-kind': 'legend-entry', 'legend-key': entry['key'], 'meaning': entry['meaning']}}
                 if entry['kind'] == 'symbol':
@@ -132,7 +136,7 @@ def pages(entries, *, metadata_factory, title='SYMBOLS AND CONVENTIONS'):
                     unit.width, unit.height = 44, 44
                 if unit.kind in {'feed', 'product'}:
                     unit.width, unit.height = 190, 85
-                    unit.pin(x=x + 12 + (140 if unit.kind == 'feed' else 0), y=y + row_height/2)
+                    unit.pin(x=x + 12 + (190 * flag_ratio - 50 if unit.kind == 'feed' else 0), y=y + row_height/2)
                     if getattr(unit, 'reference_code', ''):
                         unit.display_label = 'WATER\nTO SH. 2'
                 if unit.kind == 'instrument':

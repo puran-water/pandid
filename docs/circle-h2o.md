@@ -221,3 +221,15 @@ whole pair and reporting only its block misidentifies a P&ID as a failed PFD.
 
 New source-bound symbols and pending review requirements are documented in
 [process symbols](process-symbols.md).
+
+`process.lettering(fs, body=..., heading=...)` accepts the physical type sizes
+from the caller. PuranOS derives them from `sheet_policy` (3.5 mm body, 5 mm
+designation capitals). Neither the renderer nor a crowded sheet chooses smaller
+values. Flags and balloons retain text capacity by growing before layout;
+nameplate unbreakable words reserve their measured width. SVG tag halos and
+native labels use the same supplied size. `legend.pages(body_font_size=...)`
+measures and wraps its panels at that size as well.
+
+`fitted_band` now uses `fit_title_strip_to_sheet`, exactly as final native docking
+does. The pre-layout rail allocation must use the same wrapped header prose and
+available rectangle as the final fixed-size title strip. Both axes retain the same capacity gate.

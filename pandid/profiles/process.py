@@ -34,6 +34,40 @@ def apply(fs):
     return fs
 
 
+def lettering(fs, *, body, heading):
+    """Apply caller-supplied fixed type sizes before layout, without fitting.
+
+    Physical house lettering policy belongs to the calling library. Generic
+    engine defaults are retained when this API is not called. Flags and
+    balloons grow to keep their existing text capacity at the supplied size.
+    """
+    import math
+    from pandid.render.symbols import default_registry
+    from pandid.render.furniture import text_width
+    if any(type(v) not in (int, float) or not math.isfinite(v) or v <= 0 for v in (body, heading)):
+        raise ValueError('Process lettering sizes must be positive and finite')
+    fs.stream_labels.font_size = body
+    for unit in fs.units:
+        unit.font_size = body
+        if unit.kind in {'instrument', 'feed', 'product'}:
+            symbol = default_registry.for_unit(unit)
+            # Grow from the construction dimensions once, never from a prior
+            # typography pass; render/re-render must be idempotent.
+            if not hasattr(unit, '_lettering_base_size'):
+                unit._lettering_base_size = (unit.width or symbol.width, unit.height or symbol.height)
+            w, h = unit._lettering_base_size
+            ratio = max(1.0, body / 12)
+            unit.width, unit.height = w * ratio, h * ratio
+            if unit.kind in {'feed', 'product'} and not getattr(unit, 'reference_code', ''):
+                lines = (unit.tag or '').splitlines() or ['']
+                unit.width = max(unit.width, max(text_width(s, body) for s in lines) + 40)
+                unit.height = max(unit.height, len(lines) * body * 1.2 + 12)
+    for row in fs.equipment_data.values():
+        row['font_size'] = body
+        row['heading_font_size'] = heading
+    return fs
+
+
 def align_boundaries(fs):
     """Reserve a left inlet column and a right outlet column before routing.
 
