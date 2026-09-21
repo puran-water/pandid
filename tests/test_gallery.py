@@ -1,4 +1,4 @@
-"""``docs/gallery/``: the committed sheets, against the examples they came from.
+"""``docs/gallery/``: the committed sheets, against the goldens of the same drawings.
 
 The gallery is generated -- twenty-one examples rendered to SVG and rasterised to
 PNG by ``scripts/gallery.py`` -- and until this file existed nothing held it to
@@ -11,19 +11,57 @@ re-rasterise is coming"; what was missing was anything that noticed it had not.
 That is the same gap ``_vendored_symbols.py`` had before #150 and ``docs/api.md``
 had before #179, and this is the same answer: regenerate and compare.
 
-**Why the whole gallery, on every push.** Rendering all twenty-one sheets costs
-about 5 s, four fifths of it example 11 and most of the rest example 14 --
-measured, not assumed. That is small
-enough that the two cheaper designs both cost more than they save. Checking only
-the sheets whose example changed would have let this very drift through, since
-the change that stales a sheet is often in ``pandid/`` rather than in the
-example; and it needs a diff base, which a shallow CI clone does not reliably
-have. Leaving it to a scheduled job means finding out after the merge.
+**Why the golden and not a fresh render.** The sheet under ``docs/gallery/`` and
+the one under ``tests/golden/`` are the same drawing out of the same example, so
+re-rendering every example here asserted a third time what ``tests/test_golden.py``
+already asserts twice: that ``examples/NN.py`` draws what is committed. #302
+measured what the third copy cost -- rewording one SVG comment, a change that
+moves no geometry at all, failed 64 tests, of which 43 carried all of the
+information. So this compares the two *committed* artefacts to each other and
+leaves the renderer to ``test_golden.py``, which renders every example already,
+and does it twice: from its own fixture and from the example.
+
+The two corpora are one corpus, which is what makes that sound:
+``test_golden.test_every_example_has_a_fixture`` asserts its scenarios are
+exactly :func:`gallery.sheets`, so every sheet here has a golden behind it and
+every golden is held to the example that draws it. A stale gallery still fails
+here -- against the drawing the example is known to draw, rather than against a
+third render of it.
+
+The two are compared without an exception of any kind, which took a change in
+``test_golden.py`` to be able to say. ``03`` and ``08`` leave ``TitleBlock.date``
+blank; the fixture used to pin it to a constant while ``scripts/gallery.py``
+stamped the sheet's issue date, so the two committed artefacts stood one cell
+apart for a reason that was about neither drawing, and this file had to hold a
+rule for telling that cell from a real one. ``test_golden.py`` now pins the
+fixture to the same date the generator stamps -- the top of the sheet's own
+revision history -- and holds every scenario to it in
+``test_no_fixture_dates_a_sheet_differently_from_the_generator``, so the two
+agree and the rule is gone rather than written more carefully.
+
+What is no longer re-run is :func:`gallery.render`, and only its own two lines:
+the capture underneath it still runs over every example, since ``test_golden``'s
+pass over the examples goes through that same :func:`gallery.flowsheet`. So a
+sheet regenerated through a broken ``to_svg`` or ``normalize`` is caught on the
+run after the regeneration rather than on the one that broke it. That is the
+whole of what this trades away.
+
+**Why the whole gallery, on every push.** Comparing every sheet is two file reads
+apiece now, so neither cheaper design is worth the failure mode it brings.
+Checking only the sheets whose example changed would have let this very drift
+through, since the change that stales a sheet is often in ``pandid/`` rather
+than in the example; and it needs a diff base, which a shallow CI clone does not
+reliably have. Leaving it to a scheduled job means finding out after the merge.
 
 **Why the SVG is compared exactly and the PNG is not.** The SVG is deterministic:
 given the same code it is the same text, once ``<defs>`` ordering is
-canonicalised (:func:`gallery.normalize`, the rule ``tests/test_golden.py``
-applies for the same reason). A PNG is a raster, and its bytes come out of
+canonicalised -- :func:`test_golden._normalize`'s rule, imported rather than
+restated, since two files compared under two rules are not compared at all.
+``_normalize`` also empties the provenance block, and that half is *undone*
+here rather than inherited: see
+:func:`_with_the_provenance_the_renderer_writes`, which puts back what this
+version of the renderer writes, so a committed sheet still has to name the
+version it was drawn by. A PNG is a raster, and its bytes come out of
 whichever PDFium build and font substitution the machine that made it had, so
 comparing them across a five-interpreter Linux matrix against a file made on one
 developer's machine would be a flake and not a check. What is checked about the
@@ -40,11 +78,13 @@ import struct
 
 import pytest
 
-from pandid import Flowsheet
-from pandid.document import Revision, TitleBlock
+from pandid.render.svg import PROVENANCE_CLOSE, PROVENANCE_OPEN, _provenance
+
+from test_golden import SCENARIOS, _normalize
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 GALLERY = ROOT / "docs" / "gallery"
+GOLDEN = ROOT / "tests" / "golden"
 EXAMPLES = ROOT / "examples"
 
 
@@ -68,17 +108,6 @@ SHEETS = gallery.sheets()
 REGENERATE = "    python scripts/gallery.py\n"
 
 
-@pytest.fixture(scope="module")
-def rendered():
-    """Every example rendered once, keyed by sheet name.
-
-    Module-scoped because the corpus is the expensive part of this file and
-    every test below wants all of it: rendered per-test it would be twenty
-    renders a test rather than twenty in total.
-    """
-    return {stem: gallery.render(stem) for stem in SHEETS}
-
-
 def _png_size(data: bytes) -> tuple[int, int]:
     """A PNG's pixel dimensions, out of its IHDR.
 
@@ -93,175 +122,70 @@ def _png_size(data: bytes) -> tuple[int, int]:
 
 
 # ---------------------------------------------------------------------------
-# The committed sheets, against a fresh render of the examples
+# The committed sheets, against the goldens of the same drawings
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize("stem", SHEETS, ids=SHEETS)
-def test_the_committed_sheet_is_what_the_example_draws_today(rendered, stem):
+def test_the_committed_sheet_is_the_drawing_its_golden_holds(stem):
     """A gallery that has drifted shows a reader a drawing nobody can produce."""
     path = GALLERY / f"{stem}.svg"
     if not path.exists():
         pytest.fail(f"docs/gallery/{stem}.svg is missing. Run\n\n{REGENERATE}", pytrace=False)
     committed = gallery.normalize(path.read_text(encoding="utf-8"))
-    fresh = rendered[stem]
-    if committed != fresh:
+    golden = _with_the_provenance_the_renderer_writes(
+        _normalize((GOLDEN / f"{stem}.svg").read_text(encoding="utf-8")), SCENARIOS[stem][0]()
+    )
+    if committed != golden:
         pytest.fail(
-            f"docs/gallery/{stem}.svg is not what examples/{stem}.py draws today.\n"
+            f"docs/gallery/{stem}.svg is not the drawing tests/golden/{stem}.svg holds.\n"
             f"The gallery is generated; regenerate it with\n\n{REGENERATE}\n"
-            "and commit the result with the change that moved it.\n\n" + _diff(committed, fresh),
+            "and commit the result with the change that moved it. Neither file here is a "
+            "render, so if tests/test_golden.py is failing as well, that is the one to read "
+            "first.\n\n" + _diff(committed, golden),
             pytrace=False,
         )
 
 
-def _diff(committed: str, fresh: str, context: int = 2) -> str:
+def _with_the_provenance_the_renderer_writes(golden: str, fs) -> str:
+    """*golden* with its emptied provenance block written back in.
+
+    The two files reach this comparison in different states, and this is the
+    line where that is dealt with rather than normalised away. A committed
+    gallery sheet carries a full provenance block, version and all, because
+    ``scripts/gallery.py`` writes what the renderer emitted. A golden does not:
+    ``test_golden._normalize`` deletes the contents between the fences before the
+    fixture is written out, so that cutting a release is not a diff of
+    twenty-one fixtures -- ``test_a_version_bump_does_not_move_a_fixture`` is
+    that rule, checked.
+
+    Running ``_normalize`` over the gallery side as well would make the two
+    agree, and would also stop anything at all looking at the version a
+    committed sheet claims to have been drawn by. That is a real check: the
+    gallery *does* have to be regenerated at a release, and before #302 this
+    file was the only thing saying so. So the block is put back instead --
+    :func:`~pandid.render.svg._provenance` is the renderer's own, called on the
+    fixture whose golden this is, so what the committed sheet is held to is what
+    this version of the renderer writes for this sheet, down to the ``dc:title``.
+    """
+    block = _provenance(fs)
+    block = block[block.index(PROVENANCE_OPEN) :]
+    lines = golden.split("\n")
+    open_i, close_i = lines.index(PROVENANCE_OPEN), lines.index(PROVENANCE_CLOSE)
+    return "\n".join(lines[:open_i] + block + lines[close_i + 1 :])
+
+
+def _diff(committed: str, golden: str, context: int = 2) -> str:
     """First divergence with a little context -- not a 70 KB dump."""
-    old, new = committed.split("\n"), fresh.split("\n")
+    old, new = committed.split("\n"), golden.split("\n")
     total = max(len(old), len(new))
     row = next((i for i, (a, b) in enumerate(zip(old, new)) if a != b), min(len(old), len(new)))
     out = [f"first divergence at line {row + 1} of {total}:"]
     for k in range(max(0, row - context), min(total, row + context + 1)):
         mark = ">>" if k == row else "  "
-        for label, lines in (("committed", old), ("rendered ", new)):
+        for label, lines in (("gallery", old), ("golden ", new)):
             out.append(f"{mark} [{k + 1}] {label}: {lines[k] if k < len(lines) else '<no line>'}")
     return "\n".join(out)
-
-
-# ---------------------------------------------------------------------------
-# What an example prints about itself, against what its sheet reports
-# ---------------------------------------------------------------------------
-# Seven examples end in
-#
-#     for issue in fs.validate():
-#         print(f"  {issue}")
-#
-# and an example is the thing a reader copies. Those seven used to call
-# `validate()` without the `diagram=` their own `render()` was given, so a
-# sheet drawn as a P&ID printed `stream-table-missing` -- a finding made
-# under ISO 10628-1 4.3.2 d), which is a process flow diagram's clause and
-# not that sheet's -- while `scripts/gallery.py`, rendering the very same
-# flowsheet, reported nothing.
-#
-# The mechanical cure was to spell `diagram=` out a second time in every
-# example, and having to keep two calls in step **was the bug**: the same
-# argument written twice is what drifted. `validate()` reads the last
-# render instead, and this is what holds it there -- across the whole
-# corpus rather than across the seven that happen to print today, so an
-# example that takes the print up later is covered before it is written.
-
-
-@pytest.fixture(scope="module")
-def checked():
-    """Every example built, drawn as it draws itself, and kept.
-
-    :func:`gallery.render` throws the flowsheet away and keeps the SVG;
-    these tests want the opposite. Module-scoped for the reason `rendered`
-    is: the renders are the cost, and every test below wants all of them.
-    """
-    out = {}
-    for stem in SHEETS:
-        fs, kwargs = gallery.flowsheet(stem)
-        fs.to_svg(**kwargs)
-        out[stem] = (fs, kwargs)
-    return out
-
-
-@pytest.mark.parametrize("stem", SHEETS, ids=SHEETS)
-def test_what_an_example_prints_is_what_its_own_sheet_reports(checked, stem):
-    """Two halves of one statement, and the second is the one that bites.
-
-    **The bare call is the diagram-aware call.** Whatever the example
-    passed to `render()`, a `validate()` that names nothing answers about
-    that drawing, so the two can no longer be written apart.
-
-    **And what it prints is genuinely on the sheet.** `fs.warnings` is
-    what the render itself found, so a finding printed but not on that
-    list is a finding about some other drawing -- which is exactly what
-    the five P&ID examples used to print. The converse is allowed and is
-    not drift: `crossing-unmarked` and the title-block fit codes are the
-    *renderer's* findings, made from options the validator is never
-    handed, so the sheet may report what a bare `validate()` cannot.
-    """
-    fs, kwargs = checked[stem]
-    printed = [str(i) for i in fs.validate()]
-    assert printed == [str(i) for i in fs.validate(diagram=kwargs.get("diagram"))]
-
-    reported = [str(w) for w in fs.warnings]
-    assert [f for f in printed if f not in reported] == []
-
-
-def test_the_corpus_still_holds_a_sheet_the_diagram_changes_the_answer_for(checked):
-    """Keeps the test above from passing because there is nothing to catch.
-
-    Every assertion in it is trivially true on a corpus of nothing but
-    PFDs, and the corpus was one sheet away from that: `12` was the last
-    example to raise `stream-table-missing`, and declaring it a BFD is what
-    stopped it. So this pins that at least one shipped sheet still reports
-    something different from what the same model reports as a plain PFD.
-    """
-    moved = [
-        stem
-        for stem, (fs, _) in checked.items()
-        if [str(i) for i in fs.validate()] != [str(i) for i in fs.validate(diagram="pfd")]
-    ]
-    assert moved, "no shipped example is validated as anything but a PFD"
-
-
-#: What the shipped corpus reports: every finding on ``fs.warnings`` after
-#: an example draws itself, per sheet, sorted. A stem absent from this
-#: table reports nothing at all, which is the state fourteen of the
-#: twenty-one are in.
-#:
-#: Written down because until it was, nothing noticed a finding arriving
-#: on a reference sheet or leaving one. ``12_block_flow_diagram`` was the
-#: last example to raise ``stream-table-missing``, made under ISO
-#: 10628-1 4.3.2 d) -- a *process flow diagram*'s clause, on a sheet that
-#: is a block flow diagram and answers 4.2. The
-#: examples are the documentation, and a finding nobody is holding to a
-#: number is one that accumulates silently until the check stops meaning
-#: anything.
-#:
-#: So this is meant to be edited, and only ever deliberately: a validator
-#: change that moves what a shipped sheet reports has to say which sheet
-#: and why, in the same commit that moves it.
-#: Empty, and every one of the twenty-one sheets is in it. The seven
-#: entries this table used to carry -- six ``lines-crowded`` and
-#: ``nozzles-crowded`` between them, and one ``crossing-unmarked`` --
-#: were every one of them a consequence of #502 drawing a material run
-#: at twice the equipment it enters. All three floors are derived from
-#: that rung: 5.3.2's clearance is twice the wider of two runs,
-#: ``MIN_HEAD_CLEARANCE`` is twice the rung, and ``HOP_R`` is the hop's
-#: clearance plus a pen. Restoring the run to the weight of the
-#: equipment (pandid/render/weights.py) moved all three back under the
-#: room the sheets already had, and the corpus came out clean.
-#:
-#: That is the whole of #498, which 0.1.4 shipped as a known issue: the
-#: nine clearances it names are not crowded once the pen that crowded
-#: them is the one a drawing office rules.
-CORPUS_FINDINGS: "dict[str, list[str]]" = {}
-
-
-@pytest.mark.parametrize("stem", SHEETS, ids=SHEETS)
-def test_the_sheet_reports_what_the_corpus_says_it_reports(checked, stem):
-    fs, _ = checked[stem]
-    found = sorted(w.code for w in fs.warnings)
-    expected = sorted(CORPUS_FINDINGS.get(stem, []))
-    if found != expected:
-        pytest.fail(
-            f"examples/{stem}.py now reports {found}, and CORPUS_FINDINGS says "
-            f"{expected}.\n"
-            f"If the change is intended, edit CORPUS_FINDINGS in "
-            f"this file in the same commit and say per sheet what moved and "
-            f"why. If it is not, the validator change that moved it is "
-            f"reporting something new about a reference drawing.",
-            pytrace=False,
-        )
-
-
-def test_the_corpus_table_names_no_sheet_the_gallery_does_not_have():
-    """A stem that has been renamed or retired must not leave an entry
-    behind that no test can ever reach."""
-    assert set(CORPUS_FINDINGS) <= set(SHEETS)
 
 
 # ---------------------------------------------------------------------------
@@ -371,17 +295,22 @@ def test_an_example_shows_the_drawio_export():
 
 
 @pytest.mark.parametrize("stem", _exporters(), ids=_exporters())
-def test_the_export_is_not_counted_as_a_second_sheet(rendered, stem):
+def test_the_export_is_not_counted_as_a_second_sheet(stem):
     """:func:`gallery.flowsheet` refuses an example that draws two sheets, and an
     example that exports calls ``render()`` twice. What the second call writes is
     the same drawing in a second format, so it is passed over and the count goes
     on meaning what it says for a file that really does draw two.
 
-    The ``rendered`` fixture is the check: it runs ``flowsheet(stem)``, which
-    raises ``SystemExit`` if the ``.drawio`` write is counted as a sheet."""
+    :func:`gallery.flowsheet` raising ``SystemExit`` is the check. The assertion
+    after it is not, and the one it replaced was not either: the module fixture
+    this test used to take was satisfied by any non-empty string, as ``fs.units``
+    is by any non-empty flowsheet. What is asserted is that the call *returns* --
+    which it only does if the ``.drawio`` write was passed over. It builds the
+    flowsheet and stops there; nothing in this file renders one."""
     source = (EXAMPLES / f"{stem}.py").read_text(encoding="utf-8")
     assert source.count(".render(") >= 2, "an exporting example writes its sheet as well"
-    assert rendered[stem], "and the generator still gets exactly one sheet out of it"
+    fs, _ = gallery.flowsheet(stem)
+    assert fs.units, "and the generator still gets the example's own flowsheet out of it"
 
 
 # ---------------------------------------------------------------------------
@@ -401,35 +330,3 @@ def test_the_generator_refuses_a_pandid_from_somewhere_else(tmp_path, monkeypatc
     monkeypatch.setattr(gallery, "ROOT", tmp_path)
     with pytest.raises(SystemExit, match="not this checkout"):
         gallery._pandid_is_this_checkout()
-
-
-def test_the_generator_leaves_a_date_the_sheet_states_alone():
-    """``_stamp`` fills a *blank* date cell. It must never replace a stated one.
-
-    The substitution exists because ``03`` and ``08`` state no date, and a sheet
-    committed to a repository cannot carry ``datetime.now()``. Widened by one
-    clause -- ``if tb.revisions`` where it now reads ``if not tb.date and
-    tb.revisions`` -- it stops filling a gap and starts overwriting the author,
-    and the drawing ships dated a day nobody typed. #482 made exactly that
-    mutation, and it was review rather than a test that caught it. #467, #370
-    and #294 are the same shape.
-
-    Asked directly rather than left to the corpus, because the corpus barely
-    covers it: made unconditional, ``_stamp`` is caught by exactly one of the
-    twenty-one sheets -- and only because ``11_ethanol_pid`` happens to be dated
-    five days after its last revision. The other ten that state a date state
-    their newest revision's, so an overwrite is invisible on them. The date here
-    is therefore deliberately *not* the newest revision's, which is what makes
-    this non-vacuous: an overwriting ``_stamp`` has to move it.
-    """
-    fs = Flowsheet("Stated Date")
-    fs.title_block = TitleBlock(
-        title="Stated Date",
-        date="2026-03-04",
-        revisions=[
-            Revision("A", "2026-05-18", "Issued for internal review", "AA"),
-            Revision("B", "2026-07-02", "Issued for design", "AA", "JS", "RL"),
-        ],
-    )
-    gallery._stamp(fs)
-    assert fs.title_block.date == "2026-03-04"
