@@ -202,3 +202,22 @@ clear external paper with a leader. The planned text and leader extents are part
 of the diagram bounds before fitting and before the common nameplate row is
 placed. Both writers consume the same caption plan; data blocks cannot cover a
 displaced line number.
+
+## Measured parallel-train envelopes (2026-09-21)
+
+`LayoutOptions.parallel_train_clearance` accepts a positive distance in engine
+coordinates. When supplied, equivalent header-to-header trains are spaced by their
+occupied bodies and attached-instrument halos measured relative to the actual
+inlet axis, plus that clear lane. The maximum adjacent demand sets the uniform
+header-tap pitch. Absolute/row pins still disable train repacking. With no policy
+supplied the generic engine retains its historical spacing.
+
+PuranOS `sheet_policy.PFD_HOUSE_SHEET_PLANS` selects this rule for both members of
+its PFD/P&ID pair, converting its documented paper-space clearance at the fixed
+print scale. The engine does the placement and routing. Lettering, symbol size,
+A1 paper, nameplate rows and the capacity/collision gates are unchanged. A
+capacity refusal must identify the actual discipline and sheet; measuring a
+whole pair and reporting only its block misidentifies a P&ID as a failed PFD.
+
+New source-bound symbols and pending review requirements are documented in
+[process symbols](process-symbols.md).

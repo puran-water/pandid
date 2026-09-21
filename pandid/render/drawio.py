@@ -3160,6 +3160,18 @@ class DrawioRenderer:
         # at the ratio the title strip's scale cell reports. Without one
         # there is no fitting: the drawing keeps its own coordinates and
         # the frame was grown around it.
+        if free is not None and fs.drawing_scale is not None:
+            # Diagnostic only: use the very same ink bounds, free region and
+            # fixed scale as the gate below. Fitting coordinates precede the
+            # furniture print transform; neither axis is in millimetres.
+            need = tuple((inner[i+2] - inner[i]) * fs.drawing_scale for i in (0, 1))
+            paper = fs.print_scale * 25.4 / 96
+            fs.drawing_fit = {
+                'needed': need, 'available': free[2:],
+                'needed_mm': tuple(v * paper for v in need),
+                'available_mm': tuple(v * paper for v in free[2:]),
+                'drawing_scale': fs.drawing_scale, 'units': 'pre-print fitting coordinates',
+            }
         fit = _Fit.identity() if free is None else _Fit(
             *_fitted(inner, free, fs.drawing_scale,
                      getattr(fs, "drawing_scale_tolerance", 0.0)))

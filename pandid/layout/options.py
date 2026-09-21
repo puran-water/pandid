@@ -14,6 +14,10 @@ class LayoutOptions:
     control_passes: int = 6
     control_grid: float = 0.0
     parallel_trains: bool = False
+    #: Optional clear distance between the occupied envelopes of adjacent
+    #: inline trains. The caller supplies its house paper-space policy after
+    #: conversion to engine coordinates; None retains the generic layout.
+    parallel_train_clearance: float | None = None
     aligned_boundaries: bool = False
     fill_columns: bool = False
     #: Page whose fitted band the boundary columns are placed against, resolved
@@ -36,6 +40,8 @@ class LayoutOptions:
             raise ValueError("layout_options.stream_label_bands must be a positive integer")
         for field in fields(self):
             value = getattr(self, field.name)
+            if field.name == 'parallel_train_clearance' and value is None:
+                continue
             if field.name in {'parallel_trains', 'aligned_boundaries', 'fill_columns', 'strict_label_clearance'}:
                 if type(value) is not bool:
                     raise ValueError(f'layout_options.{field.name} must be boolean')

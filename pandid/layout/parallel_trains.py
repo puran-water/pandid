@@ -44,8 +44,31 @@ def prepare(fs):
 
 def align(fs):
     from pandid.portgeom import port_point, unit_box
+    from pandid.layout.halo import Pad, balloon_pads
+    pads = balloon_pads(fs)
     for source,target,paths,group,incoming,outgoing in _groups(fs):
-        spacing = max(140., max(u.frame.h for path in paths for u, _ in path) + 100.)
+        clearance = fs.layout_options.parallel_train_clearance
+        if clearance is None:
+            spacing = max(140., max(u.frame.h for path in paths for u, _ in path) + 100.)
+        else:
+            # Train ports need not cross their symbols at the centre. Measure
+            # the actual body and attached-instrument demand above/below the
+            # common inlet axis, rather than repeating the tallest cell's
+            # height plus an arbitrary 100-unit allowance for every member.
+            envelopes = []
+            for path in paths:
+                above = below = 0.0
+                for unit, inlet in path:
+                    _, axis = port_point(unit, unit.frame, inlet)
+                    _, y0, _, y1 = unit_box(unit, unit.frame)
+                    pad = pads.get(unit, Pad())
+                    above = max(above, axis - y0 + pad.north)
+                    below = max(below, y1 - axis + pad.south)
+                envelopes.append((above, below))
+            # Uniform header taps, sized by the worst adjacent pair, preserve
+            # port ordering; no lettering, symbol or clearance is scaled.
+            spacing = max(a[1] + b[0] + clearance
+                          for a, b in zip(envelopes, envelopes[1:]))
         top = max(spacing / 2 + 30, min(u.frame.cy for path in paths for u, _ in path))
         for i, path in enumerate(paths):
             for unit, inlet in path:
