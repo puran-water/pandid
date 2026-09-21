@@ -202,3 +202,60 @@ clear external paper with a leader. The planned text and leader extents are part
 of the diagram bounds before fitting and before the common nameplate row is
 placed. Both writers consume the same caption plan; data blocks cannot cover a
 displaced line number.
+
+## Measured parallel-train envelopes (2026-09-21)
+
+`LayoutOptions.parallel_train_clearance` accepts a positive distance in engine
+coordinates. When supplied, equivalent header-to-header trains are spaced by their
+occupied bodies and attached-instrument halos measured relative to the actual
+inlet axis, plus that clear lane. The maximum adjacent demand sets the uniform
+header-tap pitch. Absolute/row pins still disable train repacking. With no policy
+supplied the generic engine retains its historical spacing.
+
+PuranOS `sheet_policy.PFD_HOUSE_SHEET_PLANS` selects this rule for both members of
+its PFD/P&ID pair, converting its documented paper-space clearance at the fixed
+print scale. The engine does the placement and routing. A1 paper, nameplate rows
+and the capacity/collision gates are unchanged. A
+capacity refusal must identify the actual discipline and sheet; measuring a
+whole pair and reporting only its block misidentifies a P&ID as a failed PFD.
+
+New source-bound symbols and pending review requirements are documented in
+[process symbols](process-symbols.md).
+
+`process.lettering(fs, body=..., heading=...)` accepts the physical type sizes
+from the caller. PuranOS derives them from `sheet_policy` (3.5 mm body, 5 mm
+designation capitals). Neither the renderer nor a crowded sheet chooses smaller
+values. Flags and balloons retain text capacity by growing before layout;
+nameplate unbreakable words reserve their measured width. SVG tag halos and
+native labels use the same supplied size. `legend.pages(body_font_size=...)`
+measures and wraps its panels at that size as well.
+
+`fitted_band` now uses `fit_title_strip_to_sheet`, exactly as final native docking
+does. The pre-layout rail allocation must use the same wrapped header prose and
+available rectangle as the final fixed-size title strip. Both axes retain the same capacity gate.
+
+`compact_boundary_rows` repacks each boundary rail around the ordinates of its
+connected process ports. It removes stale grid pitch after equipment has been
+aligned. Ordered least-squares packing retains flag order and actual heights,
+with `boundary_flag_gap` clear between them; a rail with an authored vertical
+pin keeps its old placement. The generic default is off. PuranOS supplies the
+paper-space gap in its shared sheet policy as house drafting judgement.
+
+`expand_inline_stations` lets automatically placed valve/pump columns share
+the band's spare width. The old fill rule held every internal station seam at
+the minimum and spent the available paper outside it, crowding fixed-size tags
+around adjacent valve bodies. Explicit coordinates remain protected by the
+existing anchored-layout rule. The generic option defaults to false.
+
+When the strict caption search exhausts its local bands, it also considers
+empty interior rectangles induced by measured obstacle edges. This finds
+paper between columns that the old outside-the-entire-drawing fallback could
+not reach. `stream_label_gap` is caller-supplied clear paper; labels keep their
+full type size, and a displaced label keeps its leader to its own run. A
+crowded result still reaches the unchanged native collision gate.
+
+`TitleBlock.caption_font_size` lets the caller state the lettering for field
+captions such as CLIENT and REV. The strip measures their widths at that same
+size and preserves the value through spec round-trip. The generic default
+remains available; PuranOS derives its supplied size from its central body
+capital-height requirement and the furniture's print transform.

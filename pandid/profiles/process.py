@@ -34,6 +34,40 @@ def apply(fs):
     return fs
 
 
+def lettering(fs, *, body, heading):
+    """Apply caller-supplied fixed type sizes before layout, without fitting.
+
+    Physical house lettering policy belongs to the calling library. Generic
+    engine defaults are retained when this API is not called. Flags and
+    balloons grow to keep their existing text capacity at the supplied size.
+    """
+    import math
+    from pandid.render.symbols import default_registry
+    from pandid.render.furniture import text_width
+    if any(type(v) not in (int, float) or not math.isfinite(v) or v <= 0 for v in (body, heading)):
+        raise ValueError('Process lettering sizes must be positive and finite')
+    fs.stream_labels.font_size = body
+    for unit in fs.units:
+        unit.font_size = body
+        if unit.kind in {'instrument', 'feed', 'product'}:
+            symbol = default_registry.for_unit(unit)
+            # Grow from the construction dimensions once, never from a prior
+            # typography pass; render/re-render must be idempotent.
+            if not hasattr(unit, '_lettering_base_size'):
+                unit._lettering_base_size = (unit.width or symbol.width, unit.height or symbol.height)
+            w, h = unit._lettering_base_size
+            ratio = max(1.0, body / 12)
+            unit.width, unit.height = w * ratio, h * ratio
+            if unit.kind in {'feed', 'product'} and not getattr(unit, 'reference_code', ''):
+                lines = (unit.tag or '').splitlines() or ['']
+                unit.width = max(unit.width, max(text_width(s, body) for s in lines) + 40)
+                unit.height = max(unit.height, len(lines) * body * 1.2 + 12)
+    for row in fs.equipment_data.values():
+        row['font_size'] = body
+        row['heading_font_size'] = heading
+    return fs
+
+
 def align_boundaries(fs):
     """Reserve a left inlet column and a right outlet column before routing.
 
@@ -81,14 +115,33 @@ def align_boundaries(fs):
         left, right = centre - half, centre + half
     for kind in ("feed", "product"):
         cursor = float("-inf")
-        for unit in sorted((u for u in boundaries if u.kind == kind), key=lambda u: (u.frame.cy, u.name)):
+        rail = sorted((u for u in boundaries if u.kind == kind), key=lambda u: (u.frame.cy, u.name))
+        ys = None
+        if (rail and fs.layout_options.compact_boundary_rows
+                and not any(u.pin_ and u.pin_.y is not None for u in rail)):
+            from pandid.portgeom import port_point
+            from pandid.render.nameplates import _aligned_positions
+            desired = []
+            for unit in rail:
+                ports = [s.dest if s.source.owner is unit else s.source for s in fs.streams
+                         if s.kind in {'material', 'energy'} and unit in {s.source.owner, s.dest.owner}]
+                ordinates = [port_point(p.owner, p.owner.frame, p.name)[1]
+                             for p in ports if p.owner is not None and p.owner.frame is not None]
+                centre = sum(ordinates) / len(ordinates) if ordinates else unit.frame.cy
+                desired.append(centre - unit.frame.h / 2)
+            # Reuse the engine's ordered least-squares row packing. A boundary
+            # is charged its own height plus clear paper, not an old process
+            # row's tallest cell. No pinned rail is moved by this policy.
+            ys = _aligned_positions(desired, [u.frame.h for u in rail],
+                                    float('-inf'), gap=fs.layout_options.boundary_flag_gap)
+        for index, unit in enumerate(rail):
             f = unit.frame
-            y = max(f.y, cursor)
+            y = ys[index] if ys is not None else max(f.y, cursor)
             x = left - 50 if kind == "feed" else right
             if unit.pin_ and unit.pin_.x is not None and abs(unit.pin_.x - x) > .01:
                 raise ValueError("BOUNDARY_COLUMN_PIN_CONFLICT: " + unit.name)
             unit.frame = replace(f, x=x, y=y)
-            cursor = y + f.h + 24
+            cursor = y + f.h + fs.layout_options.boundary_flag_gap
 
 
 def inspect_drawio(document):

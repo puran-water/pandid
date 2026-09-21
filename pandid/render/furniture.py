@@ -1715,12 +1715,16 @@ def _information_minima(tb):
                  for i, (share, value) in enumerate(zip((.38, .21, .29, .12), values)))
 
 
+def _caption_type(tb):
+    return getattr(tb, 'caption_font_size', None) or _CAPTION
+
+
 def _header_value_x(tb, label=None):
     # Fitted prose fields are independently ruled rows. A long caption such
     # as CONTRACTOR must not take horizontal room from a short HOLD caption.
     if label is not None and getattr(tb, "fit_fields", False):
-        return max(_HDR_VALUE_X, text_width(label, _CAPTION) + 12)
-    return max([_HDR_VALUE_X, *(text_width(label, _CAPTION) + 12
+        return max(_HDR_VALUE_X, text_width(label, _caption_type(tb)) + 12)
+    return max([_HDR_VALUE_X, *(text_width(label, _caption_type(tb)) + 12
                                for label, _value in _header_fields(tb))])
 
 
@@ -1929,7 +1933,7 @@ def title_strip_layout(tb, name: str, date: str, right: float, bottom: float,
         if i and label:
             parts.append(("rule", ix, hy, x + w, hy, _STRIP_HAIRLINE))
         if label:
-            parts.append(("text", ix + 6, hy + _HDR_ROW - 4, label, _CAPTION,
+            parts.append(("text", ix + 6, hy + _HDR_ROW - 4, label, _caption_type(tb),
                           "start", False, CAPTION_INK))
         parts.append(("text", ix + header_value_x, hy + _HDR_ROW - 4,
                       clip(value, info_w - header_value_x - 5, _HDR_TYPE,
@@ -1987,7 +1991,7 @@ def title_strip_layout(tb, name: str, date: str, right: float, bottom: float,
                             field="sheet/of_sheets", report=report),
                   _REV_TYPE, "end", False, CAPTION_INK))
     # status (tiny label at cell top, value below)
-    parts.append(("text", ix + 6, band2 + 8, "STATUS", _CAPTION,
+    parts.append(("text", ix + 6, band2 + 8, "STATUS", _caption_type(tb),
                   "start", False, CAPTION_INK))
     parts.append(("text", ix + 6, band3 - 5,
                   clip(_stated(tb, "status") or "—", info_w - 12,
@@ -2052,7 +2056,7 @@ def title_strip_layout(tb, name: str, date: str, right: float, bottom: float,
         if j:
             parts.append(("rule", cxr, band3, cxr, bottom, _STRIP_HAIRLINE))
         bold = seg_label != "DATE"
-        parts.append(("text", cxr + 5, band3 + 8, seg_label, _CAPTION,
+        parts.append(("text", cxr + 5, band3 + 8, seg_label, _caption_type(tb),
                       "start", False, CAPTION_INK))
         # Measured either way, drawn only when there is something to
         # draw: the scale box is ruled on a sheet with no scale to state

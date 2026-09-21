@@ -14,7 +14,19 @@ class LayoutOptions:
     control_passes: int = 6
     control_grid: float = 0.0
     parallel_trains: bool = False
+    #: Optional clear distance between the occupied envelopes of adjacent
+    #: inline trains. The caller supplies its house paper-space policy after
+    #: conversion to engine coordinates; None retains the generic layout.
+    parallel_train_clearance: float | None = None
     aligned_boundaries: bool = False
+    #: Repack each boundary rail around its connected process-port ordinates,
+    #: rather than retaining stale grid rows after inline trains are aligned.
+    compact_boundary_rows: bool = False
+    boundary_flag_gap: float = 24.0
+    #: Clear paper around displaced stream captions, supplied by the caller.
+    stream_label_gap: float = 8.0
+    #: Automatic inline stations may share spare column width for their tags.
+    expand_inline_stations: bool = False
     fill_columns: bool = False
     #: Page whose fitted band the boundary columns are placed against, resolved
     #: when layout runs. ``None`` keeps the historical behaviour of hanging the
@@ -36,7 +48,9 @@ class LayoutOptions:
             raise ValueError("layout_options.stream_label_bands must be a positive integer")
         for field in fields(self):
             value = getattr(self, field.name)
-            if field.name in {'parallel_trains', 'aligned_boundaries', 'fill_columns', 'strict_label_clearance'}:
+            if field.name == 'parallel_train_clearance' and value is None:
+                continue
+            if field.name in {'parallel_trains', 'aligned_boundaries', 'fill_columns', 'strict_label_clearance', 'compact_boundary_rows', 'expand_inline_stations'}:
                 if type(value) is not bool:
                     raise ValueError(f'layout_options.{field.name} must be boolean')
                 continue

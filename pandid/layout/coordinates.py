@@ -318,6 +318,12 @@ def _station_gaps(columns: dict[int, _Column], band: list[int]) -> set[int]:
     from pandid.layout.stages import process_streams
 
     members = [u for c in band for u in columns[c].units]
+    # In a fixed-lettering process sheet an automatic valve/pump station needs
+    # room for its own tags. Keeping every internal seam at the minimum spends
+    # all spare paper outside the station and piles labels onto its bodies.
+    # Explicit coordinate pins are still handled by _wrappable/_lay_band.
+    if for_units(members).expand_inline_stations:
+        return set()
     placed = set(members)
     fixed = set()
     for stream in process_streams(members[0].flowsheet):

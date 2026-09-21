@@ -2152,8 +2152,8 @@ class DrawioRenderer:
             # the loop out by.
             return text, ["verticalLabelPosition=middle", "verticalAlign=middle",
                           "align=center",
-                          _drawn_type(_TAG_TYPE, fit, lines=len(parts),
-                                      box=self._cell_box(u))], (0.0, 0.0)
+                          _drawn_type(getattr(u, 'font_size', _TAG_TYPE), fit, lines=len(parts),
+                                      box=None if hasattr(u, 'font_size') else self._cell_box(u))], (0.0, 0.0)
 
         if getattr(u, "reference_code", ""):
             return "", [], (0.0, 0.0)
@@ -2181,8 +2181,8 @@ class DrawioRenderer:
             # at 10,5 on a baseline of its own -- and a draw.io label
             # has one size and one line height for the whole of it.
             return "<br>".join(_html_text(line) for line in lines), _LABEL_SIDE["center"] + [
-                _drawn_type(_TAG_TYPE, fit, lines=len(lines),
-                            box=self._cell_box(u))], (0.0, 0.0)
+                _drawn_type(getattr(u, 'font_size', _TAG_TYPE), fit, lines=len(lines),
+                            box=None if hasattr(u, 'font_size') else self._cell_box(u))], (0.0, 0.0)
         if closed_marking(u, self.registry) == "NC":
             lines.append("NC")
         letters = fail_marking(u)
@@ -2305,7 +2305,7 @@ class DrawioRenderer:
         at = lambda x, y: (fit.length(x - ox), fit.length(y - oy))
         x1, y1 = at(*divider[:2]); x2, y2 = at(*divider[2:])
         out = _segment(cid + '-divider', x1, y1, x2, y2, '#111111', fit.length(1))
-        for suffix, text, box, font in [('code', unit.reference_code, code, 15), ('description', unit.tag, body, 12)]:
+        for suffix, text, box, font in [('code', unit.reference_code, code, getattr(unit, 'font_size', 15)), ('description', unit.tag, body, getattr(unit, 'font_size', 12))]:
             x, y = at(*box[:2]); w, h = map(fit.length, box[2:])
             style = f'text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;strokeColor=none;fillColor=none;spacing=1;fontFamily=Arial;fontSize={fit.length(font):g};'
             cells = _rect(cid + '-' + suffix, x, y, w, h, style)
@@ -3160,6 +3160,18 @@ class DrawioRenderer:
         # at the ratio the title strip's scale cell reports. Without one
         # there is no fitting: the drawing keeps its own coordinates and
         # the frame was grown around it.
+        if free is not None and fs.drawing_scale is not None:
+            # Diagnostic only: use the very same ink bounds, free region and
+            # fixed scale as the gate below. Fitting coordinates precede the
+            # furniture print transform; neither axis is in millimetres.
+            need = tuple((inner[i+2] - inner[i]) * fs.drawing_scale for i in (0, 1))
+            paper = fs.print_scale * 25.4 / 96
+            fs.drawing_fit = {
+                'needed': need, 'available': free[2:],
+                'needed_mm': tuple(v * paper for v in need),
+                'available_mm': tuple(v * paper for v in free[2:]),
+                'drawing_scale': fs.drawing_scale, 'units': 'pre-print fitting coordinates',
+            }
         fit = _Fit.identity() if free is None else _Fit(
             *_fitted(inner, free, fs.drawing_scale,
                      getattr(fs, "drawing_scale_tolerance", 0.0)))
@@ -4584,6 +4596,10 @@ def fitted_band(fs, page_size: str, show_stream_table: bool = False) -> "tuple[f
     if sheet is None:
         raise ValueError("fitted_band needs a named page size")
     items = dock_items(fs, show_stream_table)
+    # Pre-layout capacity must measure the same wrapped strip that the final
+    # renderer docks. Header prose may use spare strip width before it spends
+    # height; layout must see that same available rectangle.
+    items = F.fit_title_strip_to_sheet(items, fs.title_block, fs.title_block, sheet)
     _placed, _frame, free = F.dock(
         items, (0.0, 0.0, 0.0, 0.0), sheet=sheet,
         too_small=lambda need_w, need_h, culprit: _too_small(

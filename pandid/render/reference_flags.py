@@ -17,10 +17,10 @@ def svg(unit):
     divider, code, body = parts(unit)
     x1,y1,x2,y2=divider
     out=[f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="black" stroke-width="1"/>']
-    for text, box, font in ((unit.reference_code, code, 15), (unit.tag, body, 12)):
+    for text, box, font in ((unit.reference_code, code, getattr(unit, 'font_size', 15)), (unit.tag, body, getattr(unit, 'font_size', 12))):
         x,y,w,h=box
         lines=text.splitlines()
         for n,line in enumerate(lines):
-            cy=y+h/2+(n-(len(lines)-1)/2)*14
+            cy=y+h/2+(n-(len(lines)-1)/2)*font*1.2
             out.append(f'<text x="{x+w/2}" y="{cy}" font-family="sans-serif" font-size="{font}" text-anchor="middle" dominant-baseline="middle">{escaped(line)}</text>')
     return out

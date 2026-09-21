@@ -1733,6 +1733,32 @@ def fitted_region(fs):
             max(b[2] for b in boxes), max(b[3] for b in boxes))
 
 
+def _interior_label_spot(region, protected, width, height, centre, gap):
+    """Nearest empty rectangular caption slot among existing obstacle edges.
+
+    Local bands and positions outside the entire drawing can miss large empty
+    spaces between equipment columns. Candidate coordinates are induced by
+    measured obstacle edges, not a second layout or a finer arbitrary grid.
+    """
+    if region is None:
+        return None
+    x0, y0, x1, y1 = region
+    cx, cy = centre
+    xs = {cx, x0 + width / 2, x1 - width / 2}
+    ys = {cy, y0 + height / 2, y1 - height / 2}
+    for a, b, c, d in protected:
+        xs.update((a - gap - width / 2, c + gap + width / 2))
+        ys.update((b - gap - height / 2, d + gap + height / 2))
+    xs = [x for x in xs if x0 <= x-width/2 and x+width/2 <= x1]
+    ys = [y for y in ys if y0 <= y-height/2 and y+height/2 <= y1]
+    for x, y in sorted(((x, y) for x in xs for y in ys),
+                       key=lambda p: ((p[0]-cx)**2 + (p[1]-cy)**2, p)):
+        box = (x-width/2, y-height/2, x+width/2, y+height/2)
+        if not any(_meets(box, b) for b in protected):
+            return (x, y), box
+    return None
+
+
 def stream_numbers(fs, placed: list, joints: "str | None",
                    direction: str,
                    region: "tuple[float, float, float, float] | None" = None) -> "list[StreamNumber]":
@@ -2037,6 +2063,13 @@ def stream_numbers(fs, placed: list, joints: "str | None",
                 leader,cut=_leader(box,seg,protected,keep)
                 spot,damage=(ux,uy),(0,0,0,cut)
                 break
+            if any(damage[:3]):
+                interior = _interior_label_spot(region, protected, bw, bh,
+                                                (cx, cy), fs.layout_options.stream_label_gap)
+                if interior is not None:
+                    spot, box = interior
+                    leader, cut = _leader(box, seg, protected, keep)
+                    damage = (0, 0, 0, cut)
             # No clear paper inside the drawing is a crowded sheet, not an
             # unrenderable one. The nearby search already chose the least
             # damaging spot on the run; keep it, and let `label_findings`
@@ -2753,6 +2786,14 @@ def arrow_marker_id(color: str) -> str:
     return ident("arrow", color.lstrip("#"))
 
 
+class _LabelItem(tuple):
+    """Six-value placement tuple carrying its actual type size for measurement."""
+    def __new__(cls, values, font_size=12):
+        value = super().__new__(cls, values)
+        value.font_size = font_size
+        return value
+
+
 def _unit_label_box(item) -> "tuple[float, float, float, float] | None":
     """Halo rect of an equipment tag.
 
@@ -2769,18 +2810,19 @@ def _unit_label_box(item) -> "tuple[float, float, float, float] | None":
     of its own ink and let the line behind the tag show through it.
     """
     lx, ly, anchor, baseline, lpos, text = item
+    font_scale = getattr(item, 'font_size', 12) / 12
     if lpos == "center":
         return None
     widths = []
     lines = text.split("\n")
     for line in lines:
         narrow, wide, zero = F.script_counts(line)
-        widths.append(len(line) * 6.6 + 8 if not wide and not zero
-                      else narrow * 6.6 + wide * 12 + 8)
+        widths.append((len(line) * 6.6 if not wide and not zero
+                       else narrow * 6.6 + wide * 12) * font_scale + 8)
     hw = max(widths)
     # A valve's size/spec may occupy a second line. Reserving a one-line
     # halo let a line number occupy the same ink in Desktop's PDF export.
-    hh = 15.0 + (len(lines) - 1) * 14.4
+    hh = (15.0 + (len(lines) - 1) * 14.4) * font_scale
     rx = lx - hw / 2 if anchor == "middle" else (lx - hw if anchor == "end" else lx)
     ry = ly - hh / 2 if baseline == "middle" else ly - hh + 3
     return (rx, ry, rx + hw, ry + hh)
@@ -5087,6 +5129,9 @@ class SvgRenderer:
         """
         from pandid.units import split_tag
 
+        font = getattr(u, 'font_size', 12)
+        number_font = getattr(u, 'font_size', 11)
+        ratio = font / 12
         variant = getattr(u, "variant", "default")
         # The tag, not the name: a repeated square is drawn with the
         # tag it shares and named apart only so it can be addressed.
@@ -5103,12 +5148,12 @@ class SvgRenderer:
             # only as far down as the sloping sides leave it room. Seven
             # units below the middle of a 40 box is where a two-figure
             # number's bottom corners clear the edges.
-            return [f'    <text x="{cx}" y="{cy + 7}" font-family="sans-serif" '
-                    f'font-size="11" text-anchor="middle" '
+            return [f'    <text x="{cx}" y="{cy + 7 * ratio}" font-family="sans-serif" '
+                    f'font-size="{number_font:g}" text-anchor="middle" '
                     f'dominant-baseline="middle">{escaped(bot or top)}</text>']
         if not top:
             return [f'    <text x="{cx}" y="{cy}" font-family="sans-serif" '
-                    f'font-size="12" text-anchor="middle" '
+                    f'font-size="{font:g}" text-anchor="middle" '
                     f'dominant-baseline="middle">{escaped(bot or top)}</text>']
         # The location bar says *where* the instrument lives and is
         # drawn across the middle, exactly where the letters would
@@ -5116,12 +5161,12 @@ class SvgRenderer:
         # and the number wholly below, so a barred variant needs the
         # pair pushed apart to leave the band clear.
         letters_dy, number_dy = (-10, 11) if variant in _BARRED_BALLOONS else (-4, 10)
-        out = [f'    <text x="{cx}" y="{cy + letters_dy}" font-family="sans-serif" '
-               f'font-size="12" font-weight="bold" text-anchor="middle" '
+        out = [f'    <text x="{cx}" y="{cy + letters_dy * ratio}" font-family="sans-serif" '
+               f'font-size="{font:g}" font-weight="bold" text-anchor="middle" '
                f'dominant-baseline="middle">{escaped(top.upper())}</text>']
         if bot:
-            out.append(f'    <text x="{cx}" y="{cy + number_dy}" font-family="sans-serif" '
-                       f'font-size="11" text-anchor="middle" '
+            out.append(f'    <text x="{cx}" y="{cy + number_dy * ratio}" font-family="sans-serif" '
+                       f'font-size="{number_font:g}" text-anchor="middle" '
                        f'dominant-baseline="middle">{escaped(bot)}</text>')
         return out
 
@@ -5156,7 +5201,8 @@ class SvgRenderer:
         lines never strike through it.
         """
         lpos = f.label_pos or "top"
-        return (*self._label_place(lpos, x, y, u_width, u_height), lpos, safe_name)
+        return _LabelItem((*self._label_place(lpos, x, y, u_width, u_height), lpos, safe_name),
+                          getattr(u, 'font_size', 12))
 
     def _tag_item(self, u, f, x, y, u_width, u_height, safe_name, ink, symbols=()):
         """The equipment tag, stepped clear of what is on the sheet.
@@ -5226,7 +5272,7 @@ class SvgRenderer:
             # it starts reading as the neighbour's.
             edgewise = side in ("left", "right")
             for sx, sy in _slide(lx, ly, (u_height if edgewise else u_width) / 2, edgewise):
-                spot = (sx, sy, anchor, baseline, side, safe_name)
+                spot = _LabelItem((sx, sy, anchor, baseline, side, safe_name), getattr(u, 'font_size', 12))
                 cost = _erases(_unit_label_box(spot), near, others)
                 if cost < damage:
                     best, damage = spot, cost
@@ -5387,6 +5433,7 @@ class SvgRenderer:
         out = ['  <g id="unit_labels">']
         for item in items:
             lx, ly, anchor, baseline, _, text = item
+            font = getattr(item, 'font_size', 12)
             box = _unit_label_box(item)
             if box is not None:
                 rx, ry, rx1, ry1 = box
@@ -5394,15 +5441,15 @@ class SvgRenderer:
                            f'height="{ry1 - ry:.1f}" fill="white" />')
             if "\n" in text:
                 lines = text.split("\n")
-                leading = 18 if item[4] == "center" else 14.4
+                leading = font * (1.5 if item[4] == "center" else 1.2)
                 first_y = ly - (len(lines) - 1) * leading / (2 if baseline == "middle" else 1)
                 for index, line in enumerate(lines):
                     out.append(f'<text x="{lx}" y="{first_y + index * leading}" '
-                               f'font-family="sans-serif" font-size="12" '
+                               f'font-family="sans-serif" font-size="{font:g}" '
                                f'text-anchor="{anchor}" dominant-baseline="{baseline}">{line}</text>')
                 continue
             out.append(f'    <text x="{lx}" y="{ly}" font-family="sans-serif" '
-                       f'font-size="12" text-anchor="{anchor}" '
+                       f'font-size="{font:g}" text-anchor="{anchor}" '
                        f'dominant-baseline="{baseline}">{text}</text>')
         out.append('  </g>')
         return out

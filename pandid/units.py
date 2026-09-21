@@ -42,6 +42,9 @@ __all__ = [
     "Product",
     "Pump",
     "MembraneCage",
+    "InjectionQuill",
+    "PressureMembrane",
+    "PressureMembraneArray",
     "ConcreteBasin",
     "BasinAgitator",
     "SubmersibleMixer",
@@ -1454,6 +1457,34 @@ class LiquidScreen(Unit):
     reject: Port
     kind = "liquid_screen"
     PORTS = [("inlet", "inlet", "process"), ("outlet", "outlet", "process"), ("reject", "outlet", "process")]
+
+
+class InjectionQuill(Unit):
+    """Chemical lance with a dosing inlet and discharge into the receiving duty.
+
+    Host process pipe, isolation and nonreturn hardware are separate roles.
+    """
+    chemical_in: Port
+    injection: Port
+    kind = "injection_quill"
+    PORTS = [("chemical_in", "inlet", "process"), ("injection", "outlet", "process")]
+    PLACES = {"chemical_in": "W", "injection": "E"}
+
+
+class PressureMembrane(Unit):
+    """Pressure membrane vessel with distinct feed, reject and permeate nozzles."""
+    inlet: Port
+    concentrate: Port
+    permeate: Port
+    kind = "pressure_membrane"
+    PORTS = [("inlet", "inlet", "process"), ("concentrate", "outlet", "process"),
+             ("permeate", "outlet", "process")]
+    PLACES = {"inlet": "W", "concentrate": "E", "permeate": "S"}
+
+
+class PressureMembraneArray(PressureMembrane):
+    """Pressure membrane bank; schematic strokes do not prescribe vessel count."""
+    kind = "pressure_membrane_array"
 
 
 class MembraneCage(Unit):

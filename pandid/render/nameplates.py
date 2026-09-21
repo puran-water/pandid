@@ -113,7 +113,11 @@ def plan(fs, inner):
         row = records[unit.name]
         font = row.get('font_size', 11)
         heading = row.get('heading_font_size', max(font+1,24))
-        width = max(row.get('width', 220), text_width(row['tags'], heading, bold=True) + 18)
+        # An unbreakable engineering value (for example a drive-type token)
+        # cannot wrap. Reserve its measured width at the fixed body type size;
+        # the complete row still goes through the ordinary capacity gate.
+        word_width = max((text_width(word, font) for line in row['rows'] for word in line.split()), default=0)
+        width = max(row.get('width', 220), text_width(row['tags'], heading, bold=True) + 18, word_width + 18)
         lines = [part for line in row['rows'] for part in _wrapped(line, width - 18, font)]
         annotation = Annotation(title=row['tags'], rows=lines, width=width, font_size=font,
                                 title_align="left", title_font_size=heading)
