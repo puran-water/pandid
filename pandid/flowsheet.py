@@ -409,6 +409,11 @@ class Flowsheet:
         # station.
         self.valve_station_tag_scheme = valve_station_tag_scheme
         self.drawing_scale: float | None = None
+        #: How far past the region left for it a FIXED-SCALE drawing may still be drawn,
+        #: as a fraction of that region. Zero refuses any overrun, which is the behaviour
+        #: every caller had before this existed. A house profile raises it where refusing a
+        #: drawing costs more than the overrun does -- see ``circle_h2o.block_diagram``.
+        self.drawing_scale_tolerance: float = 0.0
         self.containments: dict[str, str] = {}
         self.auto_faces = auto_faces
         self.units: list = []

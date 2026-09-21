@@ -4568,16 +4568,18 @@ class SvgRenderer:
         if free is None:
             lines.extend(drawing)
         else:  # a fixed sheet: the drawing is fitted into what the furniture leaves
-            lines.append(f'  <g id="drawing" transform="{self._fit(dx0, dy0, dx1, dy1, free, fs.drawing_scale)}">')
+            lines.append(f'  <g id="drawing" transform="{self._fit(dx0, dy0, dx1, dy1, free, fs.drawing_scale, getattr(fs, "drawing_scale_tolerance", 0.0))}">')
             lines.extend(drawing)
             lines.append('  </g>')
         return _document(fs, sheet,
                          (frame_x, frame_y, canvas_width, canvas_height), lines)
 
-    def _fit(self, dx0, dy0, dx1, dy1, free, fixed_scale=None) -> str:
+    def _fit(self, dx0, dy0, dx1, dy1, free, fixed_scale=None, tolerance=0.0) -> str:
         """Transform centring the drawing in *free*, scaled to fit."""
         from pandid.render.drawio import _fitted
-        s, x, y = _fitted((dx0,dy0,dx1,dy1), free, fixed_scale)
+        # Same tolerance as the drawio backend: the two draw one sheet and must agree about
+        # whether it fits, or a drawing is issued through one door and refused at the other.
+        s, x, y = _fitted((dx0,dy0,dx1,dy1), free, fixed_scale, tolerance)
         return f"translate({_num(x)}, {_num(y)}) scale({s:.6g})"
 
     # --- furniture ----------------------------------------------------

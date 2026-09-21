@@ -83,6 +83,45 @@ def test_an_overfull_sheet_reports_capacity_at_the_same_printed_size():
     assert (fs.drawing_scale, fs.print_scale) == (.44, 2.7)
 
 
+def test_a_tolerance_accepts_a_drawing_a_fraction_over_without_touching_its_scale():
+    """The overrun is spent from the margin, never from the lettering.
+
+    A drawing a hair too wide for the region left to it used to be refused outright, which
+    costs a whole extra sheet of paper to recover a fraction of a millimetre nobody can see.
+    The tolerance accepts it -- and the assertion that matters is that the returned scale is
+    still exactly the fixed one, so every character keeps the size it was qualified at.
+    """
+    from pandid.render.drawio import _fitted
+
+    inner, free = (0, 0, 1005.0, 300.0), (0, 0, 1000.0, 600.0)  # 0.5 % over on width
+    with pytest.raises(ValueError, match='FIXED_SCALE_CAPACITY'):
+        _fitted(inner, free, 1.0)
+    scale, _x, _y = _fitted(inner, free, 1.0, 0.01)
+    assert scale == 1.0, 'the drawing is accepted at its own scale, not shrunk into the region'
+
+
+def test_a_drawing_past_the_tolerance_still_refuses_and_says_by_how_much():
+    """The tolerance absorbs a rounding overrun; it must not absorb a layout problem."""
+    from pandid.render.drawio import _fitted
+
+    inner, free = (0, 0, 1200.0, 300.0), (0, 0, 1000.0, 600.0)  # 20 % over
+    with pytest.raises(ValueError, match='FIXED_SCALE_CAPACITY') as refusal:
+        _fitted(inner, free, 1.0, 0.01)
+    assert '1.0% tolerance' in str(refusal.value)
+    assert '20.0% over' in str(refusal.value)
+
+
+def test_both_backends_agree_about_whether_a_sheet_fits():
+    """One sheet, two renderers: a drawing issued through one must not refuse at the other."""
+    fs = permeation()
+    fs.units[1].width = 5000
+    fs.drawing_scale_tolerance = 0.01
+    for render in (lambda: fs.to_drawio(diagram='p&id', page_size='A1', border='zone'),
+                   lambda: fs.to_svg(diagram='p&id', page_size='A1', border='zone')):
+        with pytest.raises(ValueError, match='FIXED_SCALE_CAPACITY'):
+            render()
+
+
 @pytest.mark.parametrize('count', [2, 3, 4])
 def test_declared_channels_reserve_and_draw_the_entire_horizontal_row(count):
     fs = Flowsheet('Multi-channel element')

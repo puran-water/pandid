@@ -51,6 +51,19 @@ def plan_block_diagram(blocks, streams, lanes, *, print_scale: float = 2.7,
         band_gap=_paper_mm_in_nominal_units(band_gap_mm, print_scale, 'band_gap_mm'))
 
 
+#: How far past the region left for it a block diagram may still be drawn, as a fraction of
+#: that region (owner ruling, H. Kshetry, 2026-09-20: "accept a sheet within a reasonable
+#: tolerance"). A bounded exception to the rule that a fixed-scale drawing is refused rather
+#: than shrunk -- and it is bounded because the reason for that rule stands: a drawing whose
+#: lettering was shrunk to make it fit is not one anyone should sign.
+#:
+#: 1 % is the number because it spends MARGIN, not lettering. The drawing keeps its own scale,
+#: so 3.5 mm text stays 3.5 mm and 5 mm designations stay 5 mm; the block field simply reaches
+#: about five nominal units further into the frame margin, which is thinner than the line that
+#: draws the frame. A sheet more than this over is genuinely too full and still refuses.
+_FIXED_SCALE_TOLERANCE = 0.01
+
+
 def block_diagram(name: str, blocks: list[dict], streams: list[dict], *,
                   title_block, page_id: str, graph_attributes: dict,
                   print_scale: float = 2.7, band_width: float = 2100.0,
@@ -76,6 +89,7 @@ def block_diagram(name: str, blocks: list[dict], streams: list[dict], *,
     # would shrink title-strip, legend and zone lettering along with the BFD.
     fs.print_scale = _FURNITURE_PRINT_SCALE
     fs.drawing_scale = print_scale / _FURNITURE_PRINT_SCALE
+    fs.drawing_scale_tolerance = _FIXED_SCALE_TOLERANCE
     fs.layout_options.stream_spacing = 14
     # BFD reviews must not spend a congested caption's clearance by putting
     # its white plate through a process block. Use the existing clear-paper

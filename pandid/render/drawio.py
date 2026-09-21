@@ -3161,7 +3161,8 @@ class DrawioRenderer:
         # there is no fitting: the drawing keeps its own coordinates and
         # the frame was grown around it.
         fit = _Fit.identity() if free is None else _Fit(
-            *_fitted(inner, free, fs.drawing_scale))
+            *_fitted(inner, free, fs.drawing_scale,
+                     getattr(fs, "drawing_scale_tolerance", 0.0)))
         # What the title strip's own three variable fields fall back to,
         # all three of them the sheet's answer rather than this file's:
         # the drawing name a block with no title takes, today's date
@@ -4338,7 +4339,7 @@ def _text_box(cid: str, title: str, rows, x, y, w, h, font: float = 11.0,
 _ANNOTATION_KEYS = "rowLines=0;columnLines=0;"
 
 
-def _fitted(inner, free, fixed_scale=None) -> "tuple[float, float, float]":
+def _fitted(inner, free, fixed_scale=None, tolerance=0.0) -> "tuple[float, float, float]":
     """The scale and offset that centre the drawing in the region left
     for it.
 
@@ -4354,8 +4355,20 @@ def _fitted(inner, free, fixed_scale=None) -> "tuple[float, float, float]":
     fx, fy, fw, fh = free
     dw, dh = dx1 - dx0, dy1 - dy0
     s = _fit_scale(dw, dh, free) if fixed_scale is None else fixed_scale
-    if fixed_scale is not None and (s * dw > fw + .01 or s * dh > fh + .01):
-        raise ValueError(f"FIXED_SCALE_CAPACITY: drawing needs {s*dw:.1f} x {s*dh:.1f}; available {fw:.1f} x {fh:.1f}; rearrange the sheet without shrinking lettering")
+    # A fixed-scale drawing is refused rather than shrunk, because shrinking it shrinks the
+    # lettering that was qualified on paper. ``tolerance`` is the bounded exception: a drawing
+    # a fraction over the region is drawn at its own size and allowed that fraction of the
+    # margin, which costs nobody a legible character. It is a FRACTION of the region, so the
+    # allowance scales with the sheet, and it never changes ``s``.
+    allowance = 1.0 + max(0.0, tolerance)
+    if fixed_scale is not None and (s * dw > fw * allowance + .01
+                                    or s * dh > fh * allowance + .01):
+        over = max(s * dw / fw, s * dh / fh) - 1.0
+        raise ValueError(
+            f"FIXED_SCALE_CAPACITY: drawing needs {s*dw:.1f} x {s*dh:.1f}; "
+            f"available {fw:.1f} x {fh:.1f}"
+            + (f" (+{tolerance:.1%} tolerance, and it is {over:.1%} over)" if tolerance else "")
+            + "; rearrange the sheet without shrinking lettering")
     return (s, fx + (fw - s * dw) / 2 - s * dx0, fy + (fh - s * dh) / 2 - s * dy0)
 
 
