@@ -214,8 +214,8 @@ supplied the generic engine retains its historical spacing.
 
 PuranOS `sheet_policy.PFD_HOUSE_SHEET_PLANS` selects this rule for both members of
 its PFD/P&ID pair, converting its documented paper-space clearance at the fixed
-print scale. The engine does the placement and routing. Lettering, symbol size,
-A1 paper, nameplate rows and the capacity/collision gates are unchanged. A
+print scale. The engine does the placement and routing. A1 paper, nameplate rows
+and the capacity/collision gates are unchanged. A
 capacity refusal must identify the actual discipline and sheet; measuring a
 whole pair and reporting only its block misidentifies a P&ID as a failed PFD.
 
@@ -233,3 +233,10 @@ measures and wraps its panels at that size as well.
 `fitted_band` now uses `fit_title_strip_to_sheet`, exactly as final native docking
 does. The pre-layout rail allocation must use the same wrapped header prose and
 available rectangle as the final fixed-size title strip. Both axes retain the same capacity gate.
+
+`compact_boundary_rows` repacks each boundary rail around the ordinates of its
+connected process ports. It removes stale grid pitch after equipment has been
+aligned. Ordered least-squares packing retains flag order and actual heights,
+with `boundary_flag_gap` clear between them; a rail with an authored vertical
+pin keeps its old placement. The generic default is off. PuranOS supplies the
+paper-space gap in its shared sheet policy as house drafting judgement.

@@ -19,6 +19,10 @@ class LayoutOptions:
     #: conversion to engine coordinates; None retains the generic layout.
     parallel_train_clearance: float | None = None
     aligned_boundaries: bool = False
+    #: Repack each boundary rail around its connected process-port ordinates,
+    #: rather than retaining stale grid rows after inline trains are aligned.
+    compact_boundary_rows: bool = False
+    boundary_flag_gap: float = 24.0
     fill_columns: bool = False
     #: Page whose fitted band the boundary columns are placed against, resolved
     #: when layout runs. ``None`` keeps the historical behaviour of hanging the
@@ -42,7 +46,7 @@ class LayoutOptions:
             value = getattr(self, field.name)
             if field.name == 'parallel_train_clearance' and value is None:
                 continue
-            if field.name in {'parallel_trains', 'aligned_boundaries', 'fill_columns', 'strict_label_clearance'}:
+            if field.name in {'parallel_trains', 'aligned_boundaries', 'fill_columns', 'strict_label_clearance', 'compact_boundary_rows'}:
                 if type(value) is not bool:
                     raise ValueError(f'layout_options.{field.name} must be boolean')
                 continue

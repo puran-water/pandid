@@ -115,14 +115,33 @@ def align_boundaries(fs):
         left, right = centre - half, centre + half
     for kind in ("feed", "product"):
         cursor = float("-inf")
-        for unit in sorted((u for u in boundaries if u.kind == kind), key=lambda u: (u.frame.cy, u.name)):
+        rail = sorted((u for u in boundaries if u.kind == kind), key=lambda u: (u.frame.cy, u.name))
+        ys = None
+        if (rail and fs.layout_options.compact_boundary_rows
+                and not any(u.pin_ and u.pin_.y is not None for u in rail)):
+            from pandid.portgeom import port_point
+            from pandid.render.nameplates import _aligned_positions
+            desired = []
+            for unit in rail:
+                ports = [s.dest if s.source.owner is unit else s.source for s in fs.streams
+                         if s.kind in {'material', 'energy'} and unit in {s.source.owner, s.dest.owner}]
+                ordinates = [port_point(p.owner, p.owner.frame, p.name)[1]
+                             for p in ports if p.owner is not None and p.owner.frame is not None]
+                centre = sum(ordinates) / len(ordinates) if ordinates else unit.frame.cy
+                desired.append(centre - unit.frame.h / 2)
+            # Reuse the engine's ordered least-squares row packing. A boundary
+            # is charged its own height plus clear paper, not an old process
+            # row's tallest cell. No pinned rail is moved by this policy.
+            ys = _aligned_positions(desired, [u.frame.h for u in rail],
+                                    float('-inf'), gap=fs.layout_options.boundary_flag_gap)
+        for index, unit in enumerate(rail):
             f = unit.frame
-            y = max(f.y, cursor)
+            y = ys[index] if ys is not None else max(f.y, cursor)
             x = left - 50 if kind == "feed" else right
             if unit.pin_ and unit.pin_.x is not None and abs(unit.pin_.x - x) > .01:
                 raise ValueError("BOUNDARY_COLUMN_PIN_CONFLICT: " + unit.name)
             unit.frame = replace(f, x=x, y=y)
-            cursor = y + f.h + 24
+            cursor = y + f.h + fs.layout_options.boundary_flag_gap
 
 
 def inspect_drawio(document):

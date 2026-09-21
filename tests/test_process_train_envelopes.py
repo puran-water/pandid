@@ -92,3 +92,30 @@ def test_caller_lettering_is_measured_and_never_capped_to_a_balloon():
     large = renderer._unit_label_item(pump, frame, frame.x, frame.y, frame.w, frame.h, '801-P-01')
     a, b = _unit_label_box(small), _unit_label_box(large)
     assert b[2]-b[0] > a[2]-a[0] and b[3]-b[1] > a[3]-a[1]
+
+
+def test_boundary_rows_follow_connected_ports_instead_of_old_tall_grid_rows():
+    from pandid.geometry import Frame
+    from pandid.profiles.process import align_boundaries
+    fs = apply(Flowsheet('Synthetic fanout'))
+    fs.layout_options.boundary_page = None
+    fs.layout_options.compact_boundary_rows = True
+    fs.layout_options.boundary_flag_gap = 24
+    pump = fs.add(Pump('pump'))
+    pump.frame = Frame(x=100, y=100, w=60, h=60)
+    header = fs.add(Junction('header', outputs=3, header=True))
+    header.frame = Frame(x=300, y=100, w=4, h=180)
+    fs.connect(pump.discharge, header.inlets[0])
+    flags = []
+    for i in range(3):
+        unit = fs.add(Product('point-' + str(i), width=190, height=85))
+        unit.frame = Frame(x=700, y=i*300, w=190, h=85)
+        fs.connect(header.outlets[i], unit.inlet)
+        flags.append(unit)
+    align_boundaries(fs)
+    assert max(u.frame.y_max for u in flags) - min(u.frame.y for u in flags) == pytest.approx(3*85+2*24)
+    assert {u.frame.h for u in flags} == {85}
+    assert {u.frame.w for u in flags} == {190}
+    before = [u.frame for u in flags]
+    align_boundaries(fs)
+    assert [u.frame for u in flags] == before
