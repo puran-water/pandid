@@ -126,3 +126,56 @@ ARTWORK.update({
         reference_sha256="353c4e188f02b79423a1d59c53a93dd1cfa29b18b5e8e28938610dda2fb919be",
         reference_pages=(8, 9)),
 })
+
+
+# Original schematic candidates. The vendor references establish physical
+# meaning and separated flow paths, not prescribed graphical symbols. Printed
+# minimums are house readability judgements, not code requirements. ISA-5.1 is
+# referenced for instrument/connection vocabulary in docs/process-symbols.md;
+# it does not supply these equipment outlines. All require named review.
+ARTWORK.update({
+    "house.dosing.injection_quill": HouseArtwork(
+        "Chemical injection quill; lance and open tip only, no integral check valve or host-pipe rating implied",
+        240, 120, 36, 18,
+        (("W", 0, .5), ("E", 1, .5)),
+        '<path><move x="0" y="60"/><line x="48" y="60"/>'
+        '<move x="48" y="32"/><line x="48" y="88"/><move x="62" y="32"/><line x="62" y="88"/>'
+        '<move x="62" y="48"/><line x="202" y="48"/><line x="218" y="72"/>'
+        '<line x="62" y="72"/><move x="218" y="60"/><line x="240" y="60"/></path><stroke/>',
+        reference_document="SAF-T-FLO IQ Series Product Data Sheet, 2018-06; https://www.saftflo.com/_files/ugd/9142fa_8f67f70a918c4e03975bb16be63f7e82.pdf",
+        reference_sha256="0640a8dc91a27f49a8b7bcc757ac30f406ee87fc66627b2ddb4dadd4519c0604",
+        reference_pages=(1,),
+    ),
+    "house.membrane.pressure_vessel": HouseArtwork(
+        "Pressure membrane vessel; separate feed, concentrate and permeate, no element count implied",
+        360, 160, 54, 24,
+        (("W", 0, .5), ("E", 1, .5), ("S", .5, 1)),
+        '<roundrect x="32" y="24" w="296" h="112" arcsize="50"/><stroke/>'
+        '<path><move x="0" y="80"/><line x="32" y="80"/><move x="328" y="80"/><line x="360" y="80"/>'
+        '<move x="72" y="56"/><line x="288" y="56"/><move x="72" y="104"/><line x="288" y="104"/>'
+        '<move x="180" y="104"/><line x="180" y="160"/></path><stroke/>',
+        reference_document="DuPont FilmTec RO/NF Technical Manual, 45-D01504-en Rev.20, August 2026; https://www.dupont.com/content/dam/water/amer/us/en/water/public/documents/en/RO-NF-FilmTec-Manual-45-D01504-en.pdf.",
+        reference_sha256="eb7c8d7f7829e2652fa26896b53618c82cd7d05037f759a3a1c9b647f681fa97",
+        reference_pages=(81, 82, 106),
+    ),
+    "house.membrane.pressure_array": HouseArtwork(
+        "Pressure membrane array; schematic parallel vessels, counts and staging remain source data",
+        360, 240, 54, 36,
+        (("W", 0, .5), ("E", 1, .5), ("S", .5, 1)),
+        '<path><move x="0" y="120"/><line x="36" y="120"/>'
+        '<move x="36" y="60"/><line x="36" y="180"/>'
+        '<move x="324" y="60"/><line x="324" y="180"/><move x="324" y="120"/><line x="360" y="120"/></path><stroke/>'
+        + ''.join(
+            f'<roundrect x="60" y="{y-28}" w="240" h="56" arcsize="50"/><stroke/>'
+            f'<path><move x="36" y="{y}"/><line x="60" y="{y}"/>'
+            f'<move x="300" y="{y}"/><line x="324" y="{y}"/>'
+            f'<move x="92" y="{y+10}"/><line x="268" y="{y+10}"/>'
+            f'<move x="180" y="{y+10}"/><line x="180" y="{y+36}"/>'
+            f'<line x="310" y="{y+36}"/></path><stroke/>' for y in (60, 180)
+        )
+        + '<path><move x="310" y="96"/><line x="310" y="224"/><line x="180" y="224"/><line x="180" y="240"/></path><stroke/>',
+        reference_document="DuPont FilmTec RO/NF Technical Manual, 45-D01504-en Rev.20, August 2026; https://www.dupont.com/content/dam/water/amer/us/en/water/public/documents/en/RO-NF-FilmTec-Manual-45-D01504-en.pdf.",
+        reference_sha256="eb7c8d7f7829e2652fa26896b53618c82cd7d05037f759a3a1c9b647f681fa97",
+        reference_pages=(82, 83, 106),
+    ),
+})

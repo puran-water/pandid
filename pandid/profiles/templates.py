@@ -32,6 +32,9 @@ ALIASES = {
 def symbol_type(symbol):
     if symbol in ALIASES:
         return ALIASES[symbol]
+    from pandid.render._house_symbols import HOUSE_SYMBOL_TYPES
+    if symbol in HOUSE_SYMBOL_TYPES:
+        return HOUSE_SYMBOL_TYPES[symbol]
     if symbol.startswith('stencil.'):
         key = 'mxgraph.' + symbol.removeprefix('stencil.')
         matches = [(k, v) for (k, v), sym in default_registry._symbols.items() if sym.drawio_shape == key]
@@ -71,7 +74,9 @@ def _unit(row, incoming, outgoing):
                         header=row.get('attributes',{}).get('semantic-class')=='PipeHeader'
                                and max(len(incoming),len(outgoing))>1)
     kind, variant = symbol_type(symbol)
-    cls = _resolve_kind(kind, row['key'])
+    # A generic Filter has only two ports. Preserve the discovered device's
+    # regenerant inlet and spent outlet when this artwork is selected.
+    cls = _resolve_kind('IonExchanger' if (kind, variant) == ('filter', 'ion_exchange') else kind, row['key'])
     kwargs = {'variant': variant}
     params = inspect.signature(cls).parameters
     if 'inputs' in params:
