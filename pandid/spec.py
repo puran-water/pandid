@@ -1294,7 +1294,7 @@ def _read_title_block(entry: Any, where: str) -> TitleBlock:
     """
     data = _mapping(entry, where)
     text_fields = _drawn_text_fields(TitleBlock)
-    _check_keys(data, text_fields | {"revisions", "logo", "logo_aspect", "fit_fields", "extra_fields"}, where)
+    _check_keys(data, text_fields | {"revisions", "logo", "logo_aspect", "fit_fields", "caption_font_size", "extra_fields"}, where)
     kwargs: dict[str, Any] = {
         key: _drawn_text(value) for key, value in data.items() if key in text_fields
     }
@@ -1303,6 +1303,8 @@ def _read_title_block(entry: Any, where: str) -> TitleBlock:
         kwargs["logo"] = _text(data["logo"], f"{where}.logo")
     if "logo_aspect" in data:
         kwargs["logo_aspect"] = _number(data["logo_aspect"], f"{where}.logo_aspect")
+    if "caption_font_size" in data:
+        kwargs["caption_font_size"] = _number(data["caption_font_size"], f"{where}.caption_font_size")
     if "fit_fields" in data:
         kwargs["fit_fields"] = _flag(data["fit_fields"], f"{where}.fit_fields")
     if "extra_fields" in data:
@@ -1938,6 +1940,8 @@ def _write_title_block(block: TitleBlock) -> dict[str, Any]:
         entry["logo_aspect"] = block.logo_aspect
     if block.fit_fields:
         entry["fit_fields"] = True
+    if block.caption_font_size is not None:
+        entry["caption_font_size"] = block.caption_font_size
     if block.extra_fields:
         entry["extra_fields"] = dict(block.extra_fields)
     if block.revisions:

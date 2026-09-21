@@ -253,3 +253,9 @@ paper between columns that the old outside-the-entire-drawing fallback could
 not reach. `stream_label_gap` is caller-supplied clear paper; labels keep their
 full type size, and a displaced label keeps its leader to its own run. A
 crowded result still reaches the unchanged native collision gate.
+
+`TitleBlock.caption_font_size` lets the caller state the lettering for field
+captions such as CLIENT and REV. The strip measures their widths at that same
+size and preserves the value through spec round-trip. The generic default
+remains available; PuranOS derives its supplied size from its central body
+capital-height requirement and the furniture's print transform.

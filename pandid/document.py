@@ -198,6 +198,9 @@ class TitleBlock:
     logo: str = field(default="", metadata={"drawn_text": False})
     logo_aspect: float = 1.0
     fit_fields: bool = False
+    # Optional caller-supplied type size for the small title-strip captions.
+    # Physical millimetre policy belongs to the application, not the renderer.
+    caption_font_size: float | None = None
     extra_fields: dict[str, str] = field(default_factory=dict)
     status: str = ""
     sheet: str = "1"
@@ -222,6 +225,9 @@ class TitleBlock:
             raise ValueError("logo must be an embedded image string")
         if type(self.fit_fields) is not bool:
             raise ValueError("fit_fields must be a boolean")
+        if self.caption_font_size is not None and (type(self.caption_font_size) not in {int, float}
+                or not math.isfinite(self.caption_font_size) or self.caption_font_size <= 0):
+            raise ValueError("caption_font_size must be positive and finite")
         if not isinstance(self.extra_fields, dict) or any(
                 not isinstance(k, str) or not isinstance(v, str) for k, v in self.extra_fields.items()):
             raise ValueError("extra_fields must map text captions to text values")

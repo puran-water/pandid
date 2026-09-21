@@ -140,3 +140,17 @@ def test_caption_search_finds_interior_paper_when_outer_margins_are_occupied():
     assert spot == (188, 100)
     assert not any(_meets(box, b) for b in obstacles)
     assert _interior_label_spot(region, [region], 180, 24, (50, 100), 8) is None
+
+
+def test_title_caption_type_is_caller_supplied_and_measured():
+    from pandid import TitleBlock
+    from pandid.render.furniture import title_strip_layout, _header_value_x
+    fs = Flowsheet('Caption type')
+    fs.title_block = TitleBlock(client='Synthetic client', fit_fields=True,
+                               extra_fields={'CONTRACTOR': 'Synthetic contractor'},
+                               caption_font_size=8)
+    strip = title_strip_layout(fs.title_block, fs.name, '2026-09-21', 1500, 1000)
+    captions = [p for p in strip.parts if p[0] == 'text' and p[3] in {'CLIENT', 'CONTRACTOR', 'STATUS', 'DRAWING No'}]
+    assert captions and all(p[4] == 8 for p in captions)
+    assert _header_value_x(fs.title_block, 'CONTRACTOR') > _header_value_x(TitleBlock(fit_fields=True), 'CONTRACTOR')
+    assert Flowsheet.from_dict(fs.to_dict()).title_block.caption_font_size == 8
