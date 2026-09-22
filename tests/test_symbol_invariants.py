@@ -2312,6 +2312,7 @@ def test_a_lone_holdup_connection_lands_where_the_stencil_drew_it(kind, variant)
 def test_variants_lists_a_kinds_catalogue_default_first():
     assert default_registry.variants("tank") == [
         "default",
+        "concrete",
         "conical",
         "conical_bottom",
         "conical_ends",
@@ -2319,6 +2320,7 @@ def test_variants_lists_a_kinds_catalogue_default_first():
         "floating_roof",
         "gas_holder",
         "sphere",
+        "vertical",
     ]
 
 
@@ -3467,6 +3469,7 @@ _VENDORED_SOURCE_WORDS = {
     "reducer": "reducers",
     "fitting": "in-line fittings",
     "ejector": "ejectors",
+    "liquid_screen": "liquid screens",
     "vent": "vents",
     "funnel": "funnels",
 }
