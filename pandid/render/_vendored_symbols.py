@@ -974,6 +974,14 @@ def register_vendored(registry):
         drawio_shape='mxgraph.pid.pumps.peristaltic',
     ), 'peristaltic')
 
+    # draw.io pumps_iso:Pump (Diaphragm) (aspect=variable) -> pump/diaphragm
+    registry.register('pump', Symbol(
+        svg='<g id="sym_pump_diaphragm"><ellipse cx="50.0" cy="50.0" rx="50.0" ry="50.0" fill="white" stroke="#111" stroke-width="2.0"/><path d="M 100.0 50.0 L 50.0 100.0 A 65.0 65.0 0.0 0 1 50.0 0.0 Z" fill="none" stroke="#111" stroke-width="2.0"/></g>',
+        width=100.0, height=100.0,
+        ports={'suction': (0.0, 50.0), 'discharge': (100.0, 50.0)},
+        drawio_shape='mxgraph.pid.pumps_-_iso.pump_(diaphragm)',
+    ), 'diaphragm')
+
     # draw.io pumps:Submersible Pump (aspect=variable) -> pump/submersible
     registry.register('pump', Symbol(
         svg='<g id="sym_pump_submersible"><path d="M 96.77 40.0 A 20.0 20.0 0.0 0 1 96.77 70.0 L 6.77 70.0 A 20.0 20.0 0.0 0 1 6.77 40.0 Z M 76.77 31.5 L 96.77 31.5 M 86.77 31.5 L 86.77 40.0" fill="white" stroke="#111" stroke-width="2.0"/><rect x="16.77" y="70.0" width="70.0" height="4.0" fill="white" stroke="#111" stroke-width="2.0"/><rect x="31.77" y="5.0" width="40.0" height="35.0" fill="white" stroke="#111" stroke-width="2.0"/><rect x="44.77" y="0.0" width="14.0" height="5.0" fill="white" stroke="#111" stroke-width="2.0"/></g>',

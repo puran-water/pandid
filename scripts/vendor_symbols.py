@@ -917,6 +917,14 @@ KIND_MAP = {
     # blank casing wall; the rule for this family is that a drawn nozzle wins.
     ("pump", "peristaltic"):      ("pumps", "Peristaltic",
                                    {"suction": ("N", 20.0), "discharge": ("N", 40.0)}),
+    # Diaphragm (metering) pump: the ISO 10628-2 pump circle with the curved-back
+    # triangle of the diaphragm, from draw.io's ISO pump library (pumps_iso.xml,
+    # byte-identical to jgraph/drawio at 201a900). The chemical metering pump a
+    # stroke-speed or start/stop dosing loop acts on. Suction and discharge take
+    # the stencil's own W/E constraints on the casing circle. No ISO registration
+    # number is recorded: nobody has checked this geometry against the standard.
+    ("pump", "diaphragm"):        ("pumps_iso", "Pump (Diaphragm)",
+                                   {"suction": "W", "discharge": "E"}),
     # Submersible (sump) pump: it stands in the liquid it pumps, so the suction
     # is the strainer plate it sits on and takes the stencil's own S anchor. The
     # discharge is the elbow drawn out of the casing at y = 31.5, and the port

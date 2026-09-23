@@ -76,6 +76,7 @@ __all__ = [
     "GearPump",
     "ScrewPump",
     "PeristalticPump",
+    "DiaphragmPump",
     "SubmersiblePump",
     "VacuumPump",
     "CentrifugalCompressor",
@@ -230,6 +231,25 @@ class PeristalticPump(Pump):
     kind = "pump"
     VARIANTS = ("default", "peristaltic")
     VARIANT_ALIASES = {"default": "peristaltic"}
+    PORTS = [("suction", "inlet", "process"), ("discharge", "outlet", "process")]
+
+    suction: Port
+    discharge: Port
+
+
+class DiaphragmPump(Pump):
+    """Diaphragm metering pump: a flexing diaphragm strokes a measured volume.
+
+    The chemical dosing pump. Flow is set by stroke length and stroke
+    speed, so a dosing loop trims it by stroke speed or starts and stops
+    it; like any positive displacement pump it is protected by a relief
+    rather than throttled. An air-operated double-diaphragm pump draws the
+    same way.
+    """
+
+    kind = "pump"
+    VARIANTS = ("default", "diaphragm")
+    VARIANT_ALIASES = {"default": "diaphragm"}
     PORTS = [("suction", "inlet", "process"), ("discharge", "outlet", "process")]
 
     suction: Port

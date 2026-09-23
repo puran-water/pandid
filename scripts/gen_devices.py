@@ -146,6 +146,14 @@ DEVICES = {
     Both connections leave the top of the head, which is where the
     stencil draws the tube.
 """),
+    ("pump", "diaphragm"): ("DiaphragmPump", """Diaphragm metering pump: a flexing diaphragm strokes a measured volume.
+
+    The chemical dosing pump. Flow is set by stroke length and stroke
+    speed, so a dosing loop trims it by stroke speed or starts and stops
+    it; like any positive displacement pump it is protected by a relief
+    rather than throttled. An air-operated double-diaphragm pump draws the
+    same way.
+"""),
     ("pump", "submersible"): ("SubmersiblePump", """Submersible (sump) pump: it stands in the liquid it pumps.
 
     The suction is the strainer plate it sits on rather than a piped

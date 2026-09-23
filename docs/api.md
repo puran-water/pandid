@@ -605,7 +605,7 @@ from pandid import units
 sifter = units.Separator("SC-101", variant="sifter")
 ```
 
-`units.Kind(variant=…)` is the escape hatch. 149 of the 249 registered drawings
+`units.Kind(variant=…)` is the escape hatch. 149 of the 250 registered drawings
 get no class of their own, and this is how you reach them; see
 [Variants](#variants) for the list. Where a class exists, name it.
 
@@ -1141,6 +1141,7 @@ base has not, `-` one it drops. The bases are in the [Port table](#port-table).
 | `GearPump` | `pump` | `Pump` | |
 | `ScrewPump` | `pump` | `Pump` | |
 | `PeristalticPump` | `pump` | `Pump` | |
+| `DiaphragmPump` | `pump` | `Pump` | |
 | `SubmersiblePump` | `pump` | `Pump` | |
 | `VacuumPump` | `pump` | `Pump` | |
 | `CentrifugalCompressor` | `compressor` | `Compressor` | |
@@ -1738,6 +1739,7 @@ first listed is what the class draws when it is built by name alone.
 | `GearPump` | `pump` | `gear` (as `default`) |
 | `ScrewPump` | `pump` | `screw` (as `default`) |
 | `PeristalticPump` | `pump` | `peristaltic` (as `default`) |
+| `DiaphragmPump` | `pump` | `diaphragm` (as `default`) |
 | `SubmersiblePump` | `pump` | `submersible` (as `default`) |
 | `VacuumPump` | `pump` | `vacuum` (as `default`) |
 | `CentrifugalCompressor` | `compressor` | `default` |
