@@ -71,6 +71,117 @@ def test_line_number_search_budget_requires_positive_integer(value):
         fs.layout_options.validate()
 
 
+def _short_supply_link(block_top_line=True):
+    """The short 000-04 connection beside a five-nozzle boundary block."""
+    fs = Flowsheet("Short supply leader")
+    supply = fs.add(Block(
+        "BL Chemical Supply", inputs=0, outputs=["E"] * 5,
+        width=180, height=150)).pin(x=100, y=100)
+    antiscalant = fs.add(Block(
+        "Antiscalant Dosing", inputs=["W"], outputs=0,
+        width=180, height=150)).pin(x=325, y=100)
+    receivers = [
+        fs.add(Block(f"Other {i}", inputs=["W"], outputs=0,
+                     width=140, height=80)).pin(x=600 + 25 * i, y=y)
+        for i, y in enumerate((20, 210, 320, 430))
+    ]
+
+    short = fs.connect(supply.out_2, antiscalant.in_1, name="000-04")
+    siblings = zip(
+        (supply.out_1, supply.out_3, supply.out_4, supply.out_5),
+        receivers,
+        ("000-03", "000-05", "000-06", "000-07"),
+    )
+    for port, receiver, name in siblings:
+        if name == "000-03" and not block_top_line:
+            continue
+        line = fs.connect(port, receiver.in_1, name=name)
+        line.display_label = ""
+
+    short.display_label = "000-04"
+    fs.stream_labels.font_size = 22
+    fs.layout_options.stream_label_bands = 7
+    fs.layout_options.strict_label_clearance = True
+    fs.layout()
+    fs.route()
+    return fs, short
+
+
+def test_a_short_supply_link_uses_a_line_crossing_leader_as_the_last_resort():
+    """A sibling line may be crossed only after every clean leader loses."""
+    from pandid.render.svg import (
+        _crosses, _ink, _meets, _near_segment, label_findings,
+        stream_numbers, stream_polyline,
+    )
+
+    fs, short = _short_supply_link()
+    number = stream_numbers(
+        fs, [], None, "vertical", (50, 0, 850, 550))[0]
+
+    assert number.leader is not None
+    assert number.leader_crossed == ("000-03",)
+    assert any(
+        _near_segment(number.leader[1], start, end)
+        for start, end in zip(stream_polyline(short), stream_polyline(short)[1:])
+    ), "the leader must land on 000-04's own run"
+    assert not [
+        unit.name for unit in fs.units
+        if _crosses(*number.leader, unit_box(unit, unit.frame))
+    ]
+    assert not [
+        line.line for line in _ink(fs, "vertical")
+        if line.line != short.name and _meets(number.box, line.box)
+    ], "the halo must not paint out another line"
+
+    issues = label_findings(fs, "none", [number], "vertical")
+    crossed = [issue for issue in issues if issue.code == "leader-crosses-line"]
+    assert len(crossed) == 1 and crossed[0].severity == "warning"
+    assert "000-04" in crossed[0].message and "000-03" in crossed[0].message
+    assert not [
+        issue for issue in issues
+        if issue.code == "leader-placement-unresolved"
+    ]
+
+
+def test_a_clean_short_supply_leader_keeps_the_existing_first_choice():
+    """Three sibling lines do not license the fallback while a clean route exists."""
+    from pandid.render.svg import _crosses, _ink, label_findings, stream_numbers
+
+    fs, short = _short_supply_link(block_top_line=False)
+    number = stream_numbers(
+        fs, [], None, "vertical", (50, 0, 850, 550))[0]
+
+    assert number.leader is not None
+    assert tuple(value for point in number.leader for value in point) == pytest.approx(
+        (287.53, 85.2, 318.1666666667, 175.0))
+    assert getattr(number, "leader_crossed", ()) == ()
+    assert not [
+        line.line for line in _ink(fs, "vertical")
+        if line.line != short.name and _crosses(*number.leader, line.box)
+    ]
+    assert not label_findings(fs, "none", [number], "vertical")
+
+
+def test_svg_and_drawio_report_the_same_line_crossing_leader():
+    def render(kind):
+        fs, _short = _short_supply_link()
+        document = getattr(fs, f"to_{kind}")(
+            check=False, jump_direction="vertical")
+        issues = [
+            (issue.severity, issue.code, issue.message)
+            for issue in fs.warnings
+            if issue.code in {"leader-crosses-line", "leader-placement-unresolved"}
+        ]
+        return document, issues
+
+    svg, svg_issues = render("svg")
+    drawio, drawio_issues = render("drawio")
+    assert drawio_issues == svg_issues
+    assert len(svg_issues) == 1 and svg_issues[0][1] == "leader-crosses-line"
+    assert '<line x1=' in svg
+    assert 'id="s0-lead"' in drawio
+
+
 def test_house_line_number_uses_clear_external_paper_when_every_nearby_band_is_taken():
     from pandid.render.svg import stream_numbers, _crosses
     fs = Flowsheet('External caption')
