@@ -216,6 +216,16 @@ def _labels(svg: str) -> "list[Label]":
     return out
 
 
+def _unit_label_plates(svg: str) -> list[tuple[float, float, float, float]]:
+    """Opaque plates behind equipment and symbol lettering in the SVG."""
+    group = svg.split('<g id="unit_labels">', 1)[1].split("\n  </g>", 1)[0]
+    out = []
+    for rect in _RECT.finditer(group):
+        x, y, w, h = (float(rect.group(i)) for i in (1, 2, 3, 4))
+        out.append((x, y, x + w, y + h))
+    return out
+
+
 def _drawn_segments(fs) -> dict:
     """Every process line's drawn polyline, as segments keyed by line number."""
     segs: dict = {}
@@ -330,30 +340,40 @@ def _alongness(box, turned, runs) -> float:
 
 @pytest.fixture(scope="module")
 def sheets():
-    """Every sheet in the corpus, rendered once, as (flowsheet, labels)."""
+    """Every sheet, rendered once, as flowsheet, labels and unit lettering."""
     out = {}
     for name, build in CORPUS.items():
         fs, kwargs = build()
         svg = fs.to_svg(**{k: v for k, v in kwargs.items() if k in _RENDER_OPTS})
-        out[name] = (fs, _labels(svg))
+        out[name] = (fs, _labels(svg), _unit_label_plates(svg))
     return out
 
 
 # --- §7.2.5: along, or led ---------------------------------------------------
 
 
+def _unresolved(fs):
+    """Visible stream names whose bounded leader search reported no answer."""
+    return {
+        issue.message.split("'s number", 1)[0]
+        for issue in fs.warnings
+        if issue.code == "leader-placement-unresolved"
+    }
+
+
 @pytest.mark.parametrize("name", list(CORPUS), ids=list(CORPUS))
 def test_a_line_number_is_written_along_its_line_or_carries_a_leader(sheets, name):
-    fs, labels = sheets[name]
+    fs, labels, _lettering = sheets[name]
     segs = _drawn_segments(fs)
     adrift = []
+    unresolved = _unresolved(fs)
     upright = fs.stream_labels.enclosure in UPRIGHT_ENCLOSURES
     for label in labels:
         along = _axis(label, segs.get(label.name, []), upright)
         runs = _runs(segs.get(label.name, []), along)
         assert runs, f"{name}: {label.name} lies along no run of its own line"
         share = _alongness(label.box, along, runs)
-        if share <= 0.5 and label.leader is None:
+        if share <= 0.5 and label.leader is None and label.name not in unresolved:
             adrift.append(f"{label.name} has its own line beside {share:.0%} of it and no leader")
     assert not adrift, f"{name}: " + "; ".join(adrift)
 
@@ -363,7 +383,7 @@ def test_a_leader_lands_on_the_line_it_names(sheets, name):
     """§6.4: a leader ending on the outline of an object, or on a connection,
     terminates in an arrowhead. A leader that stops short of its connection
     points at whatever it stopped over instead."""
-    fs, labels = sheets[name]
+    fs, labels, _lettering = sheets[name]
     segs = _drawn_segments(fs)
     wrong = []
     for label in labels:
@@ -401,8 +421,10 @@ def test_a_leader_cuts_nothing_the_label_was_dodging(sheets, name):
     through a line that is not the one it names, moves the defect instead of
     fixing it -- and unlike the halo it does not even delete the ink honestly,
     it simply crosses it."""
-    fs, labels = sheets[name]
-    boxes = [unit_box(u, u.frame) for u in fs.units if u.frame is not None]
+    fs, labels, lettering = sheets[name]
+    boxes = ([('unit', unit_box(u, u.frame))
+              for u in fs.units if u.frame is not None]
+             + [('unit lettering', box) for box in lettering])
     ink = _ink(fs, "vertical")
     segs = _drawn_segments(fs)
     cutting = []
@@ -419,10 +441,11 @@ def test_a_leader_cuts_nothing_the_label_was_dodging(sheets, name):
             )
             for a, b in segs[label.name]
         }
-        for box in boxes:
+        for kind, box in boxes:
             if _crosses(*label.leader, box):
                 cutting.append(
-                    f"{label.name}'s leader crosses a unit at ({box[0]:.0f}, {box[1]:.0f})"
+                    f"{label.name}'s leader crosses {kind} at "
+                    f"({box[0]:.0f}, {box[1]:.0f})"
                 )
         for line in ink:
             if (line.axis, round(line.at, 1)) in own:
@@ -441,7 +464,8 @@ def test_the_corpus_still_draws_a_leader(sheets):
     """Three of the checks above are vacuous on a sheet with no leader on it, so
     say outright that the corpus still contains one. ``crowded_number`` is built
     to keep that true whatever happens to the shipped sheets."""
-    drawn = {name: sum(1 for lab in labels if lab.leader) for name, (_fs, labels) in sheets.items()}
+    drawn = {name: sum(1 for lab in labels if lab.leader)
+             for name, (_fs, labels, _lettering) in sheets.items()}
     assert drawn["crowded_number"] >= 1, drawn
     assert sum(drawn.values()) >= 2, drawn
 
@@ -469,52 +493,46 @@ def test_a_leader_is_drawn_only_where_the_line_is_not_beside_the_words(sheets):
     """The other half of the rule, which the check above cannot state: a number
     with its own run beside most of it does not get a leader *as well*.
 
-    Both directions matter, and the corpus is the evidence for the line falling
-    where it does. Of 286 numbers on the 21 shipped sheets 25 have their own
-    run beside less than the whole of them, and they part into two groups
-    with a gap between: 21 read as their own line's unaided, from
-    ``MS-605-200-40-CS`` on 14 at 60 % to ``E10-609-200-40-CS`` on 14 at 98 %,
-    and four do not -- ``100-CWS-209-CS`` on 17 at 18 %, ``AE-304-150-80-SS``
-    on 11 at 29 %, ``MS-601-200-40-CS`` on 14 at 34 % and ``S-403`` on 13 at
-    36 %, the second of those the last sixteen characters naming a
-    thirty-unit stub with two thirds of it lying against a reflux drum.
-
-    The gap is 36 % to 60 %, narrower than the 40 % to 61 % the fourteen-sheet
-    corpus showed at ``87935d6`` and the 32 % to 74 % the twelve-sheet corpus
-    showed at ``07cb3b3`` before that -- cited by commit because neither of
-    those corpora is here to re-measure; see :func:`pandid.render.svg._along`
-    for what that is and is not evidence for. This test is one of the two that
-    would fail first if a number ever landed inside it.
+    Both directions matter.  A number with no clean answer inside the bounded
+    search is the explicit exception: it has no leader by design and the
+    structured finding is what prevents that incomplete placement being issued
+    silently.  Every other label must satisfy exactly one side of the rule.
     """
     over, under = [], []
-    for name, (fs, labels) in sheets.items():
+    for name, (fs, labels, _lettering) in sheets.items():
         segs = _drawn_segments(fs)
         upright = fs.stream_labels.enclosure in UPRIGHT_ENCLOSURES
+        unresolved = _unresolved(fs)
         for label in labels:
             along = _axis(label, segs.get(label.name, []), upright)
             runs = _runs(segs.get(label.name, []), along)
             share = _alongness(label.box, along, runs)
             if share > 0.5 and label.leader is not None:
                 over.append(f"{name}/{label.name} at {share:.0%}")
-            if share <= 0.5 and label.leader is None:
+            if share <= 0.5 and label.leader is None and label.name not in unresolved:
                 under.append(f"{name}/{label.name} at {share:.0%}")
     assert not over, "led although written along its line: " + "; ".join(over)
     assert not under, "not written along its line and not led: " + "; ".join(under)
 
 
-def test_the_p_and_id_needs_exactly_one_leader(sheets):
-    """The sheet the defect was reported on. Named here so a change that quietly
-    stops drawing them, or starts drawing a dozen, is a red suite rather than a
-    silent regression in the drawing.
-
-    One, and not the three it used to draw. ``FB-301`` and ``FB-306`` both sit
-    over the run they name, along its whole length; leading them said there was
-    a question about which line they belonged to when there was not, and pointed
-    the answer at one end of a number that spans the run.
-    """
-    _fs, labels = sheets["11_ethanol_pid"]
+def test_the_p_and_id_reports_its_bounded_leader_failure(sheets):
+    """An exhausted search is a finding, never a known crossing leader."""
+    fs, labels, _lettering = sheets["11_ethanol_pid"]
     led = sorted(lab.name for lab in labels if lab.leader)
-    assert led == ["AE-304-150-80-SS"]
+    assert led == []
+    assert _unresolved(fs) == {"AE-304-150-80-SS"}
+
+
+def test_another_segment_is_used_before_a_leader(sheets):
+    """Clear paper on another piece of the run wins over external paper."""
+    for sheet, stream in (("14_tank_farm", "MS-601-200-40-CS"),
+                          ("17_stirred_reactor_train", "100-CWS-209-CS")):
+        fs, labels, _lettering = sheets[sheet]
+        label = next(item for item in labels if item.name == stream)
+        segs = _drawn_segments(fs)[stream]
+        along = _axis(label, segs, False)
+        assert _alongness(label.box, along, _runs(segs, along)) > 0.5
+        assert label.leader is None
 
 
 def test_a_leader_leaves_the_lettering_and_not_the_paper_beside_it(sheets):
@@ -530,7 +548,7 @@ def test_a_leader_leaves_the_lettering_and_not_the_paper_beside_it(sheets):
     drawing rather than a copy of the constant.
     """
     off_the_words = []
-    for name, (_fs, labels) in sheets.items():
+    for name, (_fs, labels, _lettering) in sheets.items():
         for label in labels:
             if label.leader is None:
                 continue

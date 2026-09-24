@@ -197,11 +197,15 @@ default: seven) to keep long line numbers clear at the common printed size.
 does not change typography or permit the A1 fit to shrink a crowded drawing.
 
 The process profile also enables `layout_options.strict_label_clearance`.
-Bare line numbers that cannot clear equipment and other text in those bands use
-clear external paper with a leader. The planned text and leader extents are part
-of the diagram bounds before fitting and before the common nameplate row is
-placed. Both writers consume the same caption plan; data blocks cannot cover a
-displaced line number.
+Bare line numbers try every straight segment of their own run before using
+clear external paper with a leader. A leader candidate is accepted only when
+it clears units, flags, symbols, lettering and other lines. The outermost
+configured band also bounds the external search; if no clean placement exists
+inside that distance, the drawing carries a `leader-placement-unresolved`
+finding and no crossing leader is drawn. The planned text and clean leader
+extents are part of the diagram bounds before fitting and before the common
+nameplate row is placed. Both writers consume the same caption plan; data
+blocks cannot cover a displaced line number.
 
 ## Measured parallel-train envelopes (2026-09-21)
 

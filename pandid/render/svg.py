@@ -1705,6 +1705,7 @@ class StreamNumber(NamedTuple):
     crossed: "tuple[str, ...]"
     display_label: str | None = None
     font_size: float = NUMBER_TYPE
+    placement_limit: float | None = None
 
     @property
     def text(self) -> str:
@@ -1757,6 +1758,249 @@ def _interior_label_spot(region, protected, width, height, centre, gap):
         if not any(_meets(box, b) for b in protected):
             return (x, y), box
     return None
+
+
+class _NumberRun(NamedTuple):
+    """One straight piece of the run a bare line number may identify."""
+
+    segment: tuple
+    keep_out: float
+    vertical: bool
+    cx: float
+    cy: float
+    span: float
+    width: float
+    height: float
+    axis: str
+    at: float
+    lo: float
+    hi: float
+
+
+def _point_run_distance(point, segments) -> float:
+    """Shortest distance from *point* to any of *segments*."""
+    px, py = point
+    nearest = float("inf")
+    for (ax, ay), (bx, by) in segments:
+        dx, dy = bx - ax, by - ay
+        length2 = dx * dx + dy * dy
+        if not length2:
+            distance = math.hypot(px - ax, py - ay)
+        else:
+            t = max(0.0, min(1.0, ((px - ax) * dx + (py - ay) * dy) / length2))
+            distance = math.hypot(px - (ax + t * dx), py - (ay + t * dy))
+        nearest = min(nearest, distance)
+    return nearest
+
+
+def _label_travel_bound(depth: float, bands: int) -> float:
+    """The outermost centre-line distance the configured bands offer.
+
+    ``stream_label_bands`` is the public search budget.  The broad fallback
+    used to ignore it and could send a number to the far side of the drawing;
+    using the last band as the radial limit makes the same option bound both
+    parts of one search.
+    """
+    # One along-run sample is allowed beyond that radial distance.  A centre
+    # on the outermost perpendicular band can be one six-unit slide past a
+    # short segment's end; excluding it on the resulting diagonal would make
+    # the effective band budget depend on where the sampling grid happened to
+    # land.
+    return depth / 2 + _LABEL_GAP + (2 * bands - 2) * depth / 2 + _LABEL_STEP
+
+
+def _bounded_label_spots(region, protected, width, height, segments, gap, limit):
+    """Clear obstacle-edge positions no farther than *limit* from a run.
+
+    A nearest clear rectangle touches either the content boundary or an
+    obstacle clearance edge on each axis, so those measured edges are the
+    finite candidates.  This is the iterable form of
+    :func:`_interior_label_spot`: callers must be able to reject a clear halo
+    whose leader is blocked and continue to the next one.
+    """
+    points = [point for segment in segments for point in segment]
+    if region is None:
+        x0 = min(p[0] for p in points) - limit - width / 2
+        y0 = min(p[1] for p in points) - limit - height / 2
+        x1 = max(p[0] for p in points) + limit + width / 2
+        y1 = max(p[1] for p in points) + limit + height / 2
+    else:
+        x0, y0, x1, y1 = region
+    xs = {x0 + width / 2, x1 - width / 2}
+    ys = {y0 + height / 2, y1 - height / 2}
+    for (ax, ay), (bx, by) in segments:
+        xs.update((ax, bx, (ax + bx) / 2))
+        ys.update((ay, by, (ay + by) / 2))
+    for a, b, c, d in protected:
+        xs.update((a - gap - width / 2, c + gap + width / 2))
+        ys.update((b - gap - height / 2, d + gap + height / 2))
+    for x in xs:
+        for y in ys:
+            box = (x - width / 2, y - height / 2,
+                   x + width / 2, y + height / 2)
+            if box[0] < x0 or box[1] < y0 or box[2] > x1 or box[3] > y1:
+                continue
+            if _point_run_distance((x, y), segments) > limit:
+                continue
+            if not any(_meets(box, obstacle) for obstacle in protected):
+                yield (x, y), box
+
+
+def _bare_stream_number(runs, name, color, display_name, font_size,
+                        text_width, text_height, bands, symbols, placed, ink,
+                        region, label_gap) -> StreamNumber:
+    """Place one un-enclosed number without ever drawing a blocked leader.
+
+    Clear positions along any straight piece of the same run are considered
+    before external halos.  External candidates are ordered by their measured
+    distance to the whole run, bounded by ``stream_label_bands``, and accepted
+    only when both their halo and their best leader clear every symbol, item of
+    lettering and foreign line.  If the bounded set is exhausted the number is
+    left on its run without a leader and carries a structured finding; drawing
+    a known crossing leader would turn a layout refusal into misleading ink.
+    """
+    segments = [segment for segment, _keep in runs]
+    foreign = [line for line in ink if line.line != name]
+    lettering = placed
+
+    described: list[_NumberRun] = []
+    for segment, keep_out in runs:
+        (sx1, sy1), (sx2, sy2) = segment
+        vertical = abs(sx2 - sx1) < abs(sy2 - sy1)
+        cx, cy = (sx1 + sx2) / 2, (sy1 + sy2) / 2
+        span = abs(sy2 - sy1) if vertical else abs(sx2 - sx1)
+        width, height = ((text_height, text_width) if vertical
+                         else (text_width, text_height))
+        axis, at = (("v", (sx1 + sx2) / 2) if vertical
+                    else ("h", (sy1 + sy2) / 2))
+        lo = min(sy1, sy2) if vertical else min(sx1, sx2)
+        hi = max(sy1, sy2) if vertical else max(sx1, sx2)
+        for line in ink:
+            if line.line == name and line.axis == axis and abs(line.at - at) < 0.5:
+                lo = min(lo, line.y0 if vertical else line.x0)
+                hi = max(hi, line.y1 if vertical else line.x1)
+        described.append(_NumberRun(
+            segment, keep_out, vertical, cx, cy, span, width, height,
+            axis, at, lo, hi))
+
+    def box_at(run, x, y):
+        return (x - run.width / 2, y - run.height / 2,
+                x + run.width / 2, y + run.height / 2)
+
+    def within(box):
+        if region is None:
+            return True
+        x0, y0, x1, y1 = region
+        return box[0] >= x0 and box[1] >= y0 and box[2] <= x1 and box[3] <= y1
+
+    def halo_is_readable(run, box):
+        if any(_meets(box, obstacle) for obstacle in symbols):
+            return False
+        if any(_meets(box, obstacle) for obstacle in placed):
+            return False
+        # Its own collinear line is the one piece of ink a number may cover.
+        return not any(
+            _meets(box, line.box)
+            for line in ink
+            if not (line.line == name and line.axis == run.axis
+                    and abs(line.at - run.at) < 0.5)
+        )
+
+    offered: list[tuple[_NumberRun, float, float, int]] = []
+    for run in described:
+        anchors = _label_anchors(
+            run.cx, run.cy, run.span, text_width, text_height,
+            run.vertical, False, text_width, bands)
+        for order, (x, y, _off) in enumerate(anchors):
+            box = box_at(run, x, y)
+            if not within(box):
+                continue
+            offered.append((run, x, y, order))
+            if (_along(box, run.vertical, run.lo, run.hi)
+                    and halo_is_readable(run, box)):
+                return StreamNumber(
+                    name, color, run.segment, x, y, run.vertical, box,
+                    None, box, (), display_name, font_size)
+
+    limit = _label_travel_bound(text_height, bands)
+    candidates: list[tuple[float, int, int, _NumberRun, float, float, tuple]] = []
+    seen: set[tuple] = set()
+    for run_index, (run, x, y, order) in enumerate(offered):
+        box = box_at(run, x, y)
+        distance = _point_run_distance((x, y), segments)
+        if distance > limit or _along(box, run.vertical, run.lo, run.hi):
+            continue
+        key = (run.vertical, round(x, 6), round(y, 6))
+        if key in seen:
+            continue
+        seen.add(key)
+        candidates.append((distance, run_index, order, run, x, y, box))
+
+    # Local bands sample regularly.  Add exact obstacle-edge positions so a
+    # narrow clear pocket is not skipped merely because it falls between two
+    # samples.  The longest segment's orientation remains the external label's
+    # orientation, preserving the convention the previous search used.
+    primary = described[0]
+    protected = symbols + lettering + [line.box for line in foreign]
+    for order, ((x, y), box) in enumerate(_bounded_label_spots(
+            region, protected, primary.width, primary.height, segments,
+            label_gap, limit)):
+        key = (primary.vertical, round(x, 6), round(y, 6))
+        if key in seen:
+            continue
+        seen.add(key)
+        candidates.append((_point_run_distance((x, y), segments),
+                           len(offered), order, primary, x, y, box))
+
+    blocked_spot = None
+    for _distance, _run_index, _order, run, x, y, box in sorted(candidates):
+        if not halo_is_readable(run, box):
+            continue
+        if blocked_spot is None:
+            blocked_spot = (run, x, y, box)
+        # First tie the halo back to the segment that offered it.  Other
+        # pieces are fallbacks only: choosing the geometrically shortest of
+        # all of them made a label jump from one equal-length stub to another
+        # and needlessly perturbed established drawings.
+        targets = [run] + [target for target in described if target is not run]
+        for target in targets:
+            obstacles = symbols + lettering + [
+                line.box for line in ink
+                if not (line.axis == target.axis and abs(line.at - target.at) < 0.5)
+            ]
+            leader, cuts = _leader(box, target.segment, obstacles, target.keep_out)
+            if cuts:
+                continue
+            return StreamNumber(
+                name, color, target.segment, x, y, run.vertical, box,
+                leader, box, (), display_name, font_size)
+
+    if blocked_spot is not None:
+        # The halo itself is readable; it is only its tie back to the run that
+        # failed.  Keep that nearest clear paper instead of putting the words
+        # back over equipment, but draw no misleading leader.  The structured
+        # finding below makes the incomplete association gateable.
+        run, x, y, box = blocked_spot
+        return StreamNumber(
+            name, color, run.segment, x, y, run.vertical, box, None,
+            box, (), display_name, font_size, limit)
+
+    # No leader is better than a leader known to cut a unit.  When even the
+    # halo has no clear paper, keep the number centred on the primary segment
+    # so its intended association is as visible as the unresolved geometry
+    # allows, and suppress the opaque plate rather than delete artwork.
+    run = primary
+    x, y = run.cx, run.cy
+    box = box_at(run, x, y)
+    damaged = (any(_meets(box, obstacle) for obstacle in symbols + placed)
+               or any(_meets(box, line.box) for line in foreign))
+    crossed = tuple(sorted({
+        line.line or "an instrument connection"
+        for line in foreign if _meets(box, line.box)
+    }))
+    return StreamNumber(
+        name, color, run.segment, x, y, run.vertical, box, None,
+        None if damaged else box, crossed, display_name, font_size, limit)
 
 
 def stream_numbers(fs, placed: list, joints: "str | None",
@@ -1828,26 +2072,29 @@ def stream_numbers(fs, placed: list, joints: "str | None",
         if s.kind in _SIGNAL_KINDS or s.name in labeled_names or not s.label:
             continue
         points = stream_polyline(s)
-        longest_seg, max_len = None, -1.0
+        segments = []
         for i in range(len(points) - 1):
             x1, y1 = points[i]
             x2, y2 = points[i + 1]
-            seg = abs(x2 - x1) + abs(y2 - y1)
-            if seg > max_len:
-                max_len, longest_seg = seg, ((x1, y1), (x2, y2))
-        if not longest_seg:
+            length = abs(x2 - x1) + abs(y2 - y1)
+            if length:
+                segments.append((((x1, y1), (x2, y2)), length))
+        if not segments:
             continue
         labeled_names.add(s.name)
-        # How much of the segment its own flange marks take: the mark's
-        # standoff plus its half-width, where the near bar ends. Nought
-        # on a run whose longest piece is in the middle of it, the marks
-        # being at the nozzles and nowhere else.
-        (mx1, my1), (mx2, my2) = longest_seg
-        keep = FLANGE_STANDOFF + FLANGE_GAP / 2 if any(
-            _near_segment((m.x, m.y), (mx1, my1), (mx2, my2))
-            for m in flange_marks(s, points, resolve_connections(s, joints))
-        ) else 0.0
-        label_items.append((longest_seg, s.name, s.color or "black", keep))
+        # Longest first preserves the established first choice, while retaining
+        # every other straight piece so a crowded longest segment does not send
+        # the number away before the rest of its own run has been tried.
+        segments.sort(key=lambda item: item[1], reverse=True)
+        marks = flange_marks(s, points, resolve_connections(s, joints))
+        runs = []
+        for segment, _length in segments:
+            keep = FLANGE_STANDOFF + FLANGE_GAP / 2 if any(
+                _near_segment((mark.x, mark.y), *segment)
+                for mark in marks
+            ) else 0.0
+            runs.append((segment, keep))
+        label_items.append((runs, s.name, s.color or "black"))
 
     # An enclosure is ruled at **one size for the whole sheet**: measured
     # over the longest label on it, and given to every label, so a sheet
@@ -1872,11 +2119,12 @@ def stream_numbers(fs, placed: list, joints: "str | None",
     bands = fs.layout_options.stream_label_bands
     halo_char, halo_pad, halo_deep = (v * text_scale for v in (_HALO_CHAR, _HALO_PAD, _HALO_DEEP))
     widest = max((len(display_names[name]) * halo_char + halo_pad
-                  for _s, name, _c, _k in label_items), default=0.0)
+                  for _runs, name, _color in label_items), default=0.0)
     uniform = enclosure_box(shape, widest, halo_deep)
 
     out: list[StreamNumber] = []
-    for seg, name, color, keep in label_items:
+    for runs, name, color in label_items:
+        seg, keep = runs[0]
         (sx1, sy1), (sx2, sy2) = seg
         # What the words occupy, and what is reserved for them. One box
         # with no enclosure; with one, the second contains the first.
@@ -1911,6 +2159,19 @@ def stream_numbers(fs, placed: list, joints: "str | None",
         # box being square.
         bw, bh = (hh, hw) if vertical else (hw, hh)
         lw, lh = (th, tw) if turned else (tw, th)
+
+        if shape == "none":
+            number = _bare_stream_number(
+                runs, name, color, display_names[name],
+                fs.stream_labels.font_size, tw, th, bands, symbols, placed,
+                ink, region, fs.layout_options.stream_label_gap)
+            placed.append(number.box)
+            if number.leader is not None:
+                (ax0, ay0), (ax1, ay1) = number.leader
+                placed.append((min(ax0, ax1), min(ay0, ay1),
+                               max(ax0, ax1), max(ay0, ay1)))
+            out.append(number)
+            continue
 
         # Everything the anchors below can reach: along the run as far
         # as _label_anchors will slide the label, and across it to the
@@ -2122,8 +2383,9 @@ def stream_numbers(fs, placed: list, joints: "str | None",
 #: gives the plate up rather than paint out a neighbour's. That is a
 #: change to the drawing, so it is a change the author has to be told
 #: about on the sheet they did not opt into.
-_LABEL_CODES = ("label-over-line", "enclosure-over-unit",
-                "enclosure-over-line", "enclosure-over-label")
+_LABEL_CODES = ("label-over-line", "leader-placement-unresolved",
+                "enclosure-over-unit", "enclosure-over-line",
+                "enclosure-over-label")
 
 
 def _shape_hits(shape: str, box, rect) -> bool:
@@ -2330,6 +2592,15 @@ def label_findings(fs, shape: str, numbers: "list[StreamNumber]",
 
     out: list[Issue] = []
     for number in numbers:
+        if number.placement_limit is not None:
+            stream = number.text
+            out.append(Issue(
+                "warning", "leader-placement-unresolved",
+                f"{stream}'s number has no clear position along its run "
+                f"and no halo within {number.placement_limit:g} drawing units "
+                f"whose leader reaches the run without crossing a unit, "
+                f"lettering or another line. No crossing leader is drawn; "
+                f"space the sheet or route {stream} clear with via()"))
         if number.crossed:
             out.append(Issue(
                 "warning", "label-over-line",
@@ -2826,6 +3097,18 @@ def _unit_label_box(item) -> "tuple[float, float, float, float] | None":
     rx = lx - hw / 2 if anchor == "middle" else (lx - hw if anchor == "end" else lx)
     ry = ly - hh / 2 if baseline == "middle" else ly - hh + 3
     return (rx, ry, rx + hw, ry + hh)
+
+
+def _combined_unit_label_box(tag_item, marks, font_size=12):
+    """The one multi-line label cell draw.io makes from SVG tag marks."""
+    if tag_item is None or not marks:
+        return None
+    lx, ly, anchor, baseline, lpos, tag = tag_item
+    combined = _LabelItem(
+        (lx, ly, anchor, baseline, lpos,
+         "\n".join([tag, *(mark[5] for mark in marks)])),
+        font_size)
+    return _unit_label_box(combined)
 
 
 def _num(v: float) -> str:
@@ -4442,7 +4725,8 @@ class SvgRenderer:
             from pandid.render.drawio import _tag_pass
             from pandid.render.nameplates import label_boxes
             tags = _tag_pass(fs,self.registry,joints,jump_direction)
-            number_plan = stream_numbers(fs,list(tags.plates),joints,jump_direction,fitted_region(fs))
+            number_plan = stream_numbers(
+                fs, list(tags.plates), joints, jump_direction, fitted_region(fs))
             text_boxes = label_boxes(tags,number_plan)
 
         # 1. Diagram bounding box: union of every unit's drawn box and
@@ -4540,6 +4824,7 @@ class SvgRenderer:
         lines = ["    " + item for item in furniture]
         lines.extend(self._defs(fs, arrows))
         unit_labels: list = []
+        combined_unit_label_plates: list = []
         balloons: list = []
         # Where every line on the sheet runs. Both label passes below
         # write on an opaque halo and so have to be told, and this is
@@ -4564,10 +4849,12 @@ class SvgRenderer:
         # ``None`` and not one of these boxes is computed.
         plates: "list[tuple[float, float, float, float]] | None" = (
             [] if grid is not None else None)
-        drawing.extend(self._draw_units(fs, unit_labels, balloons, ink, joints,
-                                        quadrants))
+        drawing.extend(self._draw_units(
+            fs, unit_labels, balloons, ink, joints, quadrants,
+            combined_unit_label_plates))
         drawing.extend(self._draw_streams(fs, jump_direction, unit_labels, arrows,
-                                          plates, joints, crossing_style, number_plan))
+                                          plates, joints, crossing_style, number_plan,
+                                          combined_unit_label_plates))
         # Instrumentation goes on over the lines: an impulse line runs
         # from the tap to the balloon, and the balloon's opaque body
         # then knocks out both it and any process line an in-line
@@ -4944,7 +5231,7 @@ class SvgRenderer:
     # --- units --------------------------------------------------------
 
     def _draw_units(self, fs, label_items, balloons, ink=(), joints=None,
-                    quadrants=()):
+                    quadrants=(), combined_label_plates=None):
         from pandid.portgeom import unit_box
 
         lines = ['  <g id="units">']
@@ -5013,6 +5300,8 @@ class SvgRenderer:
                 # the pipe tee is one today: it is bare pipe, and an
                 # issued sheet writes nothing against a junction.
                 tag_box = None
+                tag_item = None
+                marks = []
                 if u.tag:
                     if u.kind == "block" and getattr(u, "font_size", 12) != 12:
                         font = u.font_size
@@ -5023,6 +5312,7 @@ class SvgRenderer:
                         continue
                     item = self._tag_item(u, f, x, y, u_width, u_height, safe_name,
                                           ink, symbols)
+                    tag_item = item
                     tag_box = _unit_label_box(item)
                     label_items.append(item)
                     if tag_box is not None:
@@ -5030,16 +5320,25 @@ class SvgRenderer:
                 # A body that cannot carry the darkening says so in
                 # letters instead; see ISO 15519-1 §11.4.5.
                 if closed_marking(u, self.registry) == "NC":
-                    label_items.append(
-                        self._nc_label_item(u, f, x, y, u_width, u_height, tag_box))
+                    mark = self._nc_label_item(
+                        u, f, x, y, u_width, u_height, tag_box)
+                    label_items.append(mark)
+                    marks.append(mark)
                 # Where an actuated valve goes when its air or power is
                 # lost. A separate question from the one above, in a
                 # separate corner; see ISA-5.1 Table 5.4.4.
                 letters = fail_marking(u)
                 if letters:
-                    label_items.append(
-                        self._fail_label_item(u, f, x, y, u_width, u_height, letters,
-                                              tag_box, ink, symbols))
+                    mark = self._fail_label_item(
+                        u, f, x, y, u_width, u_height, letters,
+                        tag_box, ink, symbols)
+                    label_items.append(mark)
+                    marks.append(mark)
+                if combined_label_plates is not None:
+                    plate = _combined_unit_label_box(
+                        tag_item, marks, getattr(u, "font_size", 12))
+                    if plate is not None:
+                        combined_label_plates.append(plate)
         lines.append('  </g>')
         return lines
 
@@ -5468,7 +5767,8 @@ class SvgRenderer:
         return arrows and wears_arrowhead(s, self.registry)
 
     def _draw_streams(self, fs, jump_direction, unit_labels, arrows=True,
-                      plates=None, joints=None, crossing_style="arc", number_plan=None):
+                      plates=None, joints=None, crossing_style="arc", number_plan=None,
+                      extra_label_boxes=()):
         """Draw every run, and the numbers written on and beside them.
 
         ``crossing_style`` is the mark a crossing of two unconnected
@@ -5664,7 +5964,7 @@ class SvgRenderer:
         # pass only draws it.
         placed: list[tuple[float, float, float, float]] = [
             b for b in map(_unit_label_box, unit_labels) if b is not None
-        ]
+        ] + list(extra_label_boxes)
 
         shape = enclosure_shape(fs)
         numbers = stream_numbers(fs, placed, joints, jump_direction, fitted_region(fs)) if number_plan is None else number_plan

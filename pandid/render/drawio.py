@@ -1293,8 +1293,8 @@ def _tag_pass(fs, registry, joints: "str | None", direction: str) -> "_Tags":
     pennant, likewise; and a unit with no tag -- the pipe tee is the
     only one today -- is labelled nowhere at all.
     """
-    from pandid.render.svg import (SvgRenderer, _ink, _unit_label_box,
-                                   flange_boxes, quadrant_labels)
+    from pandid.render.svg import (SvgRenderer, _combined_unit_label_box, _ink,
+                                   _unit_label_box, flange_boxes, quadrant_labels)
 
     sheet = SvgRenderer(registry)
     ink = _ink(fs, direction)
@@ -1315,16 +1315,20 @@ def _tag_pass(fs, registry, joints: "str | None", direction: str) -> "_Tags":
     symbols += [(None, b) for b in map(_unit_label_box, codes) if b is not None]
     at: dict = {}
     items: list = []
+    combined_plates: list = []
     for u in fs.units:
         f = u.frame
         if f is None or u.kind in ("feed", "product", "instrument"):
             continue
         x, y, w, h = f.x, f.y, f.w, f.h
         tag_box = None
+        tag_item = None
+        marks = []
         if u.tag:
             item = sheet._tag_item(u, f, x, y, w, h, escaped(u.tag),
                                    ink, [(owner, box) for owner, box in symbols
                                                  if owner is None or fs.containments.get(u.name) != owner.name])
+            tag_item = item
             tag_box = _unit_label_box(item)
             items.append(item)
             if tag_box is not None:
@@ -1338,12 +1342,28 @@ def _tag_pass(fs, registry, joints: "str | None", direction: str) -> "_Tags":
             base = sheet._label_place(side, x, y, w, h)
             at[id(u)] = (side, item[0] - base[0], item[1] - base[1])
         if closed_marking(u, registry) == "NC":
-            items.append(sheet._nc_label_item(u, f, x, y, w, h, tag_box))
+            mark = sheet._nc_label_item(u, f, x, y, w, h, tag_box)
+            items.append(mark)
+            marks.append(mark)
         letters = fail_marking(u)
         if letters:
-            items.append(sheet._fail_label_item(u, f, x, y, w, h, letters, tag_box,
-                                                ink, symbols))
-    return _Tags(at, [b for b in map(_unit_label_box, items) if b is not None],
+            mark = sheet._fail_label_item(u, f, x, y, w, h, letters, tag_box,
+                                          ink, symbols)
+            items.append(mark)
+            marks.append(mark)
+        if tag_item is not None and marks:
+            # SVG can place a fail/normal-state mark independently beside the
+            # body, while draw.io has one label per unit cell and appends those
+            # letters as extra lines to the equipment tag.  Reserve that
+            # combined cell as well as the separately drawn SVG plates; a line
+            # number in the intervening paper is clear in SVG but is written
+            # through the unit lettering in the editable master.
+            plate = _combined_unit_label_box(
+                tag_item, marks, getattr(u, "font_size", _TAG_TYPE))
+            if plate is not None:
+                combined_plates.append(plate)
+    return _Tags(at, [b for b in map(_unit_label_box, items) if b is not None]
+                 + combined_plates,
                  codes)
 
 

@@ -24,12 +24,11 @@ def test_enclosed_label_stays_on_its_run():
     assert candidates and all(y == off == 0 for _, y, off in candidates)
 
 
-def test_bfd_caption_uses_clear_paper_when_its_nearby_search_is_full():
+def test_bfd_caption_reports_when_its_bounded_search_is_full():
     from pandid.profiles.circle_h2o import block_diagram
     from pandid.render.drawio import _tag_pass
-    from pandid.render.svg import stream_numbers, _meets
+    from pandid.render.svg import label_findings, stream_numbers
     from pandid.render.symbols import default_registry
-    from pandid.portgeom import unit_box
 
     blocks = [{'key': k, 'id': k, 'label': k, 'lane': 'process',
                'order': order, 'attributes': {}} for order, k in enumerate(('source', 'target'))]
@@ -41,6 +40,10 @@ def test_bfd_caption_uses_clear_paper_when_its_nearby_search_is_full():
     fs.layout_options.stream_label_bands = 1
     fs.to_drawio(diagram='bfd', jump_direction='auto')
     number, = stream_numbers(fs, list(_tag_pass(fs, default_registry, None, 'auto').plates), None, 'auto')
-    assert number.leader is not None
+    assert number.leader is None
     assert not number.crossed
-    assert not any(_meets(number.box, unit_box(u, u.frame)) for u in fs.units)
+    assert number.placement_limit is not None
+    unresolved = [issue for issue in label_findings(fs, 'none', [number], 'auto')
+                  if issue.code == 'leader-placement-unresolved']
+    assert len(unresolved) == 1
+    assert 'transfer-01' in unresolved[0].message

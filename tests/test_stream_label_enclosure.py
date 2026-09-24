@@ -991,8 +991,13 @@ def test_the_default_says_so_when_a_label_gives_up_its_plate():
     for issue in said:
         assert issue.severity == "warning"
         assert "is written across" in issue.message
-    # ...and nothing about an enclosure, because none was ruled.
-    assert not findings(fs, set(_LABEL_CODES) - {"label-over-line"})
+    # A bounded search that has no clean leader route says so separately; it
+    # still says nothing about an enclosure, because none was ruled.
+    unresolved = findings(fs, {"leader-placement-unresolved"})
+    assert unresolved
+    assert all(issue.severity == "warning" for issue in unresolved)
+    assert not findings(fs, set(_LABEL_CODES) - {
+        "label-over-line", "leader-placement-unresolved"})
 
 
 def test_both_backends_say_it_at_the_default_too():

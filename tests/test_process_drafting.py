@@ -72,17 +72,23 @@ def test_line_number_search_budget_requires_positive_integer(value):
 
 
 def test_house_line_number_uses_clear_external_paper_when_every_nearby_band_is_taken():
-    from pandid.render.svg import stream_numbers, _meets, stream_polyline
-    fs=apply(Flowsheet('External caption'))
-    source=fs.add(Feed('Feed')).pin(x=100,y=100)
-    target=fs.add(Product('Product')).pin(x=600,y=100)
-    line=fs.connect(source.outlet,target.inlet);line.display_label='100-L-001 / DN80 / SPEC'
-    fs.layout();fs.route()
-    y=stream_polyline(line)[0][1]
-    occupied=(-10000,y-10000,10000,y+10000)
-    number=stream_numbers(fs,[occupied],None,'vertical')[0]
-    assert not _meets(number.box,occupied)
-    assert number.leader is not None and number.crossed==()
+    from pandid.render.svg import stream_numbers, _crosses
+    fs = Flowsheet('External caption')
+    source = fs.add(Block('source', inputs=0, outputs=['S'], width=180, height=100))
+    target = fs.add(Block('target', inputs=['N'], outputs=0, width=180, height=100))
+    source.pin(x=410, y=100)
+    target.pin(x=410, y=230)
+    line = fs.connect(source.out_1, target.in_1)
+    line.display_label = '801-04'
+    fs.stream_labels.font_size = 22
+    fs.layout_options.stream_label_bands = 7
+    fs.layout_options.strict_label_clearance = True
+    fs.layout(); fs.route()
+    number = stream_numbers(fs, [], None, 'vertical', (200, 50, 800, 450))[0]
+    assert number.leader is not None and number.crossed == ()
+    assert not any(
+        _crosses(*number.leader, unit_box(unit, unit.frame)) for unit in fs.units
+    )
 
 
 def test_a_displaced_line_number_never_leads_through_the_unit_between_it_and_its_run():
