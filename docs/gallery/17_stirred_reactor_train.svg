@@ -321,10 +321,8 @@
     <text x="798.0" y="720.0" font-family="sans-serif" font-size="10" text-anchor="middle" dominant-baseline="middle" fill="black">100-PG-208-SS</text>
     <rect x="1311.7" y="713.5" width="86.6" height="13.0" fill="white" />
     <text x="1355.0" y="720.0" font-family="sans-serif" font-size="10" text-anchor="middle" dominant-baseline="middle" fill="black">100-PG-211-SS</text>
-    <rect x="1145.6" y="573.0" width="92.8" height="13.0" fill="white" />
-    <text x="1192.0" y="579.5" font-family="sans-serif" font-size="10" text-anchor="middle" dominant-baseline="middle" fill="black">100-CWS-209-CS</text>
-    <line x1="1158.1" y1="586.0" x2="1154.1" y2="590.0" stroke="black" stroke-width="1" />
-    <path d="M 1154.1,590.0 L 1156.2,583.6 L 1160.5,587.9 Z" fill="black" />
+    <rect x="1206.5" y="581.1" width="13.0" height="92.8" fill="white" />
+    <text x="1213.0" y="627.5" font-family="sans-serif" font-size="10" text-anchor="middle" dominant-baseline="middle" fill="black" transform="rotate(-90, 1213.0, 627.5)">100-CWS-209-CS</text>
     <rect x="1029.5" y="746.6" width="13.0" height="92.8" fill="white" />
     <text x="1036.0" y="793.0" font-family="sans-serif" font-size="10" text-anchor="middle" dominant-baseline="middle" fill="black" transform="rotate(-90, 1036.0, 793.0)">100-CWR-210-CS</text>
   </g>
