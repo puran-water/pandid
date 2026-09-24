@@ -3501,7 +3501,10 @@ _ATTR = re.compile(r'([\w:.-]+)="([^"]*)"')
 # alternating map below. Both are a few lines to support on the day a
 # drawing needs them, and an error until then, as
 # ``export._reject_unsupported`` does it.
-_PATH_ARITY = {"M": 2, "L": 2, "C": 6, "A": 7, "Z": 0, "z": 0}
+# Every command but A is a run of (x, y) pairs, so the generic branch of
+# _scaled_path maps it correctly; Q (control, end) and T (end) are no
+# different from C in that respect, and house artwork draws its bends with Q.
+_PATH_ARITY = {"M": 2, "L": 2, "C": 6, "Q": 4, "T": 2, "A": 7, "Z": 0, "z": 0}
 _PATH_TOKEN = re.compile(r"[A-Za-z]|-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?")
 
 

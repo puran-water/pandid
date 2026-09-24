@@ -9,7 +9,7 @@ standards claim of its own. Sources:
   valves and their variants, pumps, compressors, blowers, coolers,
   heaters, heat exchangers, cooling towers, vessels, columns, reactors,
   separators, tanks, dryers, filters, furnaces, thickeners, turbines,
-  reducers, in-line fittings, ejectors, vents and funnels. Converted
+  reducers, in-line fittings, ejectors, liquid screens, vents and funnels. Converted
   from mxGraph stencil XML by ``scripts/vendor_symbols.py`` into
   ``_vendored_symbols.py`` and registered last (overriding the
   hand-drawn defaults of the same kind). See the repo ``NOTICE`` for
