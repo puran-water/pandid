@@ -319,6 +319,11 @@ _KNOWN_GEOMETRY_GAPS = {
     ("pump", "default", "suction"),
     ("compressor", "default", "suction"),
     ("pump", "screw", "suction"),
+    # The MBR airlift is an open double-walled riser: liquid enters across its lower
+    # mouth and leaves across its upper one, and each port sits in its mouth, 5u from
+    # each wall (owner ruling, 2026-09-23: a port on an open mouth is exempt).
+    ("airlift", "default", "liquid_in"),
+    ("airlift", "default", "discharge"),
 }
 
 # A signal connection is not a nozzle: nothing flows through a valve stem or an
@@ -351,8 +356,15 @@ _SIGNAL_PORTS = {
 _SYMBOLS = sorted(default_registry._symbols.items())
 _IDS = [f"{kind}/{variant}" for (kind, variant), _ in _SYMBOLS]
 
+#: Fixed-size marks: filled, with no outline, and drawn at one size whatever box they sit
+#: in (owner ruling, 2026-09-23). A pipe junction is drawn from its unit and never redrawn
+#: at a new aspect, so the stroke and redraw invariants below do not describe it; the test
+#: after them pins what it is instead.
+_FIXED_SIZE_MARKS = {("junction", "default")}
+_REDRAWABLE = [(entry, id_) for entry, id_ in zip(_SYMBOLS, _IDS) if entry[0] not in _FIXED_SIZE_MARKS]
 
-@pytest.mark.parametrize("entry", _SYMBOLS, ids=_IDS)
+
+@pytest.mark.parametrize("entry", [e for e, _ in _REDRAWABLE], ids=[i for _, i in _REDRAWABLE])
 def test_svg_is_well_formed_and_declares_stroke_width(entry):
     (kind, variant), sym = entry
     ET.fromstring(sym.svg)  # raises ET.ParseError on malformed XML
@@ -366,7 +378,7 @@ _REDRAWS = ((1.0, 1.0), (2.0, 1.0), (1.0, 2.5), (3.0, 0.5), (0.4, 1.7))
 
 
 @pytest.mark.parametrize("factors", _REDRAWS, ids=[f"{a}x{b}" for a, b in _REDRAWS])
-@pytest.mark.parametrize("entry", _SYMBOLS, ids=_IDS)
+@pytest.mark.parametrize("entry", [e for e, _ in _REDRAWABLE], ids=[i for _, i in _REDRAWABLE])
 def test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from(entry, factors):
     """``pandid.render.svg._baked`` moves the pen and nothing else.
 
@@ -405,6 +417,14 @@ def test_a_symbol_redrawn_at_a_new_size_draws_the_ink_it_was_drawn_from(entry, f
     assert worst <= 1e-5, (
         f"{kind}/{variant} redrawn at {fx} x {fy} moved its ink by {worst:.3g} units"
     )
+
+
+def test_a_junction_is_a_fixed_size_filled_dot_and_the_only_mark_exempted():
+    """The exemption above is one named mark, and it is the thing the ruling says it is."""
+    assert _FIXED_SIZE_MARKS == {("junction", "default")}
+    dot = ET.fromstring(default_registry.get("junction", "default").svg).find("circle")
+    assert dot is not None and dot.get("fill") not in (None, "none")
+    assert dot.get("stroke") in (None, "none") and dot.get("stroke-width") is None
 
 
 @pytest.mark.parametrize("entry", _SYMBOLS, ids=_IDS)
