@@ -195,7 +195,7 @@ from pandid.render import generator
 from pandid.render import svg as _svg
 from pandid.render.escape import escaped, writable
 from pandid.render.svg import (_DIAMOND_BALLOONS, _ENCLOSURE_STROKE,
-                               _furniture_name, _LABEL_CODES, _RENDER_CODES,
+                               _furniture_name, _LABEL_CODES, _RENDER_CODES, _TAG_CODES,
                                _LEADER_HEAD, _scale_text, _Sheet, _too_small,
                                _SIGNAL_DASH, _stream_rung, _TAP_DASH,
                                fit_issue, fitted_region, HOP_R,
@@ -757,7 +757,7 @@ HOP_DROPPED = "drawio-hop-dropped"
 #: The codes this backend puts on ``fs.warnings`` itself, as against the
 #: validator's findings about the diagram. Replaced rather than added to
 #: on each export, the way ``SvgRenderer.render`` replaces its own.
-_EXPORT_CODES = (*_RENDER_CODES, *_LABEL_CODES, APPROXIMATED, HOP_DROPPED)
+_EXPORT_CODES = (*_RENDER_CODES, *_LABEL_CODES, *_TAG_CODES, APPROXIMATED, HOP_DROPPED)
 
 
 #: Every symbol this library draws itself, and what draw.io is asked for
@@ -1258,10 +1258,15 @@ class _Tags(NamedTuple):
     code is neither a unit's label nor a line's, so nothing in this
     exporter carried one and six alarms went out of ``11_ethanol_pid``
     unlettered. See :func:`_quadrant_cell`.
+
+    ``findings`` is :func:`~pandid.render.svg.tag_findings` over the same
+    items, so a tag that found no clear paper is reported from the one
+    search whichever document is drawn.
     """
     at: dict
     plates: list
     codes: list
+    findings: list = []
 
 
 def _tag_pass(fs, registry, joints: "str | None", direction: str) -> "_Tags":
@@ -1294,7 +1299,8 @@ def _tag_pass(fs, registry, joints: "str | None", direction: str) -> "_Tags":
     only one today -- is labelled nowhere at all.
     """
     from pandid.render.svg import (SvgRenderer, _combined_unit_label_box, _ink,
-                                   _unit_label_box, flange_boxes, quadrant_labels)
+                                   _unit_label_box, flange_boxes, quadrant_labels,
+                                   tag_findings)
 
     sheet = SvgRenderer(registry)
     ink = _ink(fs, direction)
@@ -1364,7 +1370,7 @@ def _tag_pass(fs, registry, joints: "str | None", direction: str) -> "_Tags":
                 combined_plates.append(plate)
     return _Tags(at, [b for b in map(_unit_label_box, items) if b is not None]
                  + combined_plates,
-                 codes)
+                 codes, tag_findings(items))
 
 
 def _quadrant_cell(cid: str, item, fit: "_Fit") -> list[str]:
@@ -1692,6 +1698,7 @@ class DrawioRenderer:
 
         joints = sheet_connections(diagram, connections)
         tags = _tag_pass(fs, self.registry, joints, jump_direction)
+        self._findings += tags.findings
         number_plan = stream_numbers(fs,list(tags.plates),joints,jump_direction,fitted_region(fs))
         from pandid.render.nameplates import label_boxes
         text_boxes = label_boxes(tags,number_plan) if fs.layout_options.strict_label_clearance else []

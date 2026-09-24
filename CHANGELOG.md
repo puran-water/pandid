@@ -31,6 +31,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   diagram minutes per table sheet and reported the diagram's detours as the
   table's.
 
+### Fixed
+
+- **A pipe ran through an equipment or valve tag** where the only clear
+  paper was on a face a nozzle leaves, or just past half the symbol's width
+  along a face. The tag search now tries every face, nozzle faces after the
+  free ones, and then a reach out to the symbol's corner, before it settles
+  for the least damaging spot; a tag still over a line is reported as
+  `tag-over-line` by both backends. Found on the LB TEX ion-exchange P&IDs,
+  where each vessel's crown pipe ran through its tag.
+
 ## [0.1.5] - 2026-08-26
 
 ### Fixed

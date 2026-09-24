@@ -3835,6 +3835,7 @@ some other drawing without rendering it as one.
 | `enclosure-over-unit` | warning | `fs.stream_labels.enclosure` only: the shape ruled around a stream number is drawn across a unit's box. An enclosed label stays on its run whatever is beside it, so this is the cue to space the sheet; see [A shape around the number](#a-shape-around-the-number) |
 | `enclosure-over-line` | warning | as above, across ink belonging to another run, so more than one line passes through one shape. Every line is still drawn, and the message says whether the number itself is written across that run — the case where the wipe under it had to be dropped to leave the run whole |
 | `enclosure-over-label` | warning | as above, across another stream label's shape. One finding per pair |
+| `tag-over-line` | warning | an equipment or valve tag is lettered over a line — its own nozzle line included — because no face of the symbol, and no step along one out to the symbol's corner, was clear. The tag's plate breaks the line under it; the message names the lines. Both backends place tags with one search and report the same list |
 
 Errors raise from `to_svg()`/`render()` unless you pass `check=False`. Warnings
 never raise, and collect on `fs.warnings` after each render. That list describes
@@ -3883,7 +3884,7 @@ to hear the geometric half; on a sheet nothing has placed yet that half is
 simply silent.
 
 Some codes are made by the **renderer** rather than by either half —
-`drawio-approximated`, the three `enclosure-*` findings, and the text-fitting
+`drawio-approximated`, the three `enclosure-*` findings, `tag-over-line`, and the text-fitting
 ones a title block or a docked box can raise. They land on `fs.warnings` after a
 render and are not what `fs.validate()` answers with: each describes where a
 mark ended up on the paper, which only the pass that laid it down can say.

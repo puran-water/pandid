@@ -2460,6 +2460,33 @@ _LABEL_CODES = ("label-over-line", "leader-crosses-line",
                 "leader-placement-unresolved", "enclosure-over-unit",
                 "enclosure-over-line", "enclosure-over-label")
 
+#: The code the equipment-tag pass puts on ``fs.warnings``; see
+#: :func:`tag_findings`. Kept apart from :data:`_LABEL_CODES`, which are
+#: the stream-label pass's, and dropped at the start of every render with
+#: them.
+_TAG_CODES = ("tag-over-line",)
+
+
+def tag_findings(items) -> "list[Issue]":
+    """``tag-over-line`` for every equipment tag still lettered over a line.
+
+    :meth:`SvgRenderer._tag_item` tries every face of the symbol and a
+    reach along each out to the symbol's corner before it settles for the
+    least damaging spot, so a tag named here had no clear paper anywhere
+    it would still read as that symbol's. Its plate paints the line out
+    under the lettering, which is the sheet saying the line stops there;
+    both backends place tags with the one search and report from here.
+    """
+    import html
+
+    return [Issue("warning", "tag-over-line",
+                  f"{html.unescape(item[5])}'s tag is lettered over "
+                  f"{', '.join(item.crossed)}. No face of the symbol and no "
+                  f"step along one, out to its corner, is clear of every line, "
+                  f"so the tag's plate breaks the line under it. Space the "
+                  f"sheet, or route the line clear with via()")
+            for item in items if getattr(item, "crossed", ())]
+
 
 def _shape_hits(shape: str, box, rect) -> bool:
     """Does the enclosure *shape* filling *box* meet the rectangle *rect*?
@@ -3144,7 +3171,14 @@ def arrow_marker_id(color: str) -> str:
 
 
 class _LabelItem(tuple):
-    """Six-value placement tuple carrying its actual type size for measurement."""
+    """Six-value placement tuple carrying its actual type size for measurement.
+
+    ``crossed`` names the lines an equipment tag's plate is still over once
+    :meth:`SvgRenderer._tag_item` has run out of paper, and is empty on every
+    other placement.
+    """
+    crossed: "tuple[str, ...]" = ()
+
     def __new__(cls, values, font_size=12):
         value = super().__new__(cls, values)
         value.font_size = font_size
@@ -4906,7 +4940,8 @@ class SvgRenderer:
                                                       crossing_style)
         fs.warnings = [w for w in fs.warnings
                        if getattr(w, "code", "") not in _RENDER_CODES
-                       and getattr(w, "code", "") not in _LABEL_CODES] + render_issues
+                       and getattr(w, "code", "") not in _LABEL_CODES
+                       and getattr(w, "code", "") not in _TAG_CODES] + render_issues
 
         # 4. SVG document. Furniture (border + title strip + boxes) sits
         #    behind the diagram.
@@ -4941,6 +4976,7 @@ class SvgRenderer:
         drawing.extend(self._draw_units(
             fs, unit_labels, balloons, ink, joints, quadrants,
             combined_unit_label_plates))
+        self._findings += tag_findings(unit_labels)
         drawing.extend(self._draw_streams(fs, jump_direction, unit_labels, arrows,
                                           plates, joints, crossing_style, number_plan,
                                           combined_unit_label_plates))
@@ -5621,10 +5657,31 @@ class SvgRenderer:
         least damaging wins, by :func:`_erases`, and a tie keeps the
         earlier answer.
 
+        **A face a nozzle leaves is tried too, after the free ones.**
+        Layout leaves those out because a pipe leaves them, which is a
+        guess about paper made before there were any lines; here the
+        lines exist, and a nozzle is one point on a face the tag can
+        slide off. Left out, a unit piped on every face -- an ion
+        exchanger takes regenerant in its crown and feed, treated water
+        and spent regenerant on the other three -- had one face and half
+        its width to search, and a tag longer than that half settled on
+        the pipe dropping into the middle of the crown (LB TEX template
+        review revision 05, item 4). Its own pipe is no exception: an
+        equipment tag names the symbol, and a plate across the nozzle
+        line says the pipe stops short of it.
+
+        **And then a wider reach along each face**, out to where the
+        tag's end still lines up with the symbol's edge, so it reads
+        against that corner rather than as the neighbour's. Only when
+        nothing at half the face is clear: a valve between two runs
+        narrower than its own tag has nowhere else to go. Whatever is
+        still under the plate after both passes is recorded on it as
+        ``crossed``, for :func:`tag_findings` to report.
+
         A side the author named is left where they put it, as is one the
         symbol fixes (an instrument balloon's ``center``).
         """
-        from pandid.layout.coordinates import free_label_sides
+        from pandid.layout.coordinates import LABEL_SIDES, free_label_sides
 
         item = self._unit_label_item(u, f, x, y, u_width, u_height, safe_name)
         box = _unit_label_box(item)
@@ -5649,23 +5706,33 @@ class SvgRenderer:
                   if v is not u and _meets(_obstacle(b), window)]
 
         clear = (0, 0, 0)
+        font = getattr(u, 'font_size', 12)
         best, damage = item, _erases(box, near, others)
-        sides = [item[4]] + [s for s in free_label_sides(u) if s != item[4]]
-        for side in sides:
-            if damage == clear:
-                break
-            lx, ly, anchor, baseline = self._label_place(side, x, y, u_width, u_height)
-            # A tag steps along its face only as far as the symbol's
-            # own half width (or half height, on a side face). Past that
-            # it starts reading as the neighbour's.
-            edgewise = side in ("left", "right")
-            for sx, sy in _slide(lx, ly, (u_height if edgewise else u_width) / 2, edgewise):
-                spot = _LabelItem((sx, sy, anchor, baseline, side, safe_name), getattr(u, 'font_size', 12))
-                cost = _erases(_unit_label_box(spot), near, others)
-                if cost < damage:
-                    best, damage = spot, cost
-                    if damage == clear:
-                        break
+        sides = list(dict.fromkeys([item[4], *free_label_sides(u), *LABEL_SIDES]))
+        # A tag steps along its face as far as the symbol's own half
+        # width (or half height, on a side face), and only past that --
+        # to its end level with the symbol's edge -- once nothing
+        # nearer is clear.
+        for wide in (False, True):
+            for side in sides:
+                if damage == clear:
+                    break
+                lx, ly, anchor, baseline = self._label_place(side, x, y, u_width, u_height)
+                edgewise = side in ("left", "right")
+                room = (u_height if edgewise else u_width) / 2
+                if wide:
+                    room += ((box[3] - box[1]) if edgewise else (box[2] - box[0])) / 2
+                for sx, sy in _slide(lx, ly, room, edgewise):
+                    spot = _LabelItem((sx, sy, anchor, baseline, side, safe_name), font)
+                    cost = _erases(_unit_label_box(spot), near, others)
+                    if cost < damage:
+                        best, damage = spot, cost
+                        if damage == clear:
+                            break
+        if damage[1:] != (0, 0):
+            spot = _unit_label_box(best)
+            best.crossed = tuple(sorted({line.line or "an instrument connection"
+                                         for line in near if _meets(spot, line.box)}))
         return best
 
     def _nc_label_item(self, u, f, x, y, u_width, u_height, tag_box=None):

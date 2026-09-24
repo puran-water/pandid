@@ -212,6 +212,16 @@ bounds before fitting and before the common nameplate row is placed. Both
 writers consume the same caption plan; data blocks cannot cover a displaced
 line number.
 
+Equipment and valve tags are placed after routing, against the drawn lines,
+and no line may run through one -- the tag's own nozzle line included, since
+a tag names the symbol and its halo across that line reads as the pipe stopping
+short. The search tries the side layout chose, then the other nozzle-free
+faces, then the faces a nozzle leaves (a unit piped on all four, such as an ion
+exchanger, has no free face), sliding along each up to half the symbol's face;
+only if none is clear does it slide further, to the tag's end level with the
+symbol's edge. A tag that is still over a line carries a `tag-over-line`
+warning naming it. Both writers use the one search.
+
 ## Measured parallel-train envelopes (2026-09-21)
 
 `LayoutOptions.parallel_train_clearance` accepts a positive distance in engine
