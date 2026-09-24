@@ -991,13 +991,20 @@ def test_the_default_says_so_when_a_label_gives_up_its_plate():
     for issue in said:
         assert issue.severity == "warning"
         assert "is written across" in issue.message
-    # A bounded search that has no clean leader route says so separately; it
-    # still says nothing about an enclosure, because none was ruled.
+    # The bounded last resort resolves some halos by crossing named stream
+    # lines, while the middle of the bundle still has no hard-clear leader at
+    # all. Neither outcome says anything about an enclosure, because none was
+    # ruled.
+    crossing = findings(fs, {"leader-crosses-line"})
+    assert crossing
+    assert all(issue.severity == "warning" for issue in crossing)
+    assert all("last-resort leader crossing" in issue.message for issue in crossing)
     unresolved = findings(fs, {"leader-placement-unresolved"})
     assert unresolved
     assert all(issue.severity == "warning" for issue in unresolved)
     assert not findings(fs, set(_LABEL_CODES) - {
-        "label-over-line", "leader-placement-unresolved"})
+        "label-over-line", "leader-crosses-line",
+        "leader-placement-unresolved"})
 
 
 def test_both_backends_say_it_at_the_default_too():

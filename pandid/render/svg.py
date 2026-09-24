@@ -1143,6 +1143,61 @@ def _near_segment(p, a, b, tol: float = 0.5) -> bool:
     return math.hypot(p[0] - (a[0] + t * dx), p[1] - (a[1] + t * dy)) <= tol
 
 
+def _leader_choices(box, seg, keep_out: float = 0.0):
+    """Every swept leader and its established angle/face preference keys.
+
+    Keeping the geometry in one iterator lets the ordinary clean search and
+    the line-only last resort compare the same leaders.  Every landing remains
+    inset from run ends (and from flange marks through ``keep_out``); the keys
+    then prefer 45 degrees and a tail near the middle of the halo face.
+    """
+    (sx1, sy1), (sx2, sy2) = seg
+    vertical = abs(sx2 - sx1) < abs(sy2 - sy1)
+    # Everything below is in the run's own frame -- *u* along it, *v*
+    # across -- so one arithmetic serves a horizontal run and a
+    # vertical.
+    lo, hi = ((min(sy1, sy2), max(sy1, sy2)) if vertical
+              else (min(sx1, sx2), max(sx1, sx2)))
+    at = (sx1 + sx2) / 2 if vertical else (sy1 + sy2) / 2
+    u0, u1 = (box[1], box[3]) if vertical else (box[0], box[2])
+    v0, v1 = (box[0], box[2]) if vertical else (box[1], box[3])
+    v = v0 if abs(v0 - at) < abs(v1 - at) else v1
+    gap = abs(v - at)
+    # Only where the run can spare it: a band inverted by its own
+    # clearance would put the head off the run altogether.
+    if keep_out and hi - lo > 3 * keep_out:
+        lo, hi = lo + keep_out, hi - keep_out
+    inset = min(_LABEL_CLEAR, (hi - lo) / 3)
+    near, far = lo + inset, hi - inset
+
+    def route(s: float):
+        """The leader leaving the near face at *s*, 45 degrees along.
+
+        Both directions along the run are offered and the one landing
+        *furthest* from ``s`` wins, which is the same as the one nearest
+        45 degrees: an unclamped landing is exactly ``gap`` away, and
+        clamping to the run can only bring it closer in.
+        """
+        u = max((min(max(s + d * gap, near), far) for d in (1.0, -1.0)),
+                key=lambda c: abs(c - s))
+        return ((v, s), (at, u)) if vertical else ((s, v), (u, at))
+
+    # The face, inset at each end so the tail lands on the lettering
+    # rather than the halo's padding, never past a quarter of a short
+    # one.
+    ends = min(abs(v1 - v0) / 2, (u1 - u0) / 4)
+    first, last, mid = u0 + ends, u1 - ends, (u0 + u1) / 2
+    starts = [first + k * _LABEL_STEP
+              for k in range(int((last - first) // _LABEL_STEP) + 1)] + [last]
+
+    choices = []
+    for order, s in enumerate(starts):
+        lead = route(s)
+        u = lead[1][1] if vertical else lead[1][0]
+        choices.append((lead, (abs(abs(u - s) - gap), abs(s - mid), order)))
+    return choices
+
+
 def _leader(box, seg, occupied, keep_out: float = 0.0) -> "tuple[tuple, int]":
     """How a label's halo at *box* is joined to the run *seg* names.
 
@@ -1192,58 +1247,40 @@ def _leader(box, seg, occupied, keep_out: float = 0.0) -> "tuple[tuple, int]":
     spool with a flange pair at each end put the head in the clear
     middle.
     """
-    (sx1, sy1), (sx2, sy2) = seg
-    vertical = abs(sx2 - sx1) < abs(sy2 - sy1)
-    # Everything below is in the run's own frame -- *u* along it, *v*
-    # across -- so one arithmetic serves a horizontal run and a
-    # vertical.
-    lo, hi = ((min(sy1, sy2), max(sy1, sy2)) if vertical
-              else (min(sx1, sx2), max(sx1, sx2)))
-    at = (sx1 + sx2) / 2 if vertical else (sy1 + sy2) / 2
-    u0, u1 = (box[1], box[3]) if vertical else (box[0], box[2])
-    v0, v1 = (box[0], box[2]) if vertical else (box[1], box[3])
-    v = v0 if abs(v0 - at) < abs(v1 - at) else v1
-    gap = abs(v - at)
-    # Only where the run can spare it: a band inverted by its own
-    # clearance would put the head off the run altogether.
-    if keep_out and hi - lo > 3 * keep_out:
-        lo, hi = lo + keep_out, hi - keep_out
-    inset = min(_LABEL_CLEAR, (hi - lo) / 3)
-    near, far = lo + inset, hi - inset
-
-    def route(s: float):
-        """The leader leaving the near face at *s*, 45 degrees along.
-
-        Both directions along the run are offered and the one landing
-        *furthest* from ``s`` wins, which is the same as the one nearest
-        45 degrees: an unclamped landing is exactly ``gap`` away, and
-        clamping to the run can only bring it closer in.
-        """
-        u = max((min(max(s + d * gap, near), far) for d in (1.0, -1.0)),
-                key=lambda c: abs(c - s))
-        return ((v, s), (at, u)) if vertical else ((s, v), (u, at))
-
-    # The face, inset at each end so the tail lands on the lettering
-    # rather than the halo's padding, never past a quarter of a short
-    # one.
-    ends = min(abs(v1 - v0) / 2, (u1 - u0) / 4)
-    first, last, mid = u0 + ends, u1 - ends, (u0 + u1) / 2
-    starts = [first + k * _LABEL_STEP
-              for k in range(int((last - first) // _LABEL_STEP) + 1)] + [last]
-
-    def scored(s: float, limit: int):
-        """The leader from *s*, and the three keys it is chosen on."""
-        lead = route(s)
-        u = lead[1][1] if vertical else lead[1][0]
-        return lead, (_cutting(lead, occupied, limit), abs(abs(u - s) - gap),
-                      abs(s - mid))
-
-    best, score = scored(starts[0], len(occupied) + 1)
-    for s in starts[1:]:
-        lead, rank = scored(s, score[0] + 1)
+    choices = _leader_choices(box, seg, keep_out)
+    best, keys = choices[0]
+    score = (_cutting(best, occupied, len(occupied) + 1), *keys)
+    for lead, keys in choices[1:]:
+        rank = (_cutting(lead, occupied, score[0] + 1), *keys)
         if rank < score:
             best, score = lead, rank
     return best, score[0]
+
+
+def _line_crossing_leader(box, seg, hard, lines, keep_out: float = 0.0):
+    """Best leader which clears *hard* obstacles but crosses stream lines.
+
+    The count is by named line rather than by the number of its segment boxes.
+    Instrument connections and unnamed ink are deliberately absent from
+    ``lines`` and belong in ``hard``: the ruling permits only identifiable
+    stream lines to be crossed.
+    """
+    best = None
+    for leader, keys in _leader_choices(box, seg, keep_out):
+        if _cutting(leader, hard, 1):
+            continue
+        crossed = tuple(sorted({
+            line.line for line in lines if _crosses(*leader, line.box)
+        }))
+        if not crossed:
+            continue
+        rank = (len(crossed), *keys)
+        if best is None or rank < best[0]:
+            best = (rank, leader, crossed)
+    if best is None:
+        return None
+    rank, leader, crossed = best
+    return leader, crossed, rank
 
 
 def stream_polyline(s) -> "list[tuple[float, float]]":
@@ -1692,6 +1729,11 @@ class StreamNumber(NamedTuple):
     away -- and because the rectangle it was measured against is not
     ``box`` once a shape is ruled around it, so a later reader of
     ``box`` alone would name lines the *number* never touched.
+
+    ``leader_crossed`` is the separate, last-resort case where the halo
+    remains on clear paper but its leader crosses named stream lines.  It is
+    empty for every clean placement and never includes a unit, symbol,
+    lettering or instrument connection: those remain hard obstacles.
     """
     name: str
     color: str
@@ -1706,6 +1748,7 @@ class StreamNumber(NamedTuple):
     display_label: str | None = None
     font_size: float = NUMBER_TYPE
     placement_limit: float | None = None
+    leader_crossed: "tuple[str, ...]" = ()
 
     @property
     def text(self) -> str:
@@ -1849,15 +1892,15 @@ def _bounded_label_spots(region, protected, width, height, segments, gap, limit)
 def _bare_stream_number(runs, name, color, display_name, font_size,
                         text_width, text_height, bands, symbols, placed, ink,
                         region, label_gap) -> StreamNumber:
-    """Place one un-enclosed number without ever drawing a blocked leader.
+    """Place one un-enclosed number, with a line-only crossing last resort.
 
     Clear positions along any straight piece of the same run are considered
     before external halos.  External candidates are ordered by their measured
-    distance to the whole run, bounded by ``stream_label_bands``, and accepted
-    only when both their halo and their best leader clear every symbol, item of
-    lettering and foreign line.  If the bounded set is exhausted the number is
-    left on its run without a leader and carries a structured finding; drawing
-    a known crossing leader would turn a layout refusal into misleading ink.
+    distance to the whole run and bounded by ``stream_label_bands``.  The clean
+    search must be exhausted first.  Only then may a readable halo use a leader
+    which crosses named stream lines; units, flags, symbols, lettering,
+    instrument connections, unnamed ink and the number's own other legs remain
+    hard obstacles.  If neither search succeeds the number remains unresolved.
     """
     segments = [segment for segment, _keep in runs]
     foreign = [line for line in ink if line.line != name]
@@ -1953,7 +1996,8 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
                            len(offered), order, primary, x, y, box))
 
     blocked_spot = None
-    for _distance, _run_index, _order, run, x, y, box in sorted(candidates):
+    line_fallback = None
+    for distance, run_index, order, run, x, y, box in sorted(candidates):
         if not halo_is_readable(run, box):
             continue
         if blocked_spot is None:
@@ -1963,23 +2007,52 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
         # all of them made a label jump from one equal-length stub to another
         # and needlessly perturbed established drawings.
         targets = [run] + [target for target in described if target is not run]
-        for target in targets:
-            obstacles = symbols + lettering + [
-                line.box for line in ink
-                if not (line.axis == target.axis and abs(line.at - target.at) < 0.5)
+        for target_index, target in enumerate(targets):
+            relevant = [
+                line for line in ink
+                if not (line.axis == target.axis
+                        and abs(line.at - target.at) < 0.5)
             ]
+            obstacles = symbols + lettering + [line.box for line in relevant]
             leader, cuts = _leader(box, target.segment, obstacles, target.keep_out)
-            if cuts:
+            if not cuts:
+                return StreamNumber(
+                    name, color, target.segment, x, y, run.vertical, box,
+                    leader, box, (), display_name, font_size)
+
+            # Only named stream ink becomes negotiable in the last resort.
+            # A tap, an unnamed line and another leg of this same stream stay
+            # as hard as the unit and lettering boxes above.
+            crossing_lines = [
+                line for line in relevant
+                if line.line and line.line != name and line.kind != "tap"
+            ]
+            hard = symbols + lettering + [
+                line.box for line in relevant if line not in crossing_lines
+            ]
+            fallback = _line_crossing_leader(
+                box, target.segment, hard, crossing_lines, target.keep_out)
+            if fallback is None:
                 continue
-            return StreamNumber(
-                name, color, target.segment, x, y, run.vertical, box,
-                leader, box, (), display_name, font_size)
+            leader, crossed, leader_keys = fallback
+            rank = (leader_keys[0], distance, *leader_keys[1:],
+                    run_index, order, target_index)
+            if line_fallback is None or rank < line_fallback[0]:
+                line_fallback = (
+                    rank, target, run, x, y, box, leader, crossed)
+
+    if line_fallback is not None:
+        _rank, target, run, x, y, box, leader, crossed = line_fallback
+        return StreamNumber(
+            name, color, target.segment, x, y, run.vertical, box,
+            leader, box, (), display_name, font_size, None, crossed)
 
     if blocked_spot is not None:
-        # The halo itself is readable; it is only its tie back to the run that
-        # failed.  Keep that nearest clear paper instead of putting the words
-        # back over equipment, but draw no misleading leader.  The structured
-        # finding below makes the incomplete association gateable.
+        # The halo itself is readable; every tie back to the run cuts a hard
+        # obstacle, or no candidate crosses only named stream lines.  Keep that
+        # nearest clear paper instead of putting the words back over equipment,
+        # but draw no misleading leader.  The structured finding below makes
+        # the incomplete association gateable.
         run, x, y, box = blocked_spot
         return StreamNumber(
             name, color, run.segment, x, y, run.vertical, box, None,
@@ -2383,9 +2456,9 @@ def stream_numbers(fs, placed: list, joints: "str | None",
 #: gives the plate up rather than paint out a neighbour's. That is a
 #: change to the drawing, so it is a change the author has to be told
 #: about on the sheet they did not opt into.
-_LABEL_CODES = ("label-over-line", "leader-placement-unresolved",
-                "enclosure-over-unit", "enclosure-over-line",
-                "enclosure-over-label")
+_LABEL_CODES = ("label-over-line", "leader-crosses-line",
+                "leader-placement-unresolved", "enclosure-over-unit",
+                "enclosure-over-line", "enclosure-over-label")
 
 
 def _shape_hits(shape: str, box, rect) -> bool:
@@ -2534,7 +2607,7 @@ def label_findings(fs, shape: str, numbers: "list[StreamNumber]",
     drafting choice and belongs to the drafter, but they cannot make it
     from a sheet they have to scan diamond by diamond.
 
-    Three codes, because the three are not the same news:
+    Three enclosure codes, because the three are not the same news:
 
     * ``enclosure-over-unit`` -- the shape crosses a symbol's box. This
       is the case the decision accepted outright, and the finding is a
@@ -2572,7 +2645,7 @@ def label_findings(fs, shape: str, numbers: "list[StreamNumber]",
     through it, and a reader who has to space the sheet needs to know
     which they have.
 
-    ``label-over-line`` is the fourth, and it is the one that has
+    ``label-over-line`` is separate, and it is the one that has
     nothing to do with enclosures: it fires **at every setting**, the
     default included. A label gives its plate up rather than paint out a
     run that is not its own, and that rule is not conditional on the
@@ -2584,23 +2657,36 @@ def label_findings(fs, shape: str, numbers: "list[StreamNumber]",
     ``tests/test_stream_label_enclosure.py`` is what a sheet with no
     clear paper in any of the fourteen bands beside a run looks like.
 
-    The other three are silent at ``"none"`` for the reason they are
-    named after: there is no enclosure to have been drawn over
-    anything.
+    A displaced bare number has two further outcomes.  A last-resort leader
+    that crosses only named stream lines is reported as
+    ``leader-crosses-line`` with those names.  If every bounded leader also
+    crosses a hard obstacle, ``leader-placement-unresolved`` reports that no
+    leader was drawn.  The three enclosure codes are silent at ``"none"`` for
+    the reason they are named after: there is no enclosure to have been drawn
+    over anything.
     """
     from pandid.portgeom import unit_box
 
     out: list[Issue] = []
     for number in numbers:
+        if number.leader_crossed:
+            out.append(Issue(
+                "warning", "leader-crosses-line",
+                f"{number.text}'s number uses a last-resort leader crossing "
+                f"{', '.join(number.leader_crossed)}. Every clean leader "
+                f"within the configured stream-label bands was blocked; the "
+                f"halo remains clear and the leader crosses no unit, flag, "
+                f"symbol or lettering"))
         if number.placement_limit is not None:
             stream = number.text
             out.append(Issue(
                 "warning", "leader-placement-unresolved",
                 f"{stream}'s number has no clear position along its run "
                 f"and no halo within {number.placement_limit:g} drawing units "
-                f"whose leader reaches the run without crossing a unit, "
-                f"lettering or another line. No crossing leader is drawn; "
-                f"space the sheet or route {stream} clear with via()"))
+                f"whose leader reaches the run without crossing a unit, flag, "
+                f"symbol or lettering, or with only named stream lines in "
+                f"its way. No leader is drawn; space the sheet or route "
+                f"{stream} clear with via()"))
         if number.crossed:
             out.append(Issue(
                 "warning", "label-over-line",
