@@ -1,7 +1,7 @@
 """Observed drawing invariants, independent of topology density."""
 import xml.etree.ElementTree as ET
 import pytest
-from pandid import Flowsheet, Feed, Product, Pump, Instrument, ConcreteBasin, AirDiffuser
+from pandid import Flowsheet, Feed, Product, Pump, Instrument, ConcreteBasin, AirDiffuser, Block
 from pandid.profiles.process import apply
 from pandid.portgeom import unit_box
 
@@ -83,6 +83,47 @@ def test_house_line_number_uses_clear_external_paper_when_every_nearby_band_is_t
     number=stream_numbers(fs,[occupied],None,'vertical')[0]
     assert not _meets(number.box,occupied)
     assert number.leader is not None and number.crossed==()
+
+
+def test_a_displaced_line_number_never_leads_through_the_unit_between_it_and_its_run():
+    """A clear halo on the far side of a unit is not a usable label position.
+
+    The short run cannot carry ``801-04``, and the two side blocks consume the
+    nearby bands.  The closest remaining paper is below ``target``; accepting
+    it makes every possible leader cut the target's body and lettering.  The
+    bounded search must leave that placement unresolved instead of drawing the
+    crossing leader.
+    """
+    from pandid.render.svg import _crosses, label_findings, stream_numbers
+
+    fs = Flowsheet("Leader clearance")
+    source = fs.add(Block("source", inputs=0, outputs=["S"], width=180, height=100))
+    target = fs.add(Block("target", inputs=["N"], outputs=0, width=180, height=100))
+    source.pin(x=410, y=100)
+    target.pin(x=410, y=230)
+    fs.add(Block("left", width=70, height=26)).pin(x=330, y=202)
+    fs.add(Block("right", width=70, height=26)).pin(x=600, y=202)
+    line = fs.connect(source.out_1, target.in_1)
+    line.display_label = "801-04"
+    fs.stream_labels.font_size = 22
+    fs.layout_options.stream_label_bands = 7
+    fs.layout_options.strict_label_clearance = True
+    fs.layout()
+    fs.route()
+
+    number = stream_numbers(fs, [], None, "vertical", (300, 50, 680, 450))[0]
+    crossed = sorted(
+        unit.name for unit in fs.units
+        if number.leader is not None and _crosses(*number.leader, unit_box(unit, unit.frame))
+    )
+    assert not crossed, f"801-04's leader crosses {', '.join(crossed)}"
+    assert number.leader is None
+    unresolved = [
+        issue for issue in label_findings(fs, "none", [number], "vertical")
+        if issue.code == "leader-placement-unresolved"
+    ]
+    assert len(unresolved) == 1
+    assert "801-04" in unresolved[0].message
 
 
 def test_nameplate_row_tracks_displaced_captions_in_both_writers(monkeypatch):
