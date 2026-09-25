@@ -143,8 +143,71 @@ def test_a_short_supply_link_uses_a_line_crossing_leader_as_the_last_resort():
     ]
 
 
-def test_a_clean_short_supply_leader_keeps_the_existing_first_choice():
-    """Three sibling lines do not license the fallback while a clean route exists."""
+def _crossing_leader_at(fs, short, seg, box):
+    """The last-resort leader a halo at *box* would draw to *seg*.
+
+    Scored the way the stream-number search scores it, so the test can
+    compare the leader the search chose against one it passed over.
+    """
+    from pandid.render.svg import _ink, _line_crossing_leader, _obstacle
+
+    (sx1, sy1), (sx2, sy2) = seg
+    axis, at = (("v", (sx1 + sx2) / 2) if abs(sx2 - sx1) < abs(sy2 - sy1)
+                else ("h", (sy1 + sy2) / 2))
+    relevant = [line for line in _ink(fs, "vertical")
+                if not (line.axis == axis and abs(line.at - at) < 0.5)]
+    crossing = [line for line in relevant
+                if line.line and line.line != short.name and line.kind != "tap"]
+    hard = [_obstacle(unit_box(u, u.frame)) for u in fs.units] + [
+        line.box for line in relevant if line not in crossing]
+    leader, crossed, _keys = _line_crossing_leader(box, seg, hard, crossing)
+    return leader, crossed
+
+
+def _length(leader):
+    import math
+    (ax, ay), (bx, by) = leader
+    return math.hypot(bx - ax, by - ay)
+
+
+def test_among_leaders_crossing_as_many_lines_the_shorter_wins():
+    """Owner ruling 2026-09-25: fewest lines crossed, then the shortest leader.
+
+    Two halos on the short supply link both need a leader across 000-03
+    and nothing else. The one nearer the run ties back 62.6 units the
+    long way round; the one a little further off drops 51.2 units
+    straight onto it. Ranking by halo distance before length chose the
+    long one; the reader follows the leader, not the halo, so the short
+    one must win. No cap is involved: nothing here is refused for length.
+    """
+    from pandid.render.svg import stream_numbers
+
+    fs, short = _short_supply_link()
+    number = stream_numbers(
+        fs, [], None, "vertical", (50, 0, 850, 550))[0]
+
+    assert number.leader is not None
+    assert number.leader_crossed == ("000-03",)
+
+    # The halo the old ranking chose: written along the horizontal leg,
+    # nearer the run, crossing the same one line, and longer.
+    nearer, nearer_crossed = _crossing_leader_at(
+        fs, short, number.seg, (208.73, 55.2, 303.77, 83.8))
+    assert nearer_crossed == number.leader_crossed
+    assert _length(nearer) == pytest.approx(62.63, abs=0.01)
+
+    assert _length(number.leader) < _length(nearer)
+    assert tuple(value for point in number.leader for value in point) == pytest.approx(
+        (285.1, 95.04, 296.3333333333, 145.0))
+
+
+def test_a_clean_short_supply_leader_is_the_shortest_clean_one():
+    """Three sibling lines do not license the fallback while a clean route exists.
+
+    Among the clean leaders the shortest wins before the halo's distance
+    (owner ruling, 2026-09-25): 51.2 units, where the nearest clean halo's
+    leader ran 94.9 units to the far end of the run.
+    """
     from pandid.render.svg import _crosses, _ink, label_findings, stream_numbers
 
     fs, short = _short_supply_link(block_top_line=False)
@@ -153,7 +216,8 @@ def test_a_clean_short_supply_leader_keeps_the_existing_first_choice():
 
     assert number.leader is not None
     assert tuple(value for point in number.leader for value in point) == pytest.approx(
-        (287.53, 85.2, 318.1666666667, 175.0))
+        (285.1, 95.04, 296.3333333333, 145.0))
+    assert _length(number.leader) < 94.88
     assert getattr(number, "leader_crossed", ()) == ()
     assert not [
         line.line for line in _ink(fs, "vertical")
