@@ -236,6 +236,11 @@ _LABEL_STEP = 6.0
 # 10 and 12 bands that label lands in the same place.
 _LABEL_BANDS = 7
 
+#: The cell an :class:`_Occupied` bins the sheet's boxes into. A leader
+#: is a few tens of units long, so most fall inside one cell; a size,
+#: and only a size -- what is binned coarser or finer answers the same.
+_BIN = 64.0
+
 def _class_weight(sym) -> LineWeight:
     """The rung *sym*'s outline is drawn on.
 
@@ -1124,6 +1129,108 @@ def _crosses(start, end, region) -> bool:
     return t0 < t1
 
 
+class _Occupied:
+    """*boxes*, binned so a leader is scored against the few it could cut.
+
+    :func:`_cutting` asks every box on the sheet whether a leader passes
+    through it, and asks for every leader the sweep offers from every
+    halo the search visits. On a crowded P&ID that is several hundred
+    boxes, several thousand leaders over, and it was where the whole
+    render went (LB TEX r05: 175 s on the ion-exchange P&ID, 99% of it
+    in :func:`_crosses`).
+
+    A box a leader cuts shares paper with the leader's own bounding
+    rectangle, so the boxes are binned into square cells and a query
+    walks the cells that rectangle touches: a superset of the hits,
+    tested exactly as before. The count is the same count, since
+    :func:`_cutting` only ever counts and counting a subset known to
+    hold every hit is counting the whole; the cell size changes how
+    much is offered and nothing about the answer.
+
+    Rectangles are closed at their edges, deliberately. :func:`_crosses`
+    counts a leader lying exactly along a box's edge as passing through
+    it -- a vertical leader on ``x == box[0]`` clips to the box's whole
+    height -- so a box merely touching the leader's rectangle has to be
+    offered too. One that does not touch cannot be cut, in exact
+    arithmetic and in floating point alike: subtraction and division
+    round monotonically, so a segment ending short of a box clips to an
+    empty interval there as well.
+
+    Boxes are binned by their normalised corners and offered as given;
+    an inverted box clips to nothing either way.
+
+    *items* may be anything with a box -- an :class:`_Ink` -- with *key*
+    saying how to read it; the default bins boxes as they are. A halo's
+    readability is asked the same way (:func:`_meets`, over symbols,
+    plates and ink) and is served by the same bins through
+    :meth:`within`: an open overlap is a closed one.
+    """
+
+    __slots__ = ("items", "cell", "grid")
+
+    def __init__(self, items, cell: float = _BIN, key=None):
+        self.items = list(items)
+        self.cell = cell
+        grid: dict = {}
+        floor = math.floor
+        for index, item in enumerate(self.items):
+            a, b, c, d = item if key is None else key(item)
+            for ix in range(floor(min(a, c) / cell), floor(max(a, c) / cell) + 1):
+                for iy in range(floor(min(b, d) / cell), floor(max(b, d) / cell) + 1):
+                    grid.setdefault((ix, iy), []).append((index, item))
+        self.grid = grid
+
+    def __len__(self) -> int:
+        return len(self.items)
+
+    def __iter__(self):
+        return iter(self.items)
+
+    def within(self, x0: float, y0: float, x1: float, y1: float):
+        """Every item that could touch the closed rectangle.
+
+        An item spanning several of the cells the rectangle touches is
+        yielded from each, so this serves an ``any`` and not a count.
+        """
+        cell, grid = self.cell, self.grid
+        floor = math.floor
+        for ix in range(floor(x0 / cell), floor(x1 / cell) + 1):
+            for iy in range(floor(y0 / cell), floor(y1 / cell) + 1):
+                hit = grid.get((ix, iy))
+                if hit:
+                    for _index, item in hit:
+                        yield item
+
+    def cutting(self, leader, limit: int) -> int:
+        """:func:`_cutting` from the boxes near *leader* alone: the same count."""
+        (ax, ay), (bx, by) = leader
+        cell, grid = self.cell, self.grid
+        floor = math.floor
+        ix0, ix1 = floor(min(ax, bx) / cell), floor(max(ax, bx) / cell)
+        iy0, iy1 = floor(min(ay, by) / cell), floor(max(ay, by) / cell)
+        n = 0
+        if ix0 == ix1 and iy0 == iy1:
+            # One cell holds each box once already.
+            for _index, box in grid.get((ix0, iy0), ()):
+                if _crosses(leader[0], leader[1], box):
+                    n += 1
+                    if n >= limit:
+                        break
+            return n
+        seen: set = set()
+        for ix in range(ix0, ix1 + 1):
+            for iy in range(iy0, iy1 + 1):
+                for index, box in grid.get((ix, iy), ()):
+                    if index in seen:
+                        continue
+                    seen.add(index)
+                    if _crosses(leader[0], leader[1], box):
+                        n += 1
+                        if n >= limit:
+                            return n
+        return n
+
+
 def _cutting(leader, occupied, limit: int) -> int:
     """How many of *occupied* a leader cuts, counted to *limit*.
 
@@ -1131,7 +1238,12 @@ def _cutting(leader, occupied, limit: int) -> int:
     number beside its line, so it is scored the way the label is: one
     running through the vessel the label stepped around has moved the
     problem rather than solved it.
+
+    *occupied* is a list of boxes, or an :class:`_Occupied` over them,
+    which answers the same count from the boxes near the leader alone.
     """
+    if isinstance(occupied, _Occupied):
+        return occupied.cutting(leader, limit)
     n = 0
     for p in occupied:
         if _crosses(leader[0], leader[1], p):
@@ -1273,10 +1385,12 @@ def _leader_choices(box, seg, keep_out: float = 0.0):
         Both directions along the run are offered and the one landing
         *furthest* from ``s`` wins, which is the same as the one nearest
         45 degrees: an unclamped landing is exactly ``gap`` away, and
-        clamping to the run can only bring it closer in.
+        clamping to the run can only bring it closer in. Forward first,
+        and kept on a tie.
         """
-        u = max((min(max(s + d * gap, near), far) for d in (1.0, -1.0)),
-                key=lambda c: abs(c - s))
+        forward = min(max(s + gap, near), far)
+        back = min(max(s - gap, near), far)
+        u = forward if abs(forward - s) >= abs(back - s) else back
         return ((v, s), (at, u)) if vertical else ((s, v), (u, at))
 
     # The face, inset at each end so the tail lands on the lettering
@@ -1986,15 +2100,29 @@ def _bounded_label_spots(region, protected, width, height, segments, gap, limit)
     for a, b, c, d in protected:
         xs.update((a - gap - width / 2, c + gap + width / 2))
         ys.update((b - gap - height / 2, d + gap + height / 2))
+    # Each test below that depends on one coordinate alone is made once
+    # per coordinate rather than once per pair, in the pairs' own order:
+    # the bounds, and a centre so far past the run's extent on one axis
+    # that no point of the run is within *limit* of it. The clearance on
+    # that last one is a thousandth of a unit, far beyond what a clamped
+    # foot and a hypotenuse can round by, so only a centre the distance
+    # test would have refused anyway is skipped. The obstacles are binned
+    # (:class:`_Occupied`) for the same reason.
+    reach = limit + 1e-3
+    lo_x, hi_x = min(p[0] for p in points) - reach, max(p[0] for p in points) + reach
+    lo_y, hi_y = min(p[1] for p in points) - reach, max(p[1] for p in points) + reach
+    xs = [x for x in xs
+          if x - width / 2 >= x0 and x + width / 2 <= x1 and lo_x <= x <= hi_x]
+    ys = [y for y in ys
+          if y - height / 2 >= y0 and y + height / 2 <= y1 and lo_y <= y <= hi_y]
+    binned = _Occupied(protected)
     for x in xs:
         for y in ys:
             box = (x - width / 2, y - height / 2,
                    x + width / 2, y + height / 2)
-            if box[0] < x0 or box[1] < y0 or box[2] > x1 or box[3] > y1:
-                continue
             if _point_run_distance((x, y), segments) > limit:
                 continue
-            if not any(_meets(box, obstacle) for obstacle in protected):
+            if not any(_meets(box, obstacle) for obstacle in binned.within(*box)):
                 yield (x, y), box
 
 
@@ -2017,6 +2145,11 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
     segments = [segment for segment, _keep in runs]
     foreign = [line for line in ink if line.line != name]
     lettering = placed
+    # Binned once per number (:class:`_Occupied`): every candidate halo
+    # asks all three whether it is readable.
+    binned_symbols = _Occupied(symbols)
+    binned_placed = _Occupied(placed)
+    binned_ink = _Occupied(ink, key=lambda line: line.box)
 
     described: list[_NumberRun] = []
     for segment, keep_out in runs:
@@ -2049,14 +2182,14 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
         return box[0] >= x0 and box[1] >= y0 and box[2] <= x1 and box[3] <= y1
 
     def halo_is_readable(run, box):
-        if any(_meets(box, obstacle) for obstacle in symbols):
+        if any(_meets(box, obstacle) for obstacle in binned_symbols.within(*box)):
             return False
-        if any(_meets(box, obstacle) for obstacle in placed):
+        if any(_meets(box, obstacle) for obstacle in binned_placed.within(*box)):
             return False
         # Its own collinear line is the one piece of ink a number may cover.
         return not any(
             _meets(box, line.box)
-            for line in ink
+            for line in binned_ink.within(*box)
             if not (line.line == name and line.axis == run.axis
                     and abs(line.at - run.at) < 0.5)
         )
@@ -2128,7 +2261,11 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
     own_line = _OwnLine(name, ink)
 
     def against(target):
-        """Every line not collinear with *target*, and the obstacles."""
+        """Every line not collinear with *target*, and the obstacles.
+
+        The obstacles come binned (:class:`_Occupied`): one target's are
+        scored by every leader from every halo the search visits.
+        """
         if id(target) not in struck:
             relevant = [
                 line for line in ink
@@ -2136,7 +2273,7 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
                         and abs(line.at - target.at) < 0.5)
             ]
             struck[id(target)] = (
-                relevant, symbols + lettering + [line.box for line in relevant])
+                relevant, _Occupied(symbols + lettering + [line.box for line in relevant]))
         return struck[id(target)]
 
     for distance, run_index, order, run, x, y, box in sorted(candidates):
