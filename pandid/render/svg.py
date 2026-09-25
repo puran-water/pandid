@@ -1165,6 +1165,71 @@ def _box_gap(box, seg) -> float:
     return math.hypot(dx, dy)
 
 
+def _rect_gap(a, b) -> float:
+    """The clear distance between two rectangles, zero where they meet."""
+    dx = max(b[0] - a[2], a[0] - b[2], 0.0)
+    dy = max(b[1] - a[3], a[1] - b[3], 0.0)
+    return math.hypot(dx, dy)
+
+
+#: How much nearer than its own line another line may be to a led-away number
+#: before the number reads as that line's -- or rather, how much *further*: a
+#: tie counts. Both gaps are measured to padded ink (:func:`_ink`), and a line
+#: on the detail rung is padded less than one on main flow, so two lines the
+#: same distance from the words by centreline differ by exactly this spread.
+#: Owner ruling 2026-09-25.
+_OWN_LINE_TOLERANCE = _ink_pad(LineWeight.MAIN_FLOW) - _ink_pad(LineWeight.DETAIL)
+
+
+class _OwnLine:
+    """Whether a halo would read as another line's number, for one number.
+
+    A number led away from its run is refused where another named line is
+    written **along** it -- beside more than half of it, the :func:`_along`
+    test its own run is held to -- at a clear gap no greater than its gap to
+    its own line (plus :data:`_OWN_LINE_TOLERANCE`). ``"strict"`` where the
+    other line is nearer, ``"tie"`` where it is as near, else ``None``.
+
+    Built once per number: the other lines' collinear pieces are merged per
+    ordinate here, so each halo only measures. Only a run whose bounding box
+    lies within ``own + tolerance`` of the halo is looked at, and that is
+    exact: no piece of a run is nearer the halo than the run's bounding box,
+    so a run beyond the limit can hold no piece within it.
+    """
+
+    def __init__(self, name, ink):
+        self.own = [line.box for line in ink if line.line == name]
+        pieces: dict = {}
+        for line in ink:
+            if line.line and line.line != name and line.kind == "pipe":
+                lo, hi = (line.y0, line.y1) if line.axis == "v" else (line.x0, line.x1)
+                pieces.setdefault((line.axis, line.line, round(line.at, 3)), []).append(
+                    (lo, hi, line.box))
+        self.runs: dict = {"h": [], "v": []}
+        for (axis, _line, _at), run in pieces.items():
+            boxes = [box for _lo, _hi, box in run]
+            bound = (min(b[0] for b in boxes), min(b[1] for b in boxes),
+                     max(b[2] for b in boxes), max(b[3] for b in boxes))
+            self.runs[axis].append((min(p[0] for p in run), max(p[1] for p in run),
+                                    bound, boxes))
+
+    def verdict(self, box, vertical: bool) -> "str | None":
+        if not self.own:
+            return None
+        own = min(_rect_gap(box, b) for b in self.own)
+        limit = own + _OWN_LINE_TOLERANCE + 1e-6
+        nearest = None
+        for lo, hi, bound, boxes in self.runs["v" if vertical else "h"]:
+            if _rect_gap(box, bound) > limit or not _along(box, vertical, lo, hi):
+                continue
+            gap = min(_rect_gap(box, b) for b in boxes)
+            if gap <= limit and (nearest is None or gap < nearest):
+                nearest = gap
+        if nearest is None:
+            return None
+        return "strict" if nearest < own - 1e-6 else "tie"
+
+
 def _near_segment(p, a, b, tol: float = 0.5) -> bool:
     """Does *p* sit on the segment ``a``-``b``, to within *tol*?"""
     dx, dy = b[0] - a[0], b[1] - a[1]
@@ -2060,6 +2125,7 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
     # otherwise score most of the band.
     reach = max(math.hypot(run.width, run.height) / 2 for run in described)
     struck: dict[int, tuple[list, list]] = {}
+    own_line = _OwnLine(name, ink)
 
     def against(target):
         """Every line not collinear with *target*, and the obstacles."""
@@ -2074,22 +2140,34 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
         return struck[id(target)]
 
     for distance, run_index, order, run, x, y, box in sorted(candidates):
-        if clean is not None and distance - reach > clean[0][0]:
+        # The length bounds hold only against a clean leader that is not
+        # itself a tie: any untied halo, however long its leader, beats one.
+        bound = clean[0][1] if clean is not None and not clean[0][0] else None
+        if bound is not None and distance - reach > bound:
             break
-        if clean is not None and min(
-                _box_gap(box, target.segment) for target in described) > clean[0][0]:
+        if bound is not None and min(
+                _box_gap(box, target.segment) for target in described) > bound:
             continue
         if not halo_is_readable(run, box):
             continue
         if blocked_spot is None:
             blocked_spot = (run, x, y, box)
+        # Written along another line as near as its own, the number reads as
+        # that line's (owner ruling, 2026-09-25). Nearer: refused outright.
+        # As near: kept only as the last resort among leaders crossing as
+        # many lines -- the tie leader is still the readable state where
+        # nothing else is -- so it ranks behind every untied one.
+        verdict = own_line.verdict(box, run.vertical)
+        if verdict == "strict":
+            continue
+        tied = verdict == "tie"
         # First tie the halo back to the segment that offered it.  Other
         # pieces are fallbacks only: choosing the geometrically shortest of
         # all of them made a label jump from one equal-length stub to another
         # and needlessly perturbed established drawings.
         targets = [run] + [target for target in described if target is not run]
         for target_index, target in enumerate(targets):
-            if clean is not None and _box_gap(box, target.segment) > clean[0][0]:
+            if bound is not None and _box_gap(box, target.segment) > bound:
                 continue
             relevant, obstacles = against(target)
             leader, cuts = _leader(box, target.segment, obstacles,
@@ -2103,10 +2181,11 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
                 # whose tie back runs the long way round the congestion
                 # sends the eye further than a farther halo whose leader
                 # drops straight onto the line.
-                rank = (_leader_length(leader), distance,
+                rank = (tied, _leader_length(leader), distance,
                         run_index, order, target_index)
                 if clean is None or rank < clean[0]:
                     clean = (rank, target, run, x, y, box, leader)
+                    bound = rank[1] if not tied else None
                 continue
             if clean is not None:
                 continue
@@ -2132,7 +2211,7 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
             # distance (owner ruling, 2026-09-25). There is no cap on the
             # length: a long leader is still better than an unresolved
             # number, and the ruling asks for the ranking and nothing else.
-            rank = (leader_keys[0], _leader_length(leader), distance,
+            rank = (leader_keys[0], tied, _leader_length(leader), distance,
                     *leader_keys[1:], run_index, order, target_index)
             if line_fallback is None or rank < line_fallback[0]:
                 line_fallback = (

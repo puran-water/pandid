@@ -59,6 +59,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   line-crossing ones alike. There is no length cap. There is a floor: no
   leader shorter than two of its own arrowheads (`_LEADER_FLOOR`) is a
   candidate, so shortest-first cannot settle on a tick.
+- **A line number was led from under another line.** A halo written along
+  another named line (beside more than half of it) at a gap no greater than
+  its gap to its own line read as that line's number: 330-L-001 on the LB TEX
+  IX sheet sat under the junction where its leg runs on as 330-L-003. Such a
+  halo is now refused when the other line is strictly nearer, and ranked
+  behind every untied halo crossing as many lines when it is a tie (within
+  the spread of the ink pads). A tie with no alternative keeps its leader;
+  only a strict refusal can leave a number unresolved.
 
 ## [0.1.5] - 2026-08-26
 
