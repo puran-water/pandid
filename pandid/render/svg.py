@@ -1123,21 +1123,58 @@ def _crosses(start, end, region) -> bool:
         return False
     dx, dy = x1 - x0, y1 - y0
     t0, t1 = 0.0, 1.0
-    for p, q in ((-dx, x0 - region[0]), (dx, region[2] - x0),
-                 (-dy, y0 - region[1]), (dy, region[3] - y0)):
-        if p == 0:
-            if q < 0:
-                return False   # parallel to this pair of edges, and outside them
-        else:
-            r = q / p
-            if p < 0:
-                if r > t1:
-                    return False
-                t0 = max(t0, r)
-            elif r < t0:
+    # The four slab tests, written out: each is the clip's step for one
+    # edge pair, ``(p, q)`` in the order the loop took them, with ``max``
+    # and ``min`` spelt as the comparison that keeps the first of two
+    # equal values, as the built-ins do.
+    if dx == 0:
+        if x0 - region[0] < 0 or region[2] - x0 < 0:
+            return False   # parallel to this pair of edges, and outside them
+    else:
+        r = (x0 - region[0]) / -dx
+        if -dx < 0:
+            if r > t1:
                 return False
-            else:
-                t1 = min(t1, r)
+            if r > t0:
+                t0 = r
+        elif r < t0:
+            return False
+        elif r < t1:
+            t1 = r
+        r = (region[2] - x0) / dx
+        if dx < 0:
+            if r > t1:
+                return False
+            if r > t0:
+                t0 = r
+        elif r < t0:
+            return False
+        elif r < t1:
+            t1 = r
+    if dy == 0:
+        if y0 - region[1] < 0 or region[3] - y0 < 0:
+            return False
+    else:
+        r = (y0 - region[1]) / -dy
+        if -dy < 0:
+            if r > t1:
+                return False
+            if r > t0:
+                t0 = r
+        elif r < t0:
+            return False
+        elif r < t1:
+            t1 = r
+        r = (region[3] - y0) / dy
+        if dy < 0:
+            if r > t1:
+                return False
+            if r > t0:
+                t0 = r
+        elif r < t0:
+            return False
+        elif r < t1:
+            t1 = r
     return t0 < t1
 
 
@@ -1213,6 +1250,30 @@ class _Occupied:
                     for _index, item in hit:
                         yield item
 
+    def near(self, x0: float, y0: float, x1: float, y1: float) -> list:
+        """Every item that could touch the closed rectangle, each once.
+
+        For a sweep: the tails a halo offers all lie within one rectangle,
+        and the items near that rectangle hold every item any tail could
+        cut, so one walk of the bins serves the whole sweep and each tail
+        is then scored against a short list.
+        """
+        cell, grid = self.cell, self.grid
+        floor = math.floor
+        ix0, ix1 = floor(x0 / cell), floor(x1 / cell)
+        iy0, iy1 = floor(y0 / cell), floor(y1 / cell)
+        if ix0 == ix1 and iy0 == iy1:
+            return [item for _index, item in grid.get((ix0, iy0), ())]
+        seen: set = set()
+        out: list = []
+        for ix in range(ix0, ix1 + 1):
+            for iy in range(iy0, iy1 + 1):
+                for index, item in grid.get((ix, iy), ()):
+                    if index not in seen:
+                        seen.add(index)
+                        out.append(item)
+        return out
+
     def cutting(self, leader, limit: int) -> int:
         """:func:`_cutting` from the boxes near *leader* alone: the same count.
 
@@ -1286,13 +1347,62 @@ def _cutting(leader, occupied, limit: int) -> int:
     """
     if isinstance(occupied, _Occupied):
         return occupied.cutting(leader, limit)
+    (ax, ay), (bx, by) = leader
+    lx, hx = (ax, bx) if ax < bx else (bx, ax)
+    ly, hy = (ay, by) if ay < by else (by, ay)
     n = 0
     for p in occupied:
+        if hx < p[0] or lx > p[2] or hy < p[1] or ly > p[3]:
+            continue
         if _crosses(leader[0], leader[1], p):
             n += 1
             if n >= limit:
                 break
     return n
+
+
+def _sweep(choices) -> "tuple[float, float, float, float]":
+    """The rectangle a sweep's tails span together."""
+    xs = [x for lead, _keys in choices for x, _y in lead]
+    ys = [y for lead, _keys in choices for _x, y in lead]
+    return min(xs), min(ys), max(xs), max(ys)
+
+
+def _swept(items, choices, sweep=None):
+    """*items* as given, or the ones near the whole sweep when binned.
+
+    Every tail in *choices* lies within the rectangle the tails span
+    together (*sweep*, measured here when not given), so what is near
+    that rectangle holds everything any tail could cut or cross; the
+    sweep then scores each tail against that list rather than walking
+    the bins once per tail.
+    """
+    if not isinstance(items, _Occupied):
+        return items
+    return items.near(*(_sweep(choices) if sweep is None else sweep))
+
+
+def _clean_leader(box, seg, occupied, keep_out: float = 0.0,
+                  floor: float = 0.0):
+    """The leader :func:`_leader` would rank first if it cuts nothing.
+
+    The clean search asks only that: a halo whose every tail cuts
+    something goes to the last resort, and which tail cut least is never
+    drawn. So the sweep is :func:`_leader`'s, in key order, stopping at
+    the first tail that cuts nothing -- the same tail :func:`_leader`
+    returns with a cut of zero -- and ``None`` where every tail cuts,
+    which :func:`_leader` reports as a cut of one or more. Binned
+    obstacles are gathered once for the sweep (:func:`_swept`).
+    """
+    choices = [c for c in _leader_choices(box, seg, keep_out)
+               if round(math.hypot(c[0][1][0] - c[0][0][0], c[0][1][1] - c[0][0][1]), 6) >= floor]
+    if not choices:
+        return None
+    occupied = _swept(occupied, choices)
+    for lead, _keys in sorted(choices, key=_choice_keys):
+        if not _cutting(lead, occupied, 1):
+            return lead
+    return None
 
 
 def _leader_length(leader) -> float:
@@ -1441,9 +1551,18 @@ def _leader_choices(box, seg, keep_out: float = 0.0):
         # *furthest* from ``s`` wins, which is the same as the one
         # nearest 45 degrees: an unclamped landing is exactly ``gap``
         # away, and clamping to the run can only bring it closer in.
-        # Forward first, and kept on a tie.
-        forward = min(max(s + gap, near), far)
-        back = min(max(s - gap, near), far)
+        # Forward first, and kept on a tie. ``min``/``max`` are spelt as
+        # the comparison that keeps the first of two equal values.
+        forward = s + gap
+        if forward < near:
+            forward = near
+        if forward > far:
+            forward = far
+        back = s - gap
+        if back < near:
+            back = near
+        if back > far:
+            back = far
         u = forward if abs(forward - s) >= abs(back - s) else back
         lead = ((v, s), (at, u)) if vertical else ((s, v), (u, at))
         choices.append((lead, (abs(abs(u - s) - gap), abs(s - mid), order)))
@@ -1506,7 +1625,7 @@ def _leader(box, seg, occupied, keep_out: float = 0.0,
     :data:`_LEADER_FLOOR`.
     """
     choices = [c for c in _leader_choices(box, seg, keep_out)
-               if _leader_length(c[0]) >= floor]
+               if round(math.hypot(c[0][1][0] - c[0][0][0], c[0][1][1] - c[0][0][1]), 6) >= floor]
     if not choices:
         # Every tail from this halo is shorter than *floor*: no leader at
         # all, reported as cutting more than anything there is to cut.
@@ -1517,6 +1636,7 @@ def _leader(box, seg, occupied, keep_out: float = 0.0,
     # leader cuts something the whole sweep is scored, and the ranking
     # is the same ranking either way.
     best = score = None
+    occupied = _swept(occupied, choices)
     for lead, keys in sorted(choices, key=_choice_keys):
         # Counted to the cut in hand: a tail cutting as much ranks behind
         # on the keys, so only a smaller cut can win and only that is
@@ -1540,9 +1660,12 @@ def _line_crossing_leader(box, seg, hard, lines, keep_out: float = 0.0,
     stream lines to be crossed.
     """
     best = None
+    choices = _leader_choices(box, seg, keep_out)
+    sweep = _sweep(choices)
+    hard, lines = _swept(hard, choices, sweep), _swept(lines, choices, sweep)
     # In key order, as :func:`_leader` sweeps: a leader crossing one
     # line, the fewest a last resort can cross, ends the sweep.
-    for leader, keys in sorted(_leader_choices(box, seg, keep_out), key=_choice_keys):
+    for leader, keys in sorted(choices, key=_choice_keys):
         if _leader_length(leader) < floor or _cutting(leader, hard, 1):
             continue
         crossed = tuple(sorted({
@@ -2387,9 +2510,9 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
             if bound is not None and _box_gap(box, target.segment) > bound:
                 continue
             relevant, obstacles = against(target)
-            leader, cuts = _leader(box, target.segment, obstacles,
+            leader = _clean_leader(box, target.segment, obstacles,
                                    target.keep_out, _LEADER_FLOOR)
-            if not cuts:
+            if leader is not None:
                 # Among leaders crossing the same number of lines -- here
                 # none -- the shortest wins, and the halo's distance from
                 # the run only breaks a tie (owner ruling, 2026-09-25).
