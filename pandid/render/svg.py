@@ -5,6 +5,7 @@ import math
 import re
 from datetime import datetime
 from functools import lru_cache
+from operator import itemgetter
 
 from pandid.render import furniture as F
 from pandid.render.escape import escaped, ident
@@ -1107,8 +1108,19 @@ def _crosses(start, end, region) -> bool:
     Liang-Barsky, and strict at the ends for the reason :func:`_meets`
     is: a leader that grazes the edge of a box is not cutting through
     it.
+
+    A segment whose own bounding rectangle stops short of the box on
+    either axis is answered before the clip, with the answer the clip
+    gives it: the slab test on that axis rejects it outright (``q < 0``
+    with ``p == 0``, or ``r < 0`` against ``t0``), or clamps ``t0`` to
+    at least 1 through a quotient that subtraction and division round
+    monotonically to no less than 1. Four comparisons, where most calls
+    from the leader search end.
     """
     (x0, y0), (x1, y1) = start, end
+    if ((x0 if x0 > x1 else x1) < region[0] or (x0 if x0 < x1 else x1) > region[2]
+            or (y0 if y0 > y1 else y1) < region[1] or (y0 if y0 < y1 else y1) > region[3]):
+        return False
     dx, dy = x1 - x0, y1 - y0
     t0, t1 = 0.0, 1.0
     for p, q in ((-dx, x0 - region[0]), (dx, region[2] - x0),
@@ -1168,9 +1180,9 @@ class _Occupied:
 
     __slots__ = ("items", "cell", "grid")
 
-    def __init__(self, items, cell: float = _BIN, key=None):
+    def __init__(self, items, cell: "float | None" = None, key=None):
         self.items = list(items)
-        self.cell = cell
+        self.cell = cell = _BIN if cell is None else cell
         grid: dict = {}
         floor = math.floor
         for index, item in enumerate(self.items):
@@ -1229,6 +1241,24 @@ class _Occupied:
                         if n >= limit:
                             return n
         return n
+
+
+#: A swept leader's ranking keys, which :func:`_leader_choices` puts
+#: second: nearness to 45 degrees, nearness to the middle of the face,
+#: and the sweep's own order, which no two share.
+_choice_keys = itemgetter(1)
+
+
+def _about(items, leader):
+    """*items* as given, or the ones near *leader* when they are binned.
+
+    For a set or an ``any`` over what the leader crosses: a binned item
+    may come more than once, and nothing the leader crosses is missing.
+    """
+    if not isinstance(items, _Occupied):
+        return items
+    (ax, ay), (bx, by) = leader
+    return items.within(min(ax, bx), min(ay, by), max(ax, bx), max(ay, by))
 
 
 def _cutting(leader, occupied, limit: int) -> int:
@@ -1352,6 +1382,7 @@ def _near_segment(p, a, b, tol: float = 0.5) -> bool:
     return math.hypot(p[0] - (a[0] + t * dx), p[1] - (a[1] + t * dy)) <= tol
 
 
+@lru_cache(maxsize=4096)
 def _leader_choices(box, seg, keep_out: float = 0.0):
     """Every swept leader and its established angle/face preference keys.
 
@@ -1359,6 +1390,10 @@ def _leader_choices(box, seg, keep_out: float = 0.0):
     the line-only last resort compare the same leaders.  Every landing remains
     inset from run ends (and from flange marks through ``keep_out``); the keys
     then prefer 45 degrees and a tail near the middle of the halo face.
+
+    Memoised: the last resort asks for the halo and run the clean search
+    just asked for, and the sweep is arithmetic on the arguments alone.
+    Callers read the list and never write to it.
     """
     (sx1, sy1), (sx2, sy2) = seg
     vertical = abs(sx2 - sx1) < abs(sy2 - sy1)
@@ -1470,12 +1505,19 @@ def _leader(box, seg, occupied, keep_out: float = 0.0,
         # Every tail from this halo is shorter than *floor*: no leader at
         # all, reported as cutting more than anything there is to cut.
         return None, len(occupied) + 1
-    best, keys = choices[0]
-    score = (_cutting(best, occupied, len(occupied) + 1), *keys)
-    for lead, keys in choices[1:]:
-        rank = (_cutting(lead, occupied, score[0] + 1), *keys)
-        if rank < score:
+    # Scored in key order, so the first leader cutting nothing is the
+    # answer and the sweep stops there: every leader after it ranks
+    # behind on the keys and none ranks ahead on the cut. Where every
+    # leader cuts something the whole sweep is scored, and the ranking
+    # is the same ranking either way.
+    best = score = None
+    for lead, keys in sorted(choices, key=_choice_keys):
+        limit = len(occupied) + 1 if score is None else score[0] + 1
+        rank = (_cutting(lead, occupied, limit), *keys)
+        if score is None or rank < score:
             best, score = lead, rank
+            if not rank[0]:
+                break
     return best, score[0]
 
 
@@ -1489,17 +1531,21 @@ def _line_crossing_leader(box, seg, hard, lines, keep_out: float = 0.0,
     stream lines to be crossed.
     """
     best = None
-    for leader, keys in _leader_choices(box, seg, keep_out):
+    # In key order, as :func:`_leader` sweeps: a leader crossing one
+    # line, the fewest a last resort can cross, ends the sweep.
+    for leader, keys in sorted(_leader_choices(box, seg, keep_out), key=_choice_keys):
         if _leader_length(leader) < floor or _cutting(leader, hard, 1):
             continue
         crossed = tuple(sorted({
-            line.line for line in lines if _crosses(*leader, line.box)
+            line.line for line in _about(lines, leader) if _crosses(*leader, line.box)
         }))
         if not crossed:
             continue
         rank = (len(crossed), *keys)
         if best is None or rank < best[0]:
             best = (rank, leader, crossed)
+            if rank[0] == 1:
+                break
     if best is None:
         return None
     rank, leader, crossed = best
@@ -2243,6 +2289,7 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
     blocked_spot = None
     clean = None
     line_fallback = None
+    deferred: list = []
     # No leader leaving a halo can be shorter than the gap between that
     # halo and the run, and the gap is at least the centre's distance less
     # the halo's half-diagonal.  Candidates are visited nearest first, so
@@ -2275,6 +2322,30 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
             struck[id(target)] = (
                 relevant, _Occupied(symbols + lettering + [line.box for line in relevant]))
         return struck[id(target)]
+
+    negotiated: dict[int, tuple] = {}
+
+    def negotiable(target):
+        """What the last resort may cross for *target*, and what it may not.
+
+        The named foreign stream ink, binned as the lines they are, and
+        the rest -- symbols, lettering, taps, unnamed ink and this
+        number's own other legs -- binned as boxes. Once per target: the
+        same two lists were rebuilt, and the second sifted through the
+        first, for every halo that reached the last resort.
+        """
+        if id(target) not in negotiated:
+            relevant, _obstacles = against(target)
+            crossing_lines = [
+                line for line in relevant
+                if line.line and line.line != name and line.kind != "tap"
+            ]
+            negotiated[id(target)] = (
+                _Occupied(crossing_lines, key=lambda line: line.box),
+                _Occupied(symbols + lettering + [
+                    line.box for line in relevant if line not in crossing_lines
+                ]))
+        return negotiated[id(target)]
 
     for distance, run_index, order, run, x, y, box in sorted(candidates):
         # The length bounds hold only against a clean leader that is not
@@ -2326,17 +2397,19 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
                 continue
             if clean is not None:
                 continue
+            # The last resort is the answer only when no halo on the sheet
+            # has a clean leader, which the sweep cannot know until it
+            # ends. Deferred, in the sweep's own order, and searched then.
+            deferred.append((distance, run_index, order, run, x, y, box,
+                             target_index, target, tied))
 
+    if clean is None:
+        for (distance, run_index, order, run, x, y, box,
+             target_index, target, tied) in deferred:
             # Only named stream ink becomes negotiable in the last resort.
             # A tap, an unnamed line and another leg of this same stream stay
             # as hard as the unit and lettering boxes above.
-            crossing_lines = [
-                line for line in relevant
-                if line.line and line.line != name and line.kind != "tap"
-            ]
-            hard = symbols + lettering + [
-                line.box for line in relevant if line not in crossing_lines
-            ]
+            crossing_lines, hard = negotiable(target)
             fallback = _line_crossing_leader(
                 box, target.segment, hard, crossing_lines, target.keep_out,
                 _LEADER_FLOOR)
