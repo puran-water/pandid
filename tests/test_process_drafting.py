@@ -519,3 +519,156 @@ def test_no_leader_is_shorter_than_two_arrowheads():
              and math.hypot(n.leader[1][0] - n.leader[0][0],
                             n.leader[1][1] - n.leader[0][1]) < 2 * _LEADER_HEAD]
     assert ticks == []
+
+
+# --- own-line rule (owner rulings 2026-09-25) ---------------------------------
+#
+# A line number led away from its run must not be written along another named
+# line at a clear gap less than or equal to its gap to its own line, within the
+# spread of the ink pads a line can be drawn with. The checks below measure that
+# independently of the engine: the caption's halo box against each line's padded
+# ink box, and "along" by the engine's own _along share over the other line's
+# collinear pieces.
+
+
+def _own_line_measure(fs, number):
+    """(own gap, nearest other line along the caption and its gap), or Nones."""
+    import math
+    from pandid.render.svg import _along, _ink, _ink_pad
+    from pandid.render.weights import LineWeight
+
+    def gap(a, b):
+        dx = max(b[0] - a[2], a[0] - b[2], 0.0)
+        dy = max(b[1] - a[3], a[1] - b[3], 0.0)
+        return math.hypot(dx, dy)
+
+    ink = _ink(fs, "vertical")
+    box, vertical = number.box, number.vertical
+    own = min(gap(box, line.box) for line in ink if line.line == number.name)
+    axis = "v" if vertical else "h"
+    runs = {}
+    for line in ink:
+        if line.line and line.line != number.name and line.kind == "pipe" and line.axis == axis:
+            lo, hi = (line.y0, line.y1) if vertical else (line.x0, line.x1)
+            runs.setdefault((line.line, round(line.at, 3)), []).append((lo, hi, line.box))
+    nearest = None
+    for (name, _at), pieces in runs.items():
+        if _along(box, vertical, min(p[0] for p in pieces), max(p[1] for p in pieces)):
+            g = min(gap(box, p[2]) for p in pieces)
+            if nearest is None or g < nearest[1]:
+                nearest = (name, g)
+    tolerance = _ink_pad(LineWeight.MAIN_FLOW) - _ink_pad(LineWeight.DETAIL)
+    return own, nearest, tolerance
+
+
+def _junction_tie():
+    """330-L-001 as LB TEX r05 ix-1 drew it: a feed that drops and runs a short
+    way to a header, where its line runs straight on as 330-L-003. The number
+    settled under the junction with its own leg and 330-L-003 exactly as far
+    above it -- a tie -- so it read as 330-L-003's."""
+    fs = Flowsheet("junction tie")
+    feed = fs.add(Feed("FEED", width=190, height=85))
+    head = fs.add(Junction("HDR", inputs=1, outputs=1))
+    sel = fs.add(Block("SELECTOR", inputs=1, outputs=1, label_pos="center"))
+    out = fs.add(Product("OUT", width=190, height=85))
+    feed.pin(port="outlet", x=100, y=100)
+    head.pin(x=280, y=160)
+    sel.pin(x=700, y=115)
+    out.pin(port="inlet", x=1100, y=160)
+    first = fs.connect(feed.outlet, head.inlets[0])
+    first.display_label = "330-L-001 / SIZE HOLD / CLASS HOLD"
+    second = fs.connect(head.outlets[0], sel.in_1)
+    second.display_label = "330-L-003 / SIZE HOLD / CLASS HOLD"
+    fs.connect(sel.out_1, out.inlet).display_label = ""
+    lettering(fs, body=17, heading=17)
+    fs.layout_options.strict_label_clearance = True
+    fs.layout()
+    fs.route()
+    return fs
+
+
+def _strictly_nearer():
+    """A 60-unit run between two flags, with long lines 140 above and 110 below
+    it. The flags leave no paper near the short run, so every halo is nearer one
+    of the long lines than its own: led down past the flags, the number lands 15
+    units from the line below and 69 from its own."""
+    fs = Flowsheet("strict")
+    a0 = fs.add(Feed("A IN", width=190, height=85))
+    a1 = fs.add(Product("A OUT", width=190, height=85))
+    b0 = fs.add(Feed("B IN", width=190, height=85))
+    b1 = fs.add(Product("B OUT", width=190, height=85))
+    c0 = fs.add(Feed("C IN", width=190, height=85))
+    c1 = fs.add(Product("C OUT", width=190, height=85))
+    a0.pin(port="outlet", x=300, y=200)
+    a1.pin(port="inlet", x=360, y=200)
+    b0.pin(port="outlet", x=100, y=60)
+    b1.pin(port="inlet", x=900, y=60)
+    c0.pin(port="outlet", x=100, y=310)
+    c1.pin(port="inlet", x=900, y=310)
+    fs.connect(b0.outlet, b1.inlet).display_label = ""
+    fs.connect(c0.outlet, c1.inlet).display_label = ""
+    short = fs.connect(a0.outlet, a1.inlet)
+    short.display_label = "104-L-002 / SIZE HOLD / CLASS HOLD"
+    lettering(fs, body=17, heading=17)
+    fs.layout_options.strict_label_clearance = True
+    fs.layout()
+    fs.route()
+    return fs, short
+
+
+def _number(fs, label):
+    from pandid.render.svg import stream_numbers
+    return next(n for n in stream_numbers(fs, [], None, "vertical", None)
+                if n.display_label.startswith(label))
+
+
+def test_a_number_is_not_led_from_under_the_line_its_own_runs_into():
+    fs = _junction_tie()
+    number = _number(fs, "330-L-001")
+    assert number.leader is not None
+    own, nearest, tolerance = _own_line_measure(fs, number)
+    assert nearest is None or nearest[1] > own + tolerance, (own, nearest)
+
+
+def test_a_number_strictly_nearer_another_line_is_never_led_there():
+    """Owner ruling 2026-09-25: a halo strictly nearer another line along it is
+    refused outright. Here nothing else is admissible, so the number falls
+    through to the unresolved finding -- a strict flag is the one case that may
+    end without a leader -- rather than being tied to the wrong line's paper."""
+    from pandid.render.svg import label_findings, stream_numbers
+
+    fs, short = _strictly_nearer()
+    number = _number(fs, "104-L-002")
+    own, nearest, tolerance = _own_line_measure(fs, number)
+    if number.leader is not None:
+        assert nearest is None or nearest[1] > own + tolerance, (own, nearest)
+    else:
+        issues = label_findings(fs, "none", stream_numbers(fs, [], None, "vertical", None),
+                                "vertical")
+        assert any(i.code == "leader-placement-unresolved" and "104-L-002" in i.message
+                   for i in issues)
+    assert number.leader is None
+
+
+def test_a_tie_with_no_alternative_keeps_its_leader():
+    """Owner ruling 2026-09-25, "keep the tie leader": where every readable
+    halo is a tie with another line, the tie position is kept WITH its leader,
+    which is the readable state -- only a strict flag may end without one.
+
+    The drawing region is cut down to the paper beside the junction, so every
+    halo left straddles it, as near 330-L-003 as its own leg. With ties refused
+    outright the number went unresolved there, leaderless; that is what this
+    exemption exists to prevent.
+    """
+    import math
+    from pandid.render.svg import stream_numbers
+
+    fs = _junction_tie()
+    number = next(n for n in stream_numbers(fs, [], None, "vertical", (240, 120, 720, 200))
+                  if n.display_label.startswith("330-L-001"))
+    own, nearest, tolerance = _own_line_measure(fs, number)
+    assert nearest is not None and nearest[1] <= own + tolerance      # still a tie
+    assert number.leader is not None and number.leader_crossed == ()
+    assert tuple(round(v, 1) for v in number.box) == (240.0, 171.2, 608.6, 193.3)
+    assert math.hypot(number.leader[1][0] - number.leader[0][0],
+                      number.leader[1][1] - number.leader[0][1]) == pytest.approx(13.0, abs=0.05)
