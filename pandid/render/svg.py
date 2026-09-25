@@ -1133,6 +1133,17 @@ def _cutting(leader, occupied, limit: int) -> int:
     return n
 
 
+def _leader_length(leader) -> float:
+    """How long a leader is, as a ranking key.
+
+    Rounded to a millionth of a unit, so two leaders the geometry makes
+    equal are equal here too and the next key decides between them
+    rather than the last bit of a square root.
+    """
+    (x0, y0), (x1, y1) = leader
+    return round(math.hypot(x1 - x0, y1 - y0), 6)
+
+
 def _near_segment(p, a, b, tol: float = 0.5) -> bool:
     """Does *p* sit on the segment ``a``-``b``, to within *tol*?"""
     dx, dy = b[0] - a[0], b[1] - a[1]
@@ -1895,9 +1906,11 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
     """Place one un-enclosed number, with a line-only crossing last resort.
 
     Clear positions along any straight piece of the same run are considered
-    before external halos.  External candidates are ordered by their measured
-    distance to the whole run and bounded by ``stream_label_bands``.  The clean
-    search must be exhausted first.  Only then may a readable halo use a leader
+    before external halos.  External candidates are bounded by
+    ``stream_label_bands`` and ranked by their leaders: fewest lines crossed
+    first, then the shortest leader, and only then the halo's measured
+    distance to the whole run.  The clean search must be exhausted first.
+    Only then may a readable halo use a leader
     which crosses named stream lines; units, flags, symbols, lettering,
     instrument connections, unnamed ink and the number's own other legs remain
     hard obstacles.  If neither search succeeds the number remains unresolved.
@@ -1996,8 +2009,17 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
                            len(offered), order, primary, x, y, box))
 
     blocked_spot = None
+    clean = None
     line_fallback = None
+    # No leader leaving a halo can be shorter than the gap between that
+    # halo and the run, and the gap is at least the centre's distance less
+    # the halo's half-diagonal.  Candidates are visited nearest first, so
+    # once that bound passes the shortest clean leader already in hand no
+    # later halo can beat it.
+    reach = max(math.hypot(run.width, run.height) / 2 for run in described)
     for distance, run_index, order, run, x, y, box in sorted(candidates):
+        if clean is not None and distance - reach > clean[0][0]:
+            break
         if not halo_is_readable(run, box):
             continue
         if blocked_spot is None:
@@ -2016,9 +2038,21 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
             obstacles = symbols + lettering + [line.box for line in relevant]
             leader, cuts = _leader(box, target.segment, obstacles, target.keep_out)
             if not cuts:
-                return StreamNumber(
-                    name, color, target.segment, x, y, run.vertical, box,
-                    leader, box, (), display_name, font_size)
+                # Among leaders crossing the same number of lines -- here
+                # none -- the shortest wins, and the halo's distance from
+                # the run only breaks a tie (owner ruling, 2026-09-25).
+                # The distance orders where the words may go; what a
+                # reader has to follow is the leader, and a near halo
+                # whose tie back runs the long way round the congestion
+                # sends the eye further than a farther halo whose leader
+                # drops straight onto the line.
+                rank = (_leader_length(leader), distance,
+                        run_index, order, target_index)
+                if clean is None or rank < clean[0]:
+                    clean = (rank, target, run, x, y, box, leader)
+                continue
+            if clean is not None:
+                continue
 
             # Only named stream ink becomes negotiable in the last resort.
             # A tap, an unnamed line and another leg of this same stream stay
@@ -2035,11 +2069,22 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
             if fallback is None:
                 continue
             leader, crossed, leader_keys = fallback
-            rank = (leader_keys[0], distance, *leader_keys[1:],
-                    run_index, order, target_index)
+            # Fewest lines crossed first, as before; then, among leaders
+            # crossing as many, the shortest, ahead of the halo's
+            # distance (owner ruling, 2026-09-25). There is no cap on the
+            # length: a long leader is still better than an unresolved
+            # number, and the ruling asks for the ranking and nothing else.
+            rank = (leader_keys[0], _leader_length(leader), distance,
+                    *leader_keys[1:], run_index, order, target_index)
             if line_fallback is None or rank < line_fallback[0]:
                 line_fallback = (
                     rank, target, run, x, y, box, leader, crossed)
+
+    if clean is not None:
+        _rank, target, run, x, y, box, leader = clean
+        return StreamNumber(
+            name, color, target.segment, x, y, run.vertical, box,
+            leader, box, (), display_name, font_size)
 
     if line_fallback is not None:
         _rank, target, run, x, y, box, leader, crossed = line_fallback

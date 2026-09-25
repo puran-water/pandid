@@ -40,6 +40,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   for the least damaging spot; a tag still over a line is reported as
   `tag-over-line` by both backends. Found on the LB TEX ion-exchange P&IDs,
   where each vessel's crown pipe ran through its tag.
+- **A line number's leader was chosen by where its halo sat, not by how long
+  the leader was.** Among candidate halos the search took the nearest to the
+  run, so a near halo whose leader ran the long way round could beat a
+  slightly farther one whose leader dropped straight onto the line. Leaders
+  are now ranked by lines crossed (fewest first, unchanged), then by length,
+  and only then by the halo's distance -- for clean leaders and last-resort
+  line-crossing ones alike. There is no length cap.
 
 ## [0.1.5] - 2026-08-26
 
