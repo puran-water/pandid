@@ -25,6 +25,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **The line-number search answers as it did, in a fraction of the time.**
+  Every leader the sweep offered from every halo it visited was clipped
+  against every box on the sheet; on a crowded P&ID that was ninety million
+  clips and all but a minute of a thirteen-minute render. The sheet's boxes
+  are now binned (`_Occupied`) so a leader is scored against the few its own
+  rectangle touches; a halo's tails are swept in key order and stop at the
+  first that cuts nothing; the line-crossing last resort is searched only once
+  the sweep ends without a clean leader, and what it may and may not cross is
+  gathered once per run piece; `_leader_choices` is memoised. Nothing about
+  the ranking changes and the drawings are byte-identical: the LB TEX r05
+  set's heaviest sheets render four to five times faster.
 - **A table sheet no longer lays out or routes the diagram.** It draws none,
   so `show_stream_table="sheet"` now numbers the streams and runs the model
   checks but skips geometry and its findings -- which cost a sixty-stream block
