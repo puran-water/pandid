@@ -1214,16 +1214,26 @@ class _Occupied:
                         yield item
 
     def cutting(self, leader, limit: int) -> int:
-        """:func:`_cutting` from the boxes near *leader* alone: the same count."""
+        """:func:`_cutting` from the boxes near *leader* alone: the same count.
+
+        A box the leader's own rectangle stops short of is passed over
+        before the clip and before it is remembered as seen, which is
+        the test :func:`_crosses` opens with; the clip, and the
+        remembering, are for the few that remain.
+        """
         (ax, ay), (bx, by) = leader
+        lx, hx = (ax, bx) if ax < bx else (bx, ax)
+        ly, hy = (ay, by) if ay < by else (by, ay)
         cell, grid = self.cell, self.grid
         floor = math.floor
-        ix0, ix1 = floor(min(ax, bx) / cell), floor(max(ax, bx) / cell)
-        iy0, iy1 = floor(min(ay, by) / cell), floor(max(ay, by) / cell)
+        ix0, ix1 = floor(lx / cell), floor(hx / cell)
+        iy0, iy1 = floor(ly / cell), floor(hy / cell)
         n = 0
         if ix0 == ix1 and iy0 == iy1:
             # One cell holds each box once already.
             for _index, box in grid.get((ix0, iy0), ()):
+                if hx < box[0] or lx > box[2] or hy < box[1] or ly > box[3]:
+                    continue
                 if _crosses(leader[0], leader[1], box):
                     n += 1
                     if n >= limit:
@@ -1233,6 +1243,8 @@ class _Occupied:
         for ix in range(ix0, ix1 + 1):
             for iy in range(iy0, iy1 + 1):
                 for index, box in grid.get((ix, iy), ()):
+                    if hx < box[0] or lx > box[2] or hy < box[1] or ly > box[3]:
+                        continue
                     if index in seen:
                         continue
                     seen.add(index)
@@ -1414,20 +1426,6 @@ def _leader_choices(box, seg, keep_out: float = 0.0):
     inset = min(_LABEL_CLEAR, (hi - lo) / 3)
     near, far = lo + inset, hi - inset
 
-    def route(s: float):
-        """The leader leaving the near face at *s*, 45 degrees along.
-
-        Both directions along the run are offered and the one landing
-        *furthest* from ``s`` wins, which is the same as the one nearest
-        45 degrees: an unclamped landing is exactly ``gap`` away, and
-        clamping to the run can only bring it closer in. Forward first,
-        and kept on a tie.
-        """
-        forward = min(max(s + gap, near), far)
-        back = min(max(s - gap, near), far)
-        u = forward if abs(forward - s) >= abs(back - s) else back
-        return ((v, s), (at, u)) if vertical else ((s, v), (u, at))
-
     # The face, inset at each end so the tail lands on the lettering
     # rather than the halo's padding, never past a quarter of a short
     # one.
@@ -1438,8 +1436,16 @@ def _leader_choices(box, seg, keep_out: float = 0.0):
 
     choices = []
     for order, s in enumerate(starts):
-        lead = route(s)
-        u = lead[1][1] if vertical else lead[1][0]
+        # The leader leaving the near face at *s*, 45 degrees along.
+        # Both directions along the run are offered and the one landing
+        # *furthest* from ``s`` wins, which is the same as the one
+        # nearest 45 degrees: an unclamped landing is exactly ``gap``
+        # away, and clamping to the run can only bring it closer in.
+        # Forward first, and kept on a tie.
+        forward = min(max(s + gap, near), far)
+        back = min(max(s - gap, near), far)
+        u = forward if abs(forward - s) >= abs(back - s) else back
+        lead = ((v, s), (at, u)) if vertical else ((s, v), (u, at))
         choices.append((lead, (abs(abs(u - s) - gap), abs(s - mid), order)))
     return choices
 
@@ -1512,7 +1518,10 @@ def _leader(box, seg, occupied, keep_out: float = 0.0,
     # is the same ranking either way.
     best = score = None
     for lead, keys in sorted(choices, key=_choice_keys):
-        limit = len(occupied) + 1 if score is None else score[0] + 1
+        # Counted to the cut in hand: a tail cutting as much ranks behind
+        # on the keys, so only a smaller cut can win and only that is
+        # counted in full.
+        limit = len(occupied) + 1 if score is None else score[0]
         rank = (_cutting(lead, occupied, limit), *keys)
         if score is None or rank < score:
             best, score = lead, rank
