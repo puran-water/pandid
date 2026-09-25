@@ -1,8 +1,8 @@
 """Observed drawing invariants, independent of topology density."""
 import xml.etree.ElementTree as ET
 import pytest
-from pandid import Flowsheet, Feed, Product, Pump, Instrument, ConcreteBasin, AirDiffuser, Block
-from pandid.profiles.process import apply
+from pandid import Flowsheet, Feed, Product, Pump, Instrument, ConcreteBasin, AirDiffuser, Block, Junction
+from pandid.profiles.process import apply, lettering
 from pandid.portgeom import unit_box
 
 
@@ -469,3 +469,53 @@ def test_near_terminal_crossing_can_clear_more_than_two_parallel_tracks(monkeypa
     assert not crossing_order(after,5)[1]
     assert _overlaps(after)<=_overlaps(before)
     assert [(p[0],p[-1]) for p in after.values()]==ends
+
+
+def _tick_fixture():
+    """A feed that drops to a header and runs on to a selector.
+
+    Reproduces the tick-length leader the shortest-first ranking found on the
+    LB TEX r05 IX sheet (330-L-001): a halo parked hard against the run's own
+    bend, tied back by a leader shorter than its own arrowhead.
+    """
+    fs = Flowsheet("tick")
+    feed = fs.add(Feed("FEED", width=190, height=85))
+    head = fs.add(Junction("HDR", inputs=1, outputs=1))
+    sel = fs.add(Block("SELECTOR", inputs=1, outputs=1, label_pos="center"))
+    out = fs.add(Product("OUT", width=190, height=85))
+    feed.pin(port="outlet", x=100, y=100)
+    head.pin(x=200, y=160)
+    sel.pin(x=700, y=115)
+    out.pin(port="inlet", x=1100, y=160)
+    first = fs.connect(feed.outlet, head.inlets[0])
+    first.display_label = "330-L-001 / SIZE HOLD / CLASS HOLD"
+    second = fs.connect(head.outlets[0], sel.in_1)
+    second.display_label = "330-L-003 / SIZE HOLD / CLASS HOLD"
+    fs.connect(sel.out_1, out.inlet).display_label = ""
+    lettering(fs, body=17, heading=17)
+    fs.layout_options.strict_label_clearance = True
+    fs.layout()
+    fs.route()
+    return fs
+
+
+def test_no_leader_is_shorter_than_two_arrowheads():
+    """Owner ruling 2026-09-25: shortest first, but never a tick.
+
+    A leader shorter than its own head is an arrowhead with no line behind it,
+    and at two heads it still barely reads as a leader. The floor is two
+    leader heads, derived from the head, never a bare number -- about 3.8 mm
+    at the house 1:2.21 scale. It is a floor, not the length cap the owner
+    ruled out: nothing long is refused.
+    """
+    import math
+    from pandid.render.svg import _LEADER_HEAD, stream_numbers
+
+    fs = _tick_fixture()
+    numbers = stream_numbers(fs, [], None, "vertical", None)
+    ticks = [(n.name, round(math.hypot(n.leader[1][0] - n.leader[0][0],
+                                       n.leader[1][1] - n.leader[0][1]), 2))
+             for n in numbers if n.leader is not None
+             and math.hypot(n.leader[1][0] - n.leader[0][0],
+                            n.leader[1][1] - n.leader[0][1]) < 2 * _LEADER_HEAD]
+    assert ticks == []
