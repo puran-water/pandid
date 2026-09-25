@@ -1144,6 +1144,19 @@ def _leader_length(leader) -> float:
     return round(math.hypot(x1 - x0, y1 - y0), 6)
 
 
+def _box_gap(box, seg) -> float:
+    """The clear distance from the rectangle *box* to the run piece *seg*.
+
+    A run piece is axis-aligned, so its own bounding rectangle is the
+    segment and the distance between two rectangles is exact. No leader
+    leaving *box* for *seg* can be shorter.
+    """
+    (ax, ay), (bx, by) = seg
+    dx = max(min(ax, bx) - box[2], box[0] - max(ax, bx), 0.0)
+    dy = max(min(ay, by) - box[3], box[1] - max(ay, by), 0.0)
+    return math.hypot(dx, dy)
+
+
 def _near_segment(p, a, b, tol: float = 0.5) -> bool:
     """Does *p* sit on the segment ``a``-``b``, to within *tol*?"""
     dx, dy = b[0] - a[0], b[1] - a[1]
@@ -2016,10 +2029,35 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
     # the halo's half-diagonal.  Candidates are visited nearest first, so
     # once that bound passes the shortest clean leader already in hand no
     # later halo can beat it.
+    #
+    # The same bound, exact per halo and per piece of run -- the clear
+    # distance from the halo to that piece -- skips a halo or a target
+    # that cannot beat it without scoring a single leader. Either bound
+    # only ever skips what would have lost, so the answer is the one the
+    # full sweep gives; what they save is the sweep, which on a long line
+    # number (a halo 300 units wide has a half-diagonal of 150) would
+    # otherwise score most of the band.
     reach = max(math.hypot(run.width, run.height) / 2 for run in described)
+    struck: dict[int, tuple[list, list]] = {}
+
+    def against(target):
+        """Every line not collinear with *target*, and the obstacles."""
+        if id(target) not in struck:
+            relevant = [
+                line for line in ink
+                if not (line.axis == target.axis
+                        and abs(line.at - target.at) < 0.5)
+            ]
+            struck[id(target)] = (
+                relevant, symbols + lettering + [line.box for line in relevant])
+        return struck[id(target)]
+
     for distance, run_index, order, run, x, y, box in sorted(candidates):
         if clean is not None and distance - reach > clean[0][0]:
             break
+        if clean is not None and min(
+                _box_gap(box, target.segment) for target in described) > clean[0][0]:
+            continue
         if not halo_is_readable(run, box):
             continue
         if blocked_spot is None:
@@ -2030,12 +2068,9 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
         # and needlessly perturbed established drawings.
         targets = [run] + [target for target in described if target is not run]
         for target_index, target in enumerate(targets):
-            relevant = [
-                line for line in ink
-                if not (line.axis == target.axis
-                        and abs(line.at - target.at) < 0.5)
-            ]
-            obstacles = symbols + lettering + [line.box for line in relevant]
+            if clean is not None and _box_gap(box, target.segment) > clean[0][0]:
+                continue
+            relevant, obstacles = against(target)
             leader, cuts = _leader(box, target.segment, obstacles, target.keep_out)
             if not cuts:
                 # Among leaders crossing the same number of lines -- here
