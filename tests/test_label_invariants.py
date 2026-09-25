@@ -69,6 +69,11 @@ from test_golden import SCENARIOS
 
 EXAMPLES = Path(__file__).resolve().parent.parent / "examples"
 TOL = 0.01
+#: A leader is written to the sheet to a tenth of a unit (``{:.1f}``), so read
+#: back off the SVG its end is known to half that and no better. A landing is
+#: judged at that resolution: a leader landing exactly on a run at x = 328.4153
+#: is written as 328.4, and at TOL it would read as stopping 0.015 short.
+WRITTEN = 0.05
 
 _RECT = re.compile(
     r'<rect x="([-\d.]+)" y="([-\d.]+)" width="([\d.]+)" '
@@ -391,8 +396,8 @@ def test_a_leader_lands_on_the_line_it_names(sheets, name):
             continue
         end = label.leader[1]
         landed = min(_gap((end[0], end[1], end[0], end[1]), seg) for seg in segs[label.name])
-        if landed > TOL:
-            wrong.append(f"{label.name}'s leader stops {landed:.1f} short of its line")
+        if landed > WRITTEN:
+            wrong.append(f"{label.name}'s leader stops {landed:.3f} short of its line")
         if not label.head:
             wrong.append(f"{label.name}'s leader carries no arrowhead")
     assert not wrong, f"{name}: " + "; ".join(wrong)
