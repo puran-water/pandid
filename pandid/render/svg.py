@@ -979,6 +979,14 @@ def _label_anchors(cx: float, cy: float, span: float, hw: float, hh: float,
 # different quantities and this is the one place they were tied.
 _LEADER_HEAD = ARROWHEAD / 2
 
+#: The shortest leader a line number may be tied back by: two of its own
+#: heads. Below one head a leader is an arrowhead with no line behind it,
+#: and at not much more it reads as a tick on the halo rather than as a
+#: line pointing somewhere. Owner ruling 2026-09-25, "about two
+#: arrowheads", taken off the head so the two cannot drift -- about 3.8 mm
+#: at the house 1:2.21. A floor and not a cap: nothing long is refused.
+_LEADER_FLOOR = 2 * _LEADER_HEAD
+
 
 #: A crossing the sheet could not mark. See :func:`unmarked_crossings`.
 CROSSING_UNMARKED = "crossing-unmarked"
@@ -1222,7 +1230,8 @@ def _leader_choices(box, seg, keep_out: float = 0.0):
     return choices
 
 
-def _leader(box, seg, occupied, keep_out: float = 0.0) -> "tuple[tuple, int]":
+def _leader(box, seg, occupied, keep_out: float = 0.0,
+            floor: float = 0.0) -> "tuple[tuple | None, int]":
     """How a label's halo at *box* is joined to the run *seg* names.
 
     Returns ``((start, end), crossings)``: the leader, the end being the
@@ -1270,8 +1279,18 @@ def _leader(box, seg, occupied, keep_out: float = 0.0) -> "tuple[tuple, int]":
     off the run's ends before the inset, which is what lets a short
     spool with a flange pair at each end put the head in the clear
     middle.
+
+    ``floor`` drops every tail shorter than itself before any of that
+    scoring, so a halo too close to its run to be led cleanly has no
+    leader at all (``None``) rather than a tick; see
+    :data:`_LEADER_FLOOR`.
     """
-    choices = _leader_choices(box, seg, keep_out)
+    choices = [c for c in _leader_choices(box, seg, keep_out)
+               if _leader_length(c[0]) >= floor]
+    if not choices:
+        # Every tail from this halo is shorter than *floor*: no leader at
+        # all, reported as cutting more than anything there is to cut.
+        return None, len(occupied) + 1
     best, keys = choices[0]
     score = (_cutting(best, occupied, len(occupied) + 1), *keys)
     for lead, keys in choices[1:]:
@@ -1281,7 +1300,8 @@ def _leader(box, seg, occupied, keep_out: float = 0.0) -> "tuple[tuple, int]":
     return best, score[0]
 
 
-def _line_crossing_leader(box, seg, hard, lines, keep_out: float = 0.0):
+def _line_crossing_leader(box, seg, hard, lines, keep_out: float = 0.0,
+                          floor: float = 0.0):
     """Best leader which clears *hard* obstacles but crosses stream lines.
 
     The count is by named line rather than by the number of its segment boxes.
@@ -1291,7 +1311,7 @@ def _line_crossing_leader(box, seg, hard, lines, keep_out: float = 0.0):
     """
     best = None
     for leader, keys in _leader_choices(box, seg, keep_out):
-        if _cutting(leader, hard, 1):
+        if _leader_length(leader) < floor or _cutting(leader, hard, 1):
             continue
         crossed = tuple(sorted({
             line.line for line in lines if _crosses(*leader, line.box)
@@ -1922,7 +1942,8 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
     before external halos.  External candidates are bounded by
     ``stream_label_bands`` and ranked by their leaders: fewest lines crossed
     first, then the shortest leader, and only then the halo's measured
-    distance to the whole run.  The clean search must be exhausted first.
+    distance to the whole run.  No leader shorter than :data:`_LEADER_FLOOR`
+    is a candidate at all.  The clean search must be exhausted first.
     Only then may a readable halo use a leader
     which crosses named stream lines; units, flags, symbols, lettering,
     instrument connections, unnamed ink and the number's own other legs remain
@@ -2071,7 +2092,8 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
             if clean is not None and _box_gap(box, target.segment) > clean[0][0]:
                 continue
             relevant, obstacles = against(target)
-            leader, cuts = _leader(box, target.segment, obstacles, target.keep_out)
+            leader, cuts = _leader(box, target.segment, obstacles,
+                                   target.keep_out, _LEADER_FLOOR)
             if not cuts:
                 # Among leaders crossing the same number of lines -- here
                 # none -- the shortest wins, and the halo's distance from
@@ -2100,7 +2122,8 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
                 line.box for line in relevant if line not in crossing_lines
             ]
             fallback = _line_crossing_leader(
-                box, target.segment, hard, crossing_lines, target.keep_out)
+                box, target.segment, hard, crossing_lines, target.keep_out,
+                _LEADER_FLOOR)
             if fallback is None:
                 continue
             leader, crossed, leader_keys = fallback

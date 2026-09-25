@@ -56,7 +56,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   slightly farther one whose leader dropped straight onto the line. Leaders
   are now ranked by lines crossed (fewest first, unchanged), then by length,
   and only then by the halo's distance -- for clean leaders and last-resort
-  line-crossing ones alike. There is no length cap.
+  line-crossing ones alike. There is no length cap. There is a floor: no
+  leader shorter than two of its own arrowheads (`_LEADER_FLOOR`) is a
+  candidate, so shortest-first cannot settle on a tick.
 
 ## [0.1.5] - 2026-08-26
 
