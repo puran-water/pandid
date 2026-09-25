@@ -2,6 +2,7 @@ import base64
 import json
 import xml.etree.ElementTree as ET
 import zlib
+from pathlib import Path
 
 import pytest
 
@@ -60,3 +61,12 @@ def test_nanded_evidence_is_bound_without_inferring_equipment_quantities():
     assert cage.version == '2'
     assert '100' not in cage.meaning
     assert default_registry.for_unit(MembraneCage('cage')).ports['permeate'] == (22.5, 0)
+
+
+def test_a_printed_meaning_never_names_its_reference_document():
+    # A legend prints the meaning on the drawing face, and a reference is often another
+    # client's project. The face cites a reference by neutral id elsewhere, never by title.
+    import re
+    for key, art in ARTWORK.items():
+        for word in re.findall(r'[A-Za-z]{4,}', Path(art.reference_document).stem):
+            assert word.lower() not in art.meaning.lower(), (key, word)

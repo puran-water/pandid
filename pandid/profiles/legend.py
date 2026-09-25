@@ -42,7 +42,7 @@ def _wrap(text, width, font):
 def pages(entries, *, metadata_factory, title='SYMBOLS AND CONVENTIONS', body_font_size=14):
     """Cover the complete admitted inventory in one multi-sheet document.
 
-    Nanded informs the sectioned arrangement. Actual engine units and streams
+    A bound reference informs the sectioned arrangement. Actual engine units and streams
     illustrate symbols and line types; no separate pictures or XML assemblies.
     """
     # Lettering is supplied by the physical policy, not chosen to fit a panel.

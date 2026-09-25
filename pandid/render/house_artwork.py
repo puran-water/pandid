@@ -33,7 +33,7 @@ class HouseArtwork:
 
 ARTWORK = {
     "house.mbr.membrane_cage": HouseArtwork(
-        "Submerged membrane cage; crossed frame and feet follow Nanded, no module count implied",
+        "Submerged membrane cage; crossed frame and feet per reference, no module count implied",
         90,
         120,
         30,
