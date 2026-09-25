@@ -2533,6 +2533,52 @@ def tag_findings(items) -> "list[Issue]":
             for item in items if getattr(item, "crossed", ())]
 
 
+def tag_reach(unit, horizontal: bool, registry=None) -> "float | None":
+    """How far a unit's tag reaches past the centre line of its run.
+
+    The unit is taken as sitting **in** a straight run -- a valve in a
+    pipe -- running across the sheet when *horizontal* and up it
+    otherwise, and its tag is measured where :meth:`SvgRenderer._tag_item`
+    would put it on each face the run does not pass through: above and
+    below a horizontal run, left and right of a vertical one. The nearer
+    of the two is the answer, since the search tries both and keeps the
+    first that is clear. An author's ``label_pos`` is the only face.
+
+    ``None`` where the unit draws no tag beside itself: no tag, or one
+    lettered inside the symbol (``center``). The geometry is the
+    renderer's own -- :meth:`SvgRenderer._label_place` and
+    :func:`_unit_label_box` at the unit's lettering size -- so the layout
+    that asks this and the tag pass that places the tag cannot disagree
+    about how much paper a tag needs.
+    """
+    from pandid.render.symbols import default_registry
+
+    tag = getattr(unit, "tag", "")
+    if not tag or unit.kind in ("feed", "product", "instrument"):
+        return None
+    sym = (registry or default_registry).for_unit(unit)
+    authored = getattr(unit, "label_pos", None) or sym.label_pos
+    if authored == "center":
+        return None
+    along = unit.width if unit.width is not None else sym.width
+    across = unit.height if unit.height is not None else sym.height
+    if horizontal:
+        frame, sides = (-along / 2, -across / 2, along, across), ("top", "bottom")
+    else:
+        frame, sides = (-across / 2, -along / 2, across, along), ("left", "right")
+    if authored:
+        sides = (authored,)
+    font = getattr(unit, "font_size", 12)
+    reaches = []
+    for side in sides:
+        place = SvgRenderer._label_place(side, *frame)
+        box = _unit_label_box(_LabelItem((*place, side, escaped(tag)), font))
+        if box is None:
+            continue
+        reaches.append(max(-box[1], box[3]) if horizontal else max(-box[0], box[2]))
+    return min(reaches) if reaches else None
+
+
 def _shape_hits(shape: str, box, rect) -> bool:
     """Does the enclosure *shape* filling *box* meet the rectangle *rect*?
 
@@ -5639,7 +5685,8 @@ class SvgRenderer:
                        f'dominant-baseline="middle">{escaped(bot)}</text>')
         return out
 
-    def _label_place(self, lpos: str, x: float, y: float, u_width: float,
+    @staticmethod
+    def _label_place(lpos: str, x: float, y: float, u_width: float,
                      u_height: float) -> "tuple[float, float, str, str]":
         """Where a label on side ``lpos`` goes, and how it sets.
 

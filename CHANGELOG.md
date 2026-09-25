@@ -40,6 +40,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   for the least damaging spot; a tag still over a line is reported as
   `tag-over-line` by both backends. Found on the LB TEX ion-exchange P&IDs,
   where each vessel's crown pipe ran through its tag.
+- **Valves fanned off one block face stood too close for their tags.** A
+  block spreads a face's nozzles at `BLOCK_PITCH` (30 units) and layout lines
+  each in-line valve up with its nozzle, so a selector feeding three vessels
+  through a valve each put the valves in rows 30 apart, narrower than a tag
+  plus the next valve's body. Layout now raises that face's pitch to what the
+  tags need -- the tag's reach past its own run (the tag search's own
+  geometry at the unit's lettering size) plus the next row's half-depth and
+  plate clearance -- and never below `BLOCK_PITCH`. A block given an explicit
+  size keeps it. Found on the LB TEX IX vessel sheets, where ten valve tags
+  were still over lines after the tag search had tried every face.
 - **A line number's leader was chosen by where its halo sat, not by how long
   the leader was.** Among candidate halos the search took the nearest to the
   run, so a near halo whose leader ran the long way round could beat a

@@ -8055,6 +8055,11 @@ class Block(Unit):
     # before this class has built anything of its own.
     _width: float | None = None
     _height: float | None = None
+    #: ``((face, pitch), ...)`` for a face whose nozzles are spread wider
+    #: than :data:`~pandid.render.symbols.BLOCK_PITCH`. Not authored: the
+    #: layout derives it on every run from the tags of the in-line units
+    #: the face's runs carry (:mod:`pandid.layout.nozzle_pitch`).
+    nozzle_pitches: tuple[tuple[str, float], ...] = ()
 
     def __init__(
         self,
@@ -8423,7 +8428,8 @@ class Block(Unit):
         # The name widens the box only where the author left the width
         # open; see block_symbol(). Passing it with a width already
         # given would cost every block its own <defs> entry.
-        return block_symbol(tuple(self._faces.items()), "" if self.width is not None else self.tag)
+        return block_symbol(tuple(self._faces.items()), "" if self.width is not None else self.tag,
+                            self.nozzle_pitches)
 
     def _check_box(self) -> None:
         """Raise unless the unit's own placed box draws the connections

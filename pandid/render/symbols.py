@@ -1461,14 +1461,16 @@ def label_span(text: str) -> float:
     return _LABEL_EM * narrow + _LABEL_EM_WIDE * wide + _LABEL_PAD
 
 
-def block_span(count: int) -> float:
+def block_span(count: int, pitch: float = BLOCK_PITCH) -> float:
     """The least length of face ``count`` connections can be drawn on.
 
-    ``count`` nozzles at :data:`BLOCK_PITCH` apart, with half a pitch of
-    margin at each end so the outermost one is not drawn into a corner.
-    This is what a block grows to fit rather than squeezing.
+    ``count`` nozzles at *pitch* apart -- :data:`BLOCK_PITCH` unless the
+    runs leaving that face need more (:mod:`pandid.layout.nozzle_pitch`)
+    -- with half a pitch of margin at each end so the outermost one is
+    not drawn into a corner. This is what a block grows to fit rather
+    than squeezing.
     """
-    return BLOCK_PITCH * count
+    return pitch * count
 
 
 def block_box_too_small(owner: str, face: str, count: int, axis: str,
@@ -1505,7 +1507,8 @@ _BLOCK_FACES = ("W", "E", "N", "S")
 
 
 @lru_cache(maxsize=None)
-def block_symbol(faces: tuple[tuple[str, str], ...], label: str = "") -> Symbol:
+def block_symbol(faces: tuple[tuple[str, str], ...], label: str = "",
+                 pitches: tuple[tuple[str, float], ...] = ()) -> Symbol:
     """A block flow diagram's box, with a nozzle per declared
     connection.
 
@@ -1537,16 +1540,24 @@ def block_symbol(faces: tuple[tuple[str, str], ...], label: str = "") -> Symbol:
     face it was declared with, and :meth:`pandid.units.Block.nozzle`
     moves it by *changing the declaration* and rebuilding this drawing.
 
+    ``pitches`` is ``((face, pitch), ...)`` for a face whose nozzles are
+    spread wider than :data:`BLOCK_PITCH`, and is empty for nearly every
+    block. :func:`pandid.layout.nozzle_pitch.widen_block_pitches` sets it
+    where the runs leaving a face carry tagged in-line units -- a valve
+    per run -- whose tags would otherwise have no lane between them.
+
     Cached, because port resolution asks for a unit's symbol on every
     call.
     """
     on: dict[str, list[str]] = {face: [] for face in _BLOCK_FACES}
     for port_name, face in faces:
         on[face].append(port_name)
+    pitch = {face: BLOCK_PITCH for face in _BLOCK_FACES}
+    pitch.update((face, max(BLOCK_PITCH, value)) for face, value in pitches)
     width = max(BLOCK_MIN_WIDTH, *(label_span(line) for line in label.split("\n")),
-                block_span(len(on["N"])), block_span(len(on["S"])))
+                block_span(len(on["N"]), pitch["N"]), block_span(len(on["S"]), pitch["S"]))
     height = max(BLOCK_MIN_HEIGHT, 18 * len(label.split("\n")) + 16,
-                 block_span(len(on["W"])), block_span(len(on["E"])))
+                 block_span(len(on["W"]), pitch["W"]), block_span(len(on["E"]), pitch["E"]))
     ports: dict[str, tuple[float, float]] = {}
     for face in _BLOCK_FACES:
         members = on[face]
@@ -1557,7 +1568,7 @@ def block_symbol(faces: tuple[tuple[str, str], ...], label: str = "") -> Symbol:
             # only way to reach it is to hand the block a smaller box
             # than it sized itself to, and Block refuses that outright
             # rather than drawing it.
-            t = spread(i, len(members), along, BLOCK_PITCH, 1.0)
+            t = spread(i, len(members), along, pitch[face], 1.0)
             ports[port_name] = _on_face(face, t, width, height)
     svg = (
         f'<g id="sym_block">'

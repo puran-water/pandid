@@ -93,8 +93,12 @@ class ConstraintLayoutEngine:
         from pandid.layout.coordinates import assign_coordinates, assign_labels
         from pandid.layout.cycles import break_cycles
         from pandid.layout.faces import select_faces
+        from pandid.layout.nozzle_pitch import widen_block_pitches
         from pandid.layout.place import assign_positions
 
+        # Before anything is sized: a block's box follows its nozzle
+        # pitch, and the pitch follows the tags on the runs it serves.
+        widen_block_pitches(fs)
         if fs.containments:
             from pandid.containment import layout
             return layout(fs, self)
