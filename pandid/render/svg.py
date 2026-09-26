@@ -1382,27 +1382,43 @@ def _swept(items, choices, sweep=None):
     return items.near(*(_sweep(choices) if sweep is None else sweep))
 
 
-def _clean_leader(box, seg, occupied, keep_out: float = 0.0,
-                  floor: float = 0.0):
-    """The leader :func:`_leader` would rank first if it cuts nothing.
+def _clean_leader(box, seg, hard, crossable, keep_out: float = 0.0,
+                  floor: float = 0.0) -> "tuple[tuple | None, list]":
+    """The leader :func:`_leader` would rank first if it cuts nothing, and
+    the tails the last resort may still consider where there is none.
 
     The clean search asks only that: a halo whose every tail cuts
     something goes to the last resort, and which tail cut least is never
     drawn. So the sweep is :func:`_leader`'s, in key order, stopping at
     the first tail that cuts nothing -- the same tail :func:`_leader`
     returns with a cut of zero -- and ``None`` where every tail cuts,
-    which :func:`_leader` reports as a cut of one or more. Binned
-    obstacles are gathered once for the sweep (:func:`_swept`).
+    which :func:`_leader` reports as a cut of one or more.
+
+    The obstacles come in two bins and are asked in order: *hard*, which
+    no leader may cut in either phase, then *crossable*, the named
+    foreign stream lines the last resort alone may cross. A tail cutting
+    nothing cuts neither, so the answer is the answer either way; what
+    the order buys is the second value, the tails that cleared *hard*
+    and cut only *crossable* -- in key order, at or above *floor* -- which
+    is exactly the list the last resort would sift the sweep down to
+    again. Where every tail cuts *hard* the list is empty and the last
+    resort has nothing to ask. Both bins are gathered once for the sweep
+    (:func:`_swept`).
     """
     choices = [c for c in _leader_choices(box, seg, keep_out)
                if round(math.hypot(c[0][1][0] - c[0][0][0], c[0][1][1] - c[0][0][1]), 6) >= floor]
     if not choices:
-        return None
-    occupied = _swept(occupied, choices)
-    for lead, _keys in sorted(choices, key=_choice_keys):
-        if not _cutting(lead, occupied, 1):
-            return lead
-    return None
+        return None, []
+    sweep = _sweep(choices)
+    hard, crossable = _swept(hard, choices, sweep), _swept(crossable, choices, sweep)
+    survivors: list = []
+    for lead, keys in sorted(choices, key=_choice_keys):
+        if _cutting(lead, hard, 1):
+            continue
+        if not _cutting(lead, crossable, 1):
+            return lead, survivors
+        survivors.append((lead, keys))
+    return None, survivors
 
 
 def _leader_length(leader) -> float:
@@ -1651,22 +1667,35 @@ def _leader(box, seg, occupied, keep_out: float = 0.0,
 
 
 def _line_crossing_leader(box, seg, hard, lines, keep_out: float = 0.0,
-                          floor: float = 0.0):
+                          floor: float = 0.0, survivors: "list | None" = None):
     """Best leader which clears *hard* obstacles but crosses stream lines.
 
     The count is by named line rather than by the number of its segment boxes.
     Instrument connections and unnamed ink are deliberately absent from
     ``lines`` and belong in ``hard``: the ruling permits only identifiable
     stream lines to be crossed.
+
+    *survivors*, when given, are the tails :func:`_clean_leader` already
+    found clear of *hard* and at or above *floor*, in key order: the
+    sweep this function would otherwise sift the halo's tails down to,
+    and it is not sifted twice. An empty list is a halo with no last
+    resort, answered without a clip.
     """
     best = None
-    choices = _leader_choices(box, seg, keep_out)
-    sweep = _sweep(choices)
-    hard, lines = _swept(hard, choices, sweep), _swept(lines, choices, sweep)
+    if survivors is None:
+        choices = _leader_choices(box, seg, keep_out)
+        sweep = _sweep(choices)
+        hard, lines = _swept(hard, choices, sweep), _swept(lines, choices, sweep)
+        ordered = sorted(choices, key=_choice_keys)
+    else:
+        if not survivors:
+            return None
+        ordered = survivors
+        lines = _swept(lines, ordered)
     # In key order, as :func:`_leader` sweeps: a leader crossing one
     # line, the fewest a last resort can cross, ends the sweep.
-    for leader, keys in sorted(choices, key=_choice_keys):
-        if _leader_length(leader) < floor or _cutting(leader, hard, 1):
+    for leader, keys in ordered:
+        if survivors is None and (_leader_length(leader) < floor or _cutting(leader, hard, 1)):
             continue
         crossed = tuple(sorted({
             line.line for line in _about(lines, leader) if _crosses(*leader, line.box)
@@ -2436,14 +2465,21 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
     # number (a halo 300 units wide has a half-diagonal of 150) would
     # otherwise score most of the band.
     reach = max(math.hypot(run.width, run.height) / 2 for run in described)
-    struck: dict[int, tuple[list, list]] = {}
+    struck: dict[int, tuple] = {}
     own_line = _OwnLine(name, ink)
 
     def against(target):
-        """Every line not collinear with *target*, and the obstacles.
+        """Every line not collinear with *target*, and the bins a leader to it is scored against.
 
-        The obstacles come binned (:class:`_Occupied`): one target's are
-        scored by every leader from every halo the search visits.
+        Built once per target, since one target's are scored by every
+        leader from every halo the search visits. Three bins
+        (:class:`_Occupied`): the hard obstacles -- symbols, lettering,
+        taps, unnamed ink and this number's own other legs -- which no
+        leader may cut in either phase; the named foreign stream lines
+        as boxes, which the last resort alone may cross; and those same
+        lines as the lines they are, for the last resort to name.
+        Together the first two are everything the clean search must
+        clear.
         """
         if id(target) not in struck:
             relevant = [
@@ -2451,33 +2487,21 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
                 if not (line.axis == target.axis
                         and abs(line.at - target.at) < 0.5)
             ]
-            struck[id(target)] = (
-                relevant, _Occupied(symbols + lettering + [line.box for line in relevant]))
-        return struck[id(target)]
-
-    negotiated: dict[int, tuple] = {}
-
-    def negotiable(target):
-        """What the last resort may cross for *target*, and what it may not.
-
-        The named foreign stream ink, binned as the lines they are, and
-        the rest -- symbols, lettering, taps, unnamed ink and this
-        number's own other legs -- binned as boxes. Once per target: the
-        same two lists were rebuilt, and the second sifted through the
-        first, for every halo that reached the last resort.
-        """
-        if id(target) not in negotiated:
-            relevant, _obstacles = against(target)
+            # Only named stream ink may be crossed in the last resort. A
+            # tap, an unnamed line and another leg of this same stream
+            # stay as hard as the unit and lettering boxes.
             crossing_lines = [
                 line for line in relevant
                 if line.line and line.line != name and line.kind != "tap"
             ]
-            negotiated[id(target)] = (
-                _Occupied(crossing_lines, key=lambda line: line.box),
+            struck[id(target)] = (
+                relevant,
                 _Occupied(symbols + lettering + [
                     line.box for line in relevant if line not in crossing_lines
-                ]))
-        return negotiated[id(target)]
+                ]),
+                _Occupied([line.box for line in crossing_lines]),
+                _Occupied(crossing_lines, key=lambda line: line.box))
+        return struck[id(target)]
 
     for distance, run_index, order, run, x, y, box in sorted(candidates):
         # The length bounds hold only against a clean leader that is not
@@ -2509,9 +2533,9 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
         for target_index, target in enumerate(targets):
             if bound is not None and _box_gap(box, target.segment) > bound:
                 continue
-            relevant, obstacles = against(target)
-            leader = _clean_leader(box, target.segment, obstacles,
-                                   target.keep_out, _LEADER_FLOOR)
+            _relevant, hard, crossable, _lines = against(target)
+            leader, survivors = _clean_leader(box, target.segment, hard, crossable,
+                                              target.keep_out, _LEADER_FLOOR)
             if leader is not None:
                 # Among leaders crossing the same number of lines -- here
                 # none -- the shortest wins, and the halo's distance from
@@ -2531,20 +2555,19 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
                 continue
             # The last resort is the answer only when no halo on the sheet
             # has a clean leader, which the sweep cannot know until it
-            # ends. Deferred, in the sweep's own order, and searched then.
+            # ends. Deferred, in the sweep's own order, with the tails
+            # the clean search found clear of the hard obstacles -- all
+            # the last resort may choose from -- and searched then.
             deferred.append((distance, run_index, order, run, x, y, box,
-                             target_index, target, tied))
+                             target_index, target, tied, survivors))
 
     if clean is None:
         for (distance, run_index, order, run, x, y, box,
-             target_index, target, tied) in deferred:
-            # Only named stream ink becomes negotiable in the last resort.
-            # A tap, an unnamed line and another leg of this same stream stay
-            # as hard as the unit and lettering boxes above.
-            crossing_lines, hard = negotiable(target)
+             target_index, target, tied, survivors) in deferred:
+            _relevant, hard, _crossable, crossing_lines = against(target)
             fallback = _line_crossing_leader(
                 box, target.segment, hard, crossing_lines, target.keep_out,
-                _LEADER_FLOOR)
+                _LEADER_FLOOR, survivors)
             if fallback is None:
                 continue
             leader, crossed, leader_keys = fallback
