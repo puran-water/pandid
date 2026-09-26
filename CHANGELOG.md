@@ -44,6 +44,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A template row can declare a variable port count.** `from_template` built
+  each unit from its symbol and its edge counts alone, so `n_feeds` on a
+  Column (or `n_draws`, `n_inlets`, `n_outlets` on their classes) was dropped:
+  a packed tower taking liquid on `feed_1` and air on `feed_2` had both edges
+  land on its one nozzle and was refused as `PANDID_DUPLICATE_PROCESS_PORT`.
+  A row now names the count with the spec's own keyword, policed by the same
+  table (`pandid.spec._VARIABLE_PORTS`, through inheritance); a count on a
+  class without that family is refused (`PANDID_PORT_COUNT_UNSUPPORTED`), as
+  is one that is not a positive integer. An undeclared count is unchanged.
+
 - **A pipe ran through an equipment or valve tag** where the only clear
   paper was on a face a nozzle leaves, or just past half the symbol's width
   along a face. The tag search now tries every face, nozzle faces after the

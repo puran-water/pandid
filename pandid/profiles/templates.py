@@ -13,7 +13,7 @@ from uuid import NAMESPACE_URL, uuid5
 
 from pandid import Block, Feed, Flowsheet, Instrument, Junction, Product
 from pandid.render.symbols import default_registry
-from pandid.spec import _resolve_kind
+from pandid.spec import _VARIABLE_PORTS, _resolve_kind, _takes
 
 ALIASES = {
     "house.basin.concrete": ("concrete_basin", "default"),
@@ -46,9 +46,41 @@ def symbol_type(symbol):
     raise ValueError('PANDID_SYMBOL_UNMAPPED: ' + symbol)
 
 
+def _declared_counts(row, cls):
+    """The variable port counts a row declares, policed as a spec entry's are.
+
+    A row names a count with the spec format's own keyword (``n_feeds``,
+    ``n_draws``, ``n_inlets``, ``n_outlets``) and only on a class that has
+    that family (:data:`pandid.spec._VARIABLE_PORTS`, matched through
+    inheritance, so ``n_feeds`` reaches Absorber and Stripper through
+    Column). A count on any other class is refused rather than dropped: the
+    nozzles it asked for would not exist, and every edge addressed to them
+    would land on whatever single nozzle the class does have.
+    """
+    counts = {}
+    for keyword, owners in _VARIABLE_PORTS.items():
+        if keyword not in row:
+            continue
+        if cls is None or not _takes(cls, owners):
+            raise ValueError(f'PANDID_PORT_COUNT_UNSUPPORTED: {row["key"]}/{keyword}; '
+                             f'only {", ".join(owners)} (and their subclasses) declare it')
+        value = row[keyword]
+        if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+            raise ValueError(f'PANDID_PORT_COUNT_INVALID: {row["key"]}/{keyword} must be a '
+                             f'positive integer, got {value!r}')
+        counts[keyword] = value
+    return counts
+
+
 def _unit(row, incoming, outgoing):
     key, symbol = row['key'], row['symbol']
     label = row.get('label', '')
+    if symbol.startswith('instrument.') or symbol == 'controller.plc' or symbol in {
+            'boundary', 'boundary.reference', 'block', 'process.package', 'control.device',
+            'process.junction'}:
+        # No typed class of these declares a variable family a template
+        # may size: refuse rather than drop.
+        _declared_counts(row, None)
     if symbol.startswith('instrument.') or symbol == 'controller.plc':
         variant = 'shared' if symbol == 'instrument.control-room' else 'sis' if symbol == 'controller.plc' else 'default'
         function = row['instrument_function']
@@ -83,6 +115,9 @@ def _unit(row, incoming, outgoing):
         kwargs['inputs'] = max(1, len(incoming))
     if 'outputs' in params:
         kwargs['outputs'] = max(1, len(outgoing))
+    # Declared, never inferred from the edges: a count read off the edges
+    # would redraw every existing sheet whose edges already share a nozzle.
+    kwargs.update(_declared_counts(row, cls))
     return cls(key, **kwargs)
 
 
