@@ -53,6 +53,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   table (`pandid.spec._VARIABLE_PORTS`, through inheritance); a count on a
   class without that family is refused (`PANDID_PORT_COUNT_UNSUPPORTED`), as
   is one that is not a positive integer. An undeclared count is unchanged.
+  A row may also name `engine_unit` (a class as `describe_unit` and the spec
+  name it) to reach a class its symbol's kind shares -- an `Absorber`,
+  `Stripper` or `DistillationColumn` on a column symbol -- which no symbol
+  selects on its own. It may only narrow the symbol's class
+  (`PANDID_ENGINE_UNIT_MISMATCH` otherwise).
 
 - **A pipe ran through an equipment or valve tag** where the only clear
   paper was on a face a nozzle leaves, or just past half the symbol's width

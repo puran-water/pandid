@@ -13,9 +13,10 @@ import pytest
 
 from pandid.portgeom import port_point
 from pandid.profiles.templates import from_template
-from pandid.units import Column
+from pandid.units import Absorber, Column
 
 PACKED = "stencil.pid.vessels.tower_with_packing"
+SHELL = "stencil.pid.vessels.pressurized_vessel"
 
 
 def node(key, symbol, **extra):
@@ -63,6 +64,12 @@ def test_template_column_declares_two_feeds_and_each_connects():
     assert tower.variant == "packed"
 
 
+def test_template_absorber_declares_two_feeds_and_each_connects():
+    nodes, edges = tower_sheet(node("tower", SHELL, engine_unit="Absorber", n_feeds=2))
+    fs = from_template("Absorber", nodes, edges, metadata={})
+    assert_two_feeds_connected(fs, Absorber)
+
+
 def test_undeclared_count_keeps_the_single_feed_column():
     nodes = [node("liquid", "boundary"), node("tower", PACKED), node("water", "boundary")]
     edges = [edge("in", "liquid", "tower", tp="feed_1"), edge("out", "tower", "water", sp="bottoms")]
@@ -88,4 +95,10 @@ def test_count_on_an_untyped_appearance_is_refused():
 def test_count_must_be_a_positive_integer(value):
     nodes = [node("tower", PACKED, n_feeds=value)]
     with pytest.raises(ValueError, match="n_feeds"):
+        from_template("Refused", nodes, [], metadata={})
+
+
+def test_engine_unit_must_refine_the_symbols_own_class():
+    nodes = [node("tower", PACKED, engine_unit="Pump")]
+    with pytest.raises(ValueError, match="PANDID_ENGINE_UNIT_MISMATCH: tower"):
         from_template("Refused", nodes, [], metadata={})

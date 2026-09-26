@@ -72,6 +72,26 @@ def _declared_counts(row, cls):
     return counts
 
 
+def _engine_class(row, cls):
+    """The class a row's optional ``engine_unit`` names, refining ``cls``.
+
+    A symbol selects artwork, and through it a kind; several classes share
+    one kind (Column, Absorber, Stripper and DistillationColumn are all
+    ``column``), differing only in the nozzles they build. ``engine_unit``
+    names one of them, as ``drawing_catalog_get(catalog="engine_unit")``
+    does. It may only narrow the symbol's own class: a class the artwork
+    was not drawn for is refused.
+    """
+    if 'engine_unit' not in row:
+        return cls
+    chosen = _resolve_kind(row['engine_unit'], row['key'])
+    if cls is None or not issubclass(chosen, cls):
+        owner = 'an untyped appearance' if cls is None else cls.__name__
+        raise ValueError(f'PANDID_ENGINE_UNIT_MISMATCH: {row["key"]}; {chosen.__name__} '
+                         f'does not refine {owner}, the class its symbol draws')
+    return chosen
+
+
 def _unit(row, incoming, outgoing):
     key, symbol = row['key'], row['symbol']
     label = row.get('label', '')
@@ -79,8 +99,9 @@ def _unit(row, incoming, outgoing):
             'boundary', 'boundary.reference', 'block', 'process.package', 'control.device',
             'process.junction'}:
         # No typed class of these declares a variable family a template
-        # may size: refuse rather than drop.
+        # may size, nor refines into another: refuse rather than drop.
         _declared_counts(row, None)
+        _engine_class(row, None)
     if symbol.startswith('instrument.') or symbol == 'controller.plc':
         variant = 'shared' if symbol == 'instrument.control-room' else 'sis' if symbol == 'controller.plc' else 'default'
         function = row['instrument_function']
@@ -109,6 +130,7 @@ def _unit(row, incoming, outgoing):
     # A generic Filter has only two ports. Preserve the discovered device's
     # regenerant inlet and spent outlet when this artwork is selected.
     cls = _resolve_kind('IonExchanger' if (kind, variant) == ('filter', 'ion_exchange') else kind, row['key'])
+    cls = _engine_class(row, cls)
     kwargs = {'variant': variant}
     params = inspect.signature(cls).parameters
     if 'inputs' in params:
