@@ -92,6 +92,7 @@ class ConstraintLayoutEngine:
         from pandid.layout.control import place_control
         from pandid.layout.coordinates import assign_coordinates, assign_labels
         from pandid.layout.cycles import break_cycles
+        from pandid.layout.dock import dock
         from pandid.layout.faces import select_faces
         from pandid.layout.nozzle_pitch import widen_block_pitches
         from pandid.layout.place import assign_positions
@@ -109,12 +110,17 @@ class ConstraintLayoutEngine:
         break_cycles(fs)
         assign_positions(fs)
         assign_coordinates(fs)
+        # A vent on a top nozzle stands on it; again after the passes
+        # that may move its host (see pandid.layout.dock).
+        dock(fs)
         if fs.layout_options.parallel_trains:
             from pandid.layout.parallel_trains import align
             align(fs)
+            dock(fs)
         if fs.layout_options.aligned_boundaries:
             from pandid.profiles.process import align_boundaries
             align_boundaries(fs)
+            dock(fs)
         # Choose the faces, and place again where that moved a balloon.
         # The loop ends on a selection made against boxes nothing has
         # moved since, so the sheet it hands on is a function of the

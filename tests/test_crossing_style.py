@@ -80,8 +80,9 @@ gallery = _gallery()
 #: The shipped sheets that have a crossing on them at all, so no case below
 #: passes by having nothing to draw. Asserted rather than trusted: each case
 #: checks its sheet really does mark something before it compares anything.
+#: ``08_from_data`` left the list when its deaerator vent came to stand on its
+#: nozzle: the only crossing on it was that vent's line over FV-201's.
 MARKED = (
-    "08_from_data",
     "11_ethanol_pid",
     "15_condensing_turbine",
     "16_demineralised_water",

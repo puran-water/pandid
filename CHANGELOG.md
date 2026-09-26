@@ -35,6 +35,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **A vent on a top nozzle stands on it.** A `Vent` whose one inlet is piped
+  from a nozzle that can only leave north -- a tower's `overhead`, a vessel's
+  `vent` -- is no longer a free unit in a grid column of its own with its line
+  routed across the sheet to it. Stage 1 leaves it out
+  (`pandid.layout.stages.process_units`) and `pandid.layout.dock` stands it on
+  the nozzle's axis, its inlet `VENT_STUB` (30) above the nozzle, after the
+  host has its frame and again after any pass that moves the host. A vent off
+  a side nozzle, a pinned vent, and every other unit are unchanged. Goldens
+  `08_from_data` (VT-201 on the deaerator) and `16_demineralised_water`
+  (VT-801 on the degasser) move: each vent now stands on its nozzle, the
+  row it occupied goes, and both sheets are shorter; the gallery sheet `16` is
+  regenerated with them.
+
 - **Two feeds on the packed artwork straddle its packing, on opposite
   faces** (owner ruling 2026-09-26). A `Column` or `Absorber` drawn
   `variant="packed"` with exactly `n_feeds=2` and no composed internals now

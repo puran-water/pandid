@@ -62,8 +62,12 @@ def is_control(unit: "Unit | None") -> bool:
 
 
 def process_units(fs: "Flowsheet") -> list["Unit"]:
-    """The units stage 1 places: everything that carries material."""
-    return [u for u in fs.units if not is_control(u)]
+    """The units stage 1 places: everything that carries material, less a
+    vent standing on a top nozzle, which its host places
+    (:mod:`pandid.layout.dock`)."""
+    from pandid.layout.dock import is_docked
+
+    return [u for u in fs.units if not is_control(u) and not is_docked(u)]
 
 
 def control_units(fs: "Flowsheet") -> list["Unit"]:
@@ -79,9 +83,11 @@ def is_process_stream(stream: "Stream") -> bool:
     signal is a measurement. Only material puts one unit downstream of
     another.
     """
+    from pandid.layout.dock import is_docked
+
     src, dst = stream.source.owner, stream.dest.owner
     return (stream.representation != "internal" and stream.kind == "material" and src is not None and dst is not None
-            and not is_control(src) and not is_control(dst))
+            and not is_control(src) and not is_control(dst) and not is_docked(dst))
 
 
 def process_streams(fs: "Flowsheet") -> list["Stream"]:
