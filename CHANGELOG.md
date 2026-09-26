@@ -44,6 +44,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **An `Absorber` on the packed artwork drew its packing twice.** Its
+  `internals="packing"` default composed eight beds over the two
+  `variant="packed"` already draws on their support grids -- what #373 fixed
+  for `Column`. The default is now no composed internals on any body whose
+  artwork draws its own beds, read off the new `Symbol.beds`/`Symbol.shell`
+  (emitted for `column/packed` from its stencil by `scripts/vendor_symbols.py`).
+  An explicit `internals=` is still honoured. The docstring's
+  `feed_stages=[1, 8]` example said the gas entered under the packing; a bed
+  stage lands on the top of that bed, so it now says so.
+
 - **A template row can declare a variable port count.** `from_template` built
   each unit from its symbol and its edge counts alone, so `n_feeds` on a
   Column (or `n_draws`, `n_inlets`, `n_outlets` on their classes) was dropped:

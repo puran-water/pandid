@@ -1064,6 +1064,7 @@ def _composition_case(cid: str, cls: type) -> Case:
 
 _composition_case("Unit.composition_defaults", U.Vessel)
 _composition_case("Reactor.composition_defaults", U.Reactor)
+_composition_case("Absorber.composition_defaults", U.Absorber)
 
 
 def _repeats_case(cid: str, entry: Any, build: Callable[[], tuple[Any, Any]]) -> Case:
@@ -1746,6 +1747,11 @@ INAPPLICABLE: dict[tuple[str, str], Inapplicable] = {
     ("Unit.composition_defaults", "stated"): Inapplicable(
         "same: one part rules another out only where a class says so, and this base "
         "says nothing. Reactor.composition_defaults reads it."
+    ),
+    ("Absorber.composition_defaults", "stated"): Inapplicable(
+        "an absorber's defaults turn on the body alone -- no composed bed where the "
+        "artwork draws its own -- and no part it composes rules another out. "
+        "Reactor.composition_defaults reads it."
     ),
 }
 

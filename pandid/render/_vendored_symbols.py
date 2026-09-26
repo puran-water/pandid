@@ -404,6 +404,8 @@ def register_vendored(registry):
         drawio_shape='mxgraph.pid.vessels.tower_with_packing',
         # must not be turned: packed beds rest on their support grids
         gravity_fixed=True,
+        beds=((38.14, 89.69), (110.31, 161.86)),
+        shell=(7.22, 192.78),
         port_series=(PortSeries('feed_', 'W', pitch=35.0, extent=0.35, at=105.0, singular='feed'), PortSeries('draw_', 'E', pitch=35.0, extent=0.35, at=105.0, singular='draw'),),
     ), 'packed')
 

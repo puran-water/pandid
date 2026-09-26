@@ -2107,6 +2107,20 @@ DIRECTIONAL = {
 # So every face either family may be piped from is named here, for every body.
 # ``test_every_family_face_declares_a_band`` holds that: a face with a
 # placement and no band would be a family bounded by the box alone.
+# The beds a stencil draws in its own artwork, in the stencil's NATIVE
+# coordinates (scaled at emission with the rest of the drawing): the two head
+# seams the straight shell runs between, and each bed's top and bottom rule, top
+# bed first. Read straight off the stencil's path -- draw.io's "Tower With
+# Packing" is ``M 0 3.5 L 14 3.5`` and ``M 0 93.5 L 14 93.5`` for the seams and
+# the crossed bands 18.5..43.5 and 53.5..78.5 -- and emitted as ``Symbol.shell``
+# and ``Symbol.beds``. A unit that seats a nozzle above or below the packing
+# reads them there (``Column._series_seat``), so the number lives beside the
+# ink it measures and nowhere else.
+BEDS = {
+    ("column", "packed"): {"shell": (3.5, 93.5), "beds": ((18.5, 43.5), (53.5, 78.5))},
+}
+
+
 BANDS = {
     # Concrete walls end at y 65; the vertical tank's barrel runs
     # between the heads at y 7.69..87.69. Keep families off the corners.
@@ -2602,6 +2616,12 @@ def render() -> str:
             "BANDS names symbols KIND_MAP does not draw: "
             + ", ".join(f"{kind}/{variant}" for kind, variant in orphans)
         )
+    orphans = sorted(key for key in BEDS if key not in KIND_MAP)
+    if orphans:
+        raise SystemExit(
+            "BEDS names symbols KIND_MAP does not draw: "
+            + ", ".join(f"{kind}/{variant}" for kind, variant in orphans)
+        )
 
     specs = [spec for _, _, port_map in KIND_MAP.values() for spec in port_map.values()]
     names = ["Symbol"]
@@ -2731,6 +2751,12 @@ def render() -> str:
             # position is the same body with different ink in it.
             if (kind, variant) in BANDS:
                 lines.append(f"        bands={BANDS[(kind, variant)]!r},")
+            # The beds the artwork draws itself, scaled as the drawing is; see BEDS.
+            if (kind, variant) in BEDS:
+                bed = BEDS[(kind, variant)]
+                beds = tuple((round(a * sy, 2), round(b * sy, 2)) for a, b in bed["beds"])
+                lines.append(f"        beds={beds!r},")
+                lines.append(f"        shell={tuple(round(v * sy, 2) for v in bed['shell'])!r},")
             # A family is named after the port it replaces: one member keeps
             # that name, and only a second one numbers them.
             if series:

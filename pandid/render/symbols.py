@@ -707,6 +707,16 @@ class Symbol:
     # suite -- so declaring one changes nothing about a symbol whose
     # ports are all fixed.
     bands: dict[str, tuple[float, float]] = field(default_factory=dict)
+    # The packed beds the artwork itself draws, as ``(top, bottom)`` along
+    # the height in this symbol's own coordinates, top bed first, and the
+    # two head seams the straight shell runs between. Facts about the ink,
+    # like ``bands``: ``column/packed`` draws two beds on their support
+    # grids, and a unit that seats a nozzle above or below the packing
+    # (:meth:`pandid.units.Column._series_seat`) reads them here rather
+    # than carrying a second copy of the drawing's numbers. Empty on every
+    # symbol whose beds, if any, are composed onto it instead.
+    beds: tuple[tuple[float, float], ...] = ()
+    shell: tuple[float, float] | None = None
     label_pos: str | None = None
     # Tells two definitions of one (kind, variant) apart when they are
     # not the same drawing. A conveyor is built to its belt run rather

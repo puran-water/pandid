@@ -7203,8 +7203,21 @@ class Absorber(Column):
     really holds, exactly as the module docstring already says. Gas
     enters at the bottom and lean liquid at the top; treated gas leaves
     over ``overhead`` and rich liquid over ``bottoms``, and the two
-    counter-current inlets are ``n_feeds=2``, placed on the trays they
-    actually enter::
+    counter-current inlets are ``n_feeds=2``.
+
+    **Where the gas nozzle lands depends on the body.** On the packed
+    artwork the two feeds straddle the packing the drawing already
+    shows -- ``feed_1`` on the west face above the top bed, ``feed_2`` on
+    the east face below the bottom one (see :meth:`Column._straddles`)::
+
+        Absorber("V-501", variant="packed", n_feeds=2)
+
+    On the plain shell with composed beds, ``feed_stages=`` places each
+    feed on the **top** of the bed it names -- a bed stage is where a
+    distributor sits, never inside or under the packing -- so
+    ``feed_stages=[1, 8]`` puts the lean liquid on top of bed 1 and the
+    gas on top of bed 8, the lowest bed, not beneath it. No stage lies
+    below the bottom bed::
 
         Absorber("V-501", internals="packing",
                  n_feeds=2, feed_stages=[1, 8])
@@ -7249,6 +7262,26 @@ class Absorber(Column):
     #: own default -- the count means the same thing on both classes and
     #: neither has a reason to disagree with the other about it.
     COMPOSITION = {"internals": "packing", "trays": DEFAULT_TRAYS}
+
+    @classmethod
+    def composition_defaults(
+        cls, variant: str, stated: Mapping[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """The bed default, except on a body whose artwork draws its own.
+
+        ``packed`` draws two beds on their support grids
+        (:attr:`~pandid.render.symbols.Symbol.beds`); composing the default
+        eight onto it drew the tower's packing twice. The same lesson
+        :class:`Column` learned in #373, read off the artwork rather than
+        a list of variant names, so a future body that draws its own
+        packing gets the same answer without being listed here.
+        """
+        from pandid.render.symbols import default_registry
+
+        defaults = super().composition_defaults(variant, stated)
+        if default_registry.get(cls.kind, variant).beds:
+            defaults["internals"] = None
+        return defaults
 
     # Copied from :class:`Column`'s own overloads rather than inherited:
     # a literal ``n_feeds`` has to resolve to ``Absorber2``, not
