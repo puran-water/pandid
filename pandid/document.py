@@ -856,6 +856,7 @@ _MAJOR_EQUIPMENT = frozenset({
 # engineer would write.
 _KIND_LABELS = {
     "airlift": "Airlift",
+    "degasser": "Packed Degasser",
     "liquid_screen": "Liquid Screen",
     "membrane_cage": "Membrane Cage",
     "injection_quill": "Injection Quill",

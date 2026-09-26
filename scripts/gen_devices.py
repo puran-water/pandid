@@ -940,6 +940,7 @@ STAYS_ON_BASE = {
     # artwork or channel duty, and do not create a second equipment identity.
     ("air_diffuser", "default"): "AirDiffuser's own drawing",
     ("airlift", "default"): "Airlift's own drawing",
+    ("degasser", "default"): "Degasser's own drawing",
     ("basin_agitator", "default"): "BasinAgitator's own drawing",
     ("concrete_basin", "default"): "ConcreteBasin's own drawing",
     ("membrane_cage", "default"): "MembraneCage's own drawing",

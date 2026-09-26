@@ -295,6 +295,9 @@ GRAVITY_FIXED = {
     # The thickener: an open rim to clarify at, and a raked cone under the
     # floor for what settles. Turned, the cone is a roof.
     ("thickener", "default"),
+    # The house packed degasser: liquid falls through the packing onto the
+    # sump drawn under it while the air rises; turned, the sump is a roof.
+    ("degasser", "default"),
 }
 
 

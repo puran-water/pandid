@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`Degasser` and the house symbol `house.degasser.packed_tower`**: an
+  original candidate packed degassing tower -- vent over a demister, a liquid
+  distributor above one packed bed, air admitted below it, an integral sump.
+  Nozzles `liquid_in` (west, above the bed), `air_in` (east, below it),
+  `offgas` (top) and `outlet` (bottom); the draw.io stencil's anchors carry the
+  same names. Gravity-fixed. Reachable from a template row by its symbol key.
+  `HouseArtwork` gains `qualification` (default
+  `candidate_requires_template_review`) and `bed`; `scripts/house_symbols.py`
+  accepts an `(anchor, face)` pair and a `GRAVITY_FIXED` table.
+
 - **`fs.stream_table.columns`**: the streams a table carries, by name and in
   column order. It is what lets a caller split a table too wide for one sheet
   over several, each sheet drawing exactly its part -- boundary streams

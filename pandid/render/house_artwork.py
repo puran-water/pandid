@@ -22,6 +22,13 @@ class HouseArtwork:
     reference_document: str = ""
     reference_sha256: str = ""
     reference_pages: tuple[int, ...] = ()
+    # Every house artwork is a candidate until the owner's named template
+    # review qualifies it in context; the value is carried into the
+    # controlled symbol record rather than restated there.
+    qualification: str = "candidate_requires_template_review"
+    # The packed bed a tower drawing shows, as (top, bottom) in the
+    # artwork's own units; empty for artwork with no bed.
+    bed: tuple[float, ...] = ()
 
     @property
     def stencil(self):
@@ -177,5 +184,57 @@ ARTWORK.update({
         reference_document="DuPont FilmTec RO/NF Technical Manual, 45-D01504-en Rev.20, August 2026; https://www.dupont.com/content/dam/water/amer/us/en/water/public/documents/en/RO-NF-FilmTec-Manual-45-D01504-en.pdf.",
         reference_sha256="eb7c8d7f7829e2652fa26896b53618c82cd7d05037f759a3a1c9b647f681fa97",
         reference_pages=(82, 83, 106),
+    ),
+})
+
+
+# Original schematic candidate. The public references (the saved vendor
+# bulletin named below, and the published packed-tower and decarbonator
+# arrangements recorded in the drawing-library evidence) establish only the
+# arrangement a reader expects -- vent over a demister, a distributor above
+# the packing, air admitted below it, an integral sump -- not any outline.
+# The owner's rulings of 2026-09-26 put the liquid on the west face and the
+# air on the east, counter-current. Requires named template review.
+ARTWORK.update({
+    "house.degasser.packed_tower": HouseArtwork(
+        "Packed degasser tower; liquid distributor above one packed bed, air inlet below it, "
+        "demister, top vent and integral sump; packing, bed depth, air rate and sump volume "
+        "remain source data",
+        100, 240, 20, 48,
+        (("liquid_in", 0, .25), ("air_in", 1, .7), ("offgas", .5, 0), ("outlet", .5, 1)),
+        # Shell: dished heads on straight walls, head seams at y 30 and 186.
+        '<path><move x="20" y="30"/><arc rx="30" ry="16" x-axis-rotation="0" large-arc-flag="0" '
+        'sweep-flag="1" x="80" y="30"/><line x="80" y="186"/><arc rx="30" ry="16" '
+        'x-axis-rotation="0" large-arc-flag="0" sweep-flag="1" x="20" y="186"/><close/></path><stroke/>'
+        '<path><move x="20" y="30"/><line x="80" y="30"/><move x="20" y="186"/><line x="80" y="186"/>'
+        # Vent stub off the top head, outlet stub off the bottom head.
+        '<move x="50" y="0"/><line x="50" y="14"/><move x="50" y="202"/><line x="50" y="240"/></path><stroke/>'
+        # Demister pad: a zigzag mesh between two rules.
+        '<path><move x="20" y="38"/><line x="80" y="38"/><move x="20" y="46"/><line x="80" y="46"/>'
+        '<move x="20" y="46"/>'
+        + ''.join(f'<line x="{x}" y="{38 if i % 2 == 0 else 46}"/>' for i, x in enumerate(range(26, 81, 6)))
+        + '</path><stroke/>'
+        # Liquid inlet on the west wall and its distributor header, with spray tips.
+        '<path><move x="0" y="60"/><line x="72" y="60"/>'
+        + ''.join(f'<move x="{x}" y="60"/><line x="{x}" y="67"/>' for x in (30, 42, 54, 66))
+        + '</path><stroke/>'
+        # One packed bed: a crossed band between its rules, on a support grid.
+        '<path><move x="20" y="76"/><line x="80" y="76"/><move x="20" y="150"/><line x="80" y="150"/>'
+        '<move x="20" y="76"/><line x="80" y="150"/><move x="80" y="76"/><line x="20" y="150"/>'
+        '<move x="20" y="155"/><line x="80" y="155"/>'
+        + ''.join(f'<move x="{x}" y="150"/><line x="{x}" y="155"/>' for x in (30, 40, 50, 60, 70))
+        + '</path><stroke/>'
+        # Air inlet on the east wall, below the bed and above the sump's free surface.
+        '<path><move x="80" y="168"/><line x="100" y="168"/></path><stroke/>'
+        # Integral sump: its free surface.
+        '<path><move x="38" y="176"/><line x="62" y="176"/><move x="43" y="180"/><line x="57" y="180"/>'
+        '<move x="48" y="184"/><line x="52" y="184"/></path><stroke/>',
+        reference_document="Pure Aqua, Forced Draft Degasifiers FDD Series bulletin, 2016; "
+                           "https://pureaqua.com/content/pdf/forced-draft-degasifiers.pdf",
+        reference_sha256="53159f68b917b820c5b8658230afe2e4b023da52d9b795442d84dc201ceb2afa",
+        reference_pages=(1,),
+        qualification="candidate_requires_template_review: original house artwork; the owner's "
+                      "named template review is required before it is used on an issued drawing",
+        bed=(76.0, 150.0),
     ),
 })

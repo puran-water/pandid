@@ -77,6 +77,11 @@ airlifts are original house candidates requiring engineering qualification.
 `MembraneCage` revision 2 uses the crossed frame and feet in the Nanded reference;
 `AirDiffuser` uses a submerged air header, risers and bubbles. Both have named
 engineering ports. Their strokes do not specify module or diffuser quantities.
+`Degasser` (`house.degasser.packed_tower`) is an original candidate packed
+degassing tower: `liquid_in` on the west wall above one packed bed, `air_in` on
+the east wall below it, `offgas` from the top head and `outlet` from the
+integral sump. It prescribes no bed count, packing, air rate or sump volume, and
+needs the owner's named template review before it is used on an issued drawing.
 `python -m pandid.house_library --out <new-file>.xml` exports these same native
 stencils as an importable draw.io library with reference hashes and revisions.
 

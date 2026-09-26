@@ -25,6 +25,18 @@ KINDS = {
     'house.mbr.membrane_cage': ('membrane_cage', 'default', {'feed': 'W', 'mixed_liquor': 'E', 'permeate': 'N', 'air': 'S'}),
     'house.mbr.airlift': ('airlift', 'default', {'liquid_in': 'S', 'air_in': 'W', 'discharge': 'E'}),
     'house.air.diffuser_grid': ('air_diffuser', 'default', {'air_in': 'W', 'dispersed_air': 'E'}),
+    # Anchors named for the nozzles rather than the faces, so the draw.io
+    # library shows liquid_in/air_in/offgas/outlet; each pairs its anchor
+    # with the face it leaves by.
+    'house.degasser.packed_tower': ('degasser', 'default', {
+        'liquid_in': ('liquid_in', 'W'), 'air_in': ('air_in', 'E'),
+        'offgas': ('offgas', 'N'), 'outlet': ('outlet', 'S')}),
+}
+
+# House artwork that must not be turned, and why: the reason travels into
+# the generated file beside the keyword, as scripts/vendor_symbols.py does.
+GRAVITY_FIXED = {
+    'house.degasser.packed_tower': 'liquid falls through the packing onto the sump; air rises',
 }
 
 
@@ -40,12 +52,17 @@ def render():
         compressor = zlib.compressobj(wbits=-15)
         shape = 'stencil(' + base64.b64encode(compressor.compress(art.stencil.encode()) + compressor.flush()).decode() + ')'
         anchors = {name: (x * art.width / 2, y * art.height / 2) for name, x, y in art.anchors}
-        ports = {name: anchors[side] for name, side in names.items()}
-        faces = {name: {side: ports[name]} for name, side in names.items()}
+        # A face letter names an anchor of that name; a pair names the
+        # anchor and the face it leaves by.
+        pairs = {name: (side, side) if isinstance(side, str) else side for name, side in names.items()}
+        ports = {name: anchors[anchor] for name, (anchor, _face) in pairs.items()}
+        faces = {name: {face: ports[name]} for name, (_anchor, face) in pairs.items()}
         icon = f'<g id="sym_{kind}_{variant}"><g transform="scale(.5)">{svg}</g></g>'
         # Ports must follow the same letterbox as the native stencil. Treating
         # fixed artwork as stretchable moves its nozzles off the drawn body.
         fixed = ', stretchable=False' if aspect == 'fixed' else ''
+        if key in GRAVITY_FIXED:
+            fixed += ', gravity_fixed=True'
         lines.append(f'    registry.register({kind!r}, Symbol(svg={icon!r}, width={w/2!r}, height={h/2!r}, ports={ports!r}, port_faces={faces!r}, drawio_shape={shape!r}{fixed}), {variant!r})')
     return '\n'.join(lines) + '\n'
 

@@ -605,7 +605,7 @@ from pandid import units
 sifter = units.Separator("SC-101", variant="sifter")
 ```
 
-`units.Kind(variant=…)` is the escape hatch. 149 of the 250 registered drawings
+`units.Kind(variant=…)` is the escape hatch. 150 of the 251 registered drawings
 get no class of their own, and this is how you reach them; see
 [Variants](#variants) for the list. Where a class exists, name it.
 
@@ -1849,6 +1849,7 @@ first listed is what the class draws when it is built by name alone.
 | `PressureMembraneArray` | `pressure_membrane_array` | `default` (a pressure membrane array) |
 | `InjectionQuill` | `injection_quill` | `default` (a chemical injection quill) |
 | `Airlift` | `airlift` | `default` (a liquid riser with air injection) |
+| `Degasser` | `degasser` | `default` (a packed degassing tower: liquid over the bed, air under it, integral sump) |
 | `AirDiffuser` | `air_diffuser` | `default` (a dispersed-air grid) |
 | `Heater`, `Cooler`, `Furnace`, `Turbine`, `Ejector`, `Funnel`, `Conveyor`, `Mixer`, `Splitter`, `Tee`, `Block`, `Feed`, `Product` | each its own | `default` only |
 
@@ -4164,7 +4165,7 @@ What a flip may not do is reverse an arrow the artwork carries — see
 below, which is handled by drawing rather than by refusing, for exactly the
 reason this paragraph gives.
 
-The 95 marked symbols, and what in each one's artwork only means one thing one
+The 96 marked symbols, and what in each one's artwork only means one thing one
 way up:
 
 | Symbols | Why |
@@ -4179,7 +4180,7 @@ way up:
 | `cooling_tower` `default` `induced_draft` `forced_draft` `general` `dry_natural` `dry_forced` `dry_induced` `wet_natural` `wet_forced` `wet_induced` `wet_dry_natural` | the warm water is distributed over the fill and falls through the draught into the basin the artwork draws under the machine. Turned, the water leaves sideways and the draught runs across the basin |
 | `vessel` `default` `dished` `dome` `horizontal` `jacketed` `skirted` `legs` `insulated` `electrical_heating` | holdup with a vapour space: the vent is on the top head and the shell drains from the bottom, and four of them draw the brackets, skirt, legs or saddles they stand on |
 | `vessel` `swaged` | the same, and one thing more: the vessel is drawn in two diameters with the larger below, so it is the bottom that holds the inventory. Turned, the two diameters are side by side and say nothing about either |
-| `column` `default` `packed`, `reactor` `default` `plain` | liquid running down over trays or packing while vapour rises, and an agitator hanging in from above |
+| `column` `default` `packed`, `reactor` `default` `plain`, `degasser` `default` | liquid running down over trays or packing while vapour rises, and an agitator hanging in from above; the house degasser draws the same fall onto its sump, with air admitted under the bed |
 | `vent` `default` `breather` `exhaust_head`, `funnel` | open ends: what leaves rises, and an open end drawn pointing down is a drain |
 | `stack` `default`, `flare` `default` | ISO items 4.7 (2041) and 4.8 (2591): a stack exhausts up and a flare burns off its tip up, the same "open end, and what leaves rises" claim as `vent` |
 | `crushing_machine` `default`, `crusher` `default` `cone` `hammer` `impact` `jaw` `roller`, `mill` `default` `hammer` `impact` `roller` `vibration` | ISO group 11's trapezoid is wide at the mouth and narrow at the throat, with its feed tick above it and its discharge tick below: turned, the machine is fed through the opening its product falls out of |
@@ -5022,7 +5023,7 @@ What it follows, feature by feature:
 - **Symbols where gravity is a functionality** are not turned. **ISO 15519-1
   §11.4.2** excepts them from the general permission to turn and mirror, naming
   the open tank (2061) and the cyclone separator (X 2618) as its two examples.
-  95 registered symbols carry `Symbol.gravity_fixed` (`pandid.render.symbols`),
+  96 registered symbols carry `Symbol.gravity_fixed` (`pandid.render.symbols`),
   and [Symbols that must not be turned](#symbols-that-must-not-be-turned) lists
   them.
 

@@ -51,6 +51,7 @@ __all__ = [
     "AirDiffuser",
     "LiquidScreen",
     "Airlift",
+    "Degasser",
     "Compressor",
     "Blower",
     "Valve",
@@ -1535,6 +1536,30 @@ class Airlift(Unit):
     PORTS = [("liquid_in", "inlet", "process"), ("air_in", "inlet", "process"),
              ("discharge", "outlet", "process")]
     PLACES = {"liquid_in": "S", "air_in": "W", "discharge": "E"}
+
+
+class Degasser(Unit):
+    """Packed degassing tower: liquid over one packed bed, stripping air
+    under it, the off-gas vented from the top and treated water drawn from
+    an integral sump.
+
+    Counter-current, and drawn so: ``liquid_in`` on the west face above the
+    bed, ``air_in`` on the east face below it. Its drawing prescribes no
+    bed count, packing, air rate or sump volume; those are source data.
+    """
+    liquid_in: Port
+    air_in: Port
+    offgas: Port
+    outlet: Port
+
+    kind = "degasser"
+    #: A tower, and so the equipment its sheet is drawn around: the air
+    #: blower is drawn east of it and the liquid arrives from the west,
+    #: which is what keeps the two lines from crossing.
+    LAYOUT_CONFIDENCE = 8
+    PORTS = [("liquid_in", "inlet", "process"), ("air_in", "inlet", "process"),
+             ("offgas", "outlet", "process"), ("outlet", "outlet", "process")]
+    PLACES = {"liquid_in": "W", "air_in": "E", "offgas": "N", "outlet": "S"}
 
 
 class AirDiffuser(Unit):
