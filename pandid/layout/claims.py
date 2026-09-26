@@ -306,7 +306,7 @@ def _placed(unit: "Unit", port_name: str) -> tuple[str | None, float]:
     measured; with the transform they are once again the same statement.
     """
     confidence = float(type(unit).LAYOUT_CONFIDENCE)
-    places = type(unit).PLACES
+    places = unit._places()
     # Asked with ``in`` rather than ``get``, because an entry **of**
     # ``None`` and no entry at all are different answers and ``get``
     # returns ``None`` to both: no entry reads the face next, an empty

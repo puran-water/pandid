@@ -1105,6 +1105,29 @@ class Unit(TapHost):
         """
         return None
 
+    def _series_seat(self, port_name: str, sym: Any) -> "tuple[str, float] | None":
+        """A face and a coordinate along it, in *sym*'s own frame, where
+        this unit seats ``port_name`` instead of its series' face -- or
+        ``None``, which every unit but :class:`Column` answers.
+
+        :meth:`_series_pin` moves a member *along* its series' face; this
+        is for the one arrangement that puts a member on another face
+        altogether, and it is read off the artwork (*sym*), so a seat is
+        only ever where the drawing has wall to weld it to.
+        """
+        return None
+
+    def _places(self) -> "dict[str, str | tuple[str, float] | None]":
+        """:attr:`PLACES` as this unit states it.
+
+        :mod:`pandid.layout.claims` asks through here. The class table is
+        the answer for every unit but one that seats a family member on a
+        face the family's entry does not name (:meth:`_series_seat`); that
+        unit says so per port, so the peer is looked for where the nozzle
+        really is.
+        """
+        return type(self).PLACES
+
     def _series_members(self, series: "PortSeries") -> dict[str, int]:
         """This unit's ports that belong to *series*, each mapped to its
         place among them in port order.
@@ -6911,6 +6934,47 @@ class Column(Unit):
 
     def _series_pin(self, port_name: str) -> float | None:
         return self._stage_fractions.get(port_name)
+
+    def _straddles(self, sym: Any) -> bool:
+        """Whether this tower's two feeds straddle the packing its
+        artwork draws (owner ruling 2026-09-26).
+
+        A counter-current packed tower with **exactly two** feeds takes
+        its liquid above the packing and its gas below it, on opposite
+        faces so the two lines never cross: ``feed_1`` on the west face
+        above the top bed, ``feed_2`` on the east face below the bottom
+        one. Only where the artwork itself draws the beds
+        (:attr:`~pandid.render.symbols.Symbol.beds`) and nothing is
+        composed over them (``internals is None``), and only on a tower
+        with no ``boilup_in`` of its own -- a :class:`Stripper` or a
+        :class:`DistillationColumn` already takes its vapour there, east
+        and below the bed, and a second nozzle beside it would be two
+        vapour inlets on one spot. Any other count keeps the even spread.
+        """
+        return (bool(getattr(sym, "beds", ())) and getattr(sym, "shell", None) is not None
+                and len(self.feeds) == 2 and self.internals is None
+                and "boilup_in" not in self.ports)
+
+    def _series_seat(self, port_name: str, sym: Any) -> "tuple[str, float] | None":
+        # Midway through the clear shell between the bed and its head seam:
+        # just above the top bed's upper rule, just below the bottom bed's
+        # lower rule, both measured off the artwork's own ink.
+        if port_name not in ("feed_1", "feed_2") or not self._straddles(sym):
+            return None
+        (seam_top, seam_bottom), beds = sym.shell, sym.beds
+        if port_name == "feed_1":
+            return "W", (seam_top + beds[0][0]) / 2
+        return "E", (beds[-1][1] + seam_bottom) / 2
+
+    def _places(self) -> "dict[str, str | tuple[str, float] | None]":
+        from pandid.portgeom import _sym
+
+        places = type(self).PLACES
+        if not self._straddles(_sym(self)):
+            return places
+        # The family entry says every feed's peer is west; the gas inlet
+        # is now east, and says so by name, which the lookup asks first.
+        return {**places, "feed_1": "W", "feed_2": "E"}
 
 
 if TYPE_CHECKING:

@@ -1733,6 +1733,13 @@ def _assert_family_between_duty_arrows(variant, prefix, label, build):
         members = [name for name in column.ports if family.matches(name)]
         assert len(members) == count, f"column/{variant} {label}={count}: {members}"
         for name in members:
+            if column._series_seat(name, sym) is not None:
+                # Seated off the family's face on purpose: two feeds on a
+                # packed artwork straddle its beds on opposite walls (owner
+                # ruling 2026-09-26), clear of any return because only a
+                # tower with no boilup_in straddles. Its own test pins where
+                # (tests/test_packed_tower_feeds.py).
+                continue
             y = port_offset(column, name)[1]
             assert lo < y < hi, (
                 f"column/{variant} {name} of {count} sits at y={y}, outside the "

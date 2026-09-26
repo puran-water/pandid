@@ -25,6 +25,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Two feeds on the packed artwork straddle its packing, on opposite
+  faces** (owner ruling 2026-09-26). A `Column` or `Absorber` drawn
+  `variant="packed"` with exactly `n_feeds=2` and no composed internals now
+  puts `feed_1` on the west face midway between the top head seam and the top
+  bed, and `feed_2` on the east face midway between the bottom bed and the
+  bottom head seam -- read off `Symbol.beds`/`Symbol.shell` -- so a
+  counter-current tower's liquid enters over the packing, its gas under it,
+  and the two lines no longer cross. The layout is told the same thing: the
+  unit's `PLACES` (now asked through `Unit._places()`) names `feed_2` east.
+  Every other count keeps the even spread on the west face, and a `Stripper`
+  or `DistillationColumn`, whose vapour already enters on `boilup_in`, is
+  unchanged. New hook: `Unit._series_seat()`.
+
 - **The line-number search answers as it did, in a fraction of the time.**
   Every leader the sweep offered from every halo it visited was clipped
   against every box on the sheet; on a crowded P&ID that was ninety million

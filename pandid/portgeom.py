@@ -311,6 +311,11 @@ def _series_point(unit: "Unit", sym, port_name: str
     index = members.get(port_name)
     if index is None:
         return None
+    seat = unit._series_seat(port_name, sym)
+    if seat is not None:
+        from pandid.render.symbols import _on_face
+        face, along = seat
+        return _on_face(face, along, sym.width, sym.height)
     return series.placement(index, len(members), sym.width, sym.height,
                             pin=unit._series_pin(port_name),
                             band=sym.bands.get(series.face))
