@@ -304,32 +304,42 @@
     <line x1="1147.2" y1="496.8" x2="1157.2" y2="502.8" stroke="black" stroke-width="1" />
     <line x1="1147.2" y1="519.6" x2="1157.2" y2="525.6" stroke="black" stroke-width="1" />
     <line x1="1147.2" y1="523.6" x2="1157.2" y2="529.6" stroke="black" stroke-width="1" />
-    <rect x="208.4" y="94.5" width="105.2" height="13.0" fill="white" />
-    <text x="261.0" y="101.0" font-family="sans-serif" font-size="10" text-anchor="middle" dominant-baseline="middle" fill="black">MS-601-200-40-CS</text>
-    <rect x="318.3" y="103.5" width="111.4" height="13.0" fill="white" />
-    <text x="374.0" y="110.0" font-family="sans-serif" font-size="10" text-anchor="middle" dominant-baseline="middle" fill="black">ETH-602-150-40-SS</text>
+    <rect x="133.8" y="200.0" width="105.2" height="13.0" fill="white" />
+    <text x="186.4" y="206.5" font-family="sans-serif" font-size="10" text-anchor="middle" dominant-baseline="middle" fill="black">MS-601-200-40-CS</text>
+    <line x1="206.3" y1="200.0" x2="233.3" y2="170.0" stroke="black" stroke-width="1" />
+    <path d="M 233.3,170.0 L 231.5,176.5 L 227.1,172.4 Z" fill="black" />
+    <rect x="294.3" y="103.5" width="111.4" height="13.0" fill="white" />
+    <text x="350.0" y="110.0" font-family="sans-serif" font-size="10" text-anchor="middle" dominant-baseline="middle" fill="black">ETH-602-150-40-SS</text>
     <rect x="564.3" y="43.5" width="111.4" height="13.0" fill="white" />
     <text x="620.0" y="50.0" font-family="sans-serif" font-size="10" text-anchor="middle" dominant-baseline="middle" fill="black">LPG-603-100-80-CS</text>
     <rect x="448.5" y="457.4" width="13.0" height="105.2" fill="white" />
     <text x="455.0" y="510.0" font-family="sans-serif" font-size="10" text-anchor="middle" dominant-baseline="middle" fill="black" transform="rotate(-90, 455.0, 510.0)">MS-604-250-40-CS</text>
-    <rect x="732.4" y="593.1" width="105.2" height="13.0" fill="white" />
-    <text x="785.0" y="599.6" font-family="sans-serif" font-size="10" text-anchor="middle" dominant-baseline="middle" fill="black">MS-605-200-40-CS</text>
+    <rect x="785.3" y="675.0" width="105.2" height="13.0" fill="white" />
+    <text x="837.9" y="681.5" font-family="sans-serif" font-size="10" text-anchor="middle" dominant-baseline="middle" fill="black">MS-605-200-40-CS</text>
+    <line x1="809.8" y1="675.0" x2="781.7" y2="642.6" stroke="black" stroke-width="1" />
+    <path d="M 781.7,642.6 L 787.9,645.2 L 783.3,649.1 Z" fill="black" />
     <rect x="763.5" y="396.8" width="13.0" height="111.4" fill="white" />
     <text x="770.0" y="452.5" font-family="sans-serif" font-size="10" text-anchor="middle" dominant-baseline="middle" fill="black" transform="rotate(-90, 770.0, 452.5)">ETH-606-100-40-SS</text>
-    <rect x="953.4" y="599.5" width="105.2" height="13.0" fill="white" />
-    <text x="1006.0" y="606.0" font-family="sans-serif" font-size="10" text-anchor="middle" dominant-baseline="middle" fill="black">ETH-607-80-40-SS</text>
-    <rect x="918.4" y="624.0" width="105.2" height="13.0" fill="white" />
-    <text x="971.0" y="630.5" font-family="sans-serif" font-size="10" text-anchor="middle" dominant-baseline="middle" fill="black">ETH-613-40-40-SS</text>
+    <rect x="959.4" y="474.5" width="105.2" height="13.0" fill="white" />
+    <text x="1012.0" y="481.0" font-family="sans-serif" font-size="10" text-anchor="middle" dominant-baseline="middle" fill="black">ETH-607-80-40-SS</text>
+    <line x1="983.9" y1="487.5" x2="1040.0" y2="550.0" stroke="black" stroke-width="1" />
+    <path d="M 1040.0,550.0 L 1033.8,547.5 L 1038.2,543.5 Z" fill="black" />
+    <rect x="948.4" y="603.0" width="105.2" height="13.0" fill="white" />
+    <text x="1001.0" y="609.5" font-family="sans-serif" font-size="10" text-anchor="middle" dominant-baseline="middle" fill="black">ETH-613-40-40-SS</text>
     <rect x="1140.4" y="394.0" width="105.2" height="13.0" fill="white" />
     <text x="1193.0" y="400.5" font-family="sans-serif" font-size="10" text-anchor="middle" dominant-baseline="middle" fill="black">LPG-608-80-80-CS</text>
-    <rect x="1230.3" y="653.1" width="111.4" height="13.0" fill="white" />
-    <text x="1286.0" y="659.6" font-family="sans-serif" font-size="10" text-anchor="middle" dominant-baseline="middle" fill="black">E10-609-200-40-CS</text>
+    <rect x="1176.3" y="652.6" width="111.4" height="13.0" fill="white" />
+    <text x="1232.0" y="659.1" font-family="sans-serif" font-size="10" text-anchor="middle" dominant-baseline="middle" fill="black">E10-609-200-40-CS</text>
+    <line x1="1242.8" y1="652.6" x2="1252.8" y2="642.6" stroke="black" stroke-width="1" />
+    <path d="M 1252.8,642.6 L 1250.7,649.0 L 1246.4,644.7 Z" fill="black" />
     <rect x="595.0" y="823.5" width="111.4" height="13.0" fill="white" />
     <text x="650.8" y="830.0" font-family="sans-serif" font-size="10" text-anchor="middle" dominant-baseline="middle" fill="black">VAP-610-150-40-CS</text>
     <rect x="1381.8" y="823.5" width="111.4" height="13.0" fill="white" />
     <text x="1437.5" y="830.0" font-family="sans-serif" font-size="10" text-anchor="middle" dominant-baseline="middle" fill="black">VAP-612-150-40-CS</text>
     <rect x="1242.0" y="667.3" width="13.0" height="111.4" fill="white" />
     <text x="1248.5" y="723.0" font-family="sans-serif" font-size="10" text-anchor="middle" dominant-baseline="middle" fill="black" transform="rotate(-90, 1248.5, 723.0)">VAP-611-150-40-CS</text>
+    <line x1="1255.0" y1="757.8" x2="1285.0" y2="774.7" stroke="black" stroke-width="1" />
+    <path d="M 1285.0,774.7 L 1278.3,774.3 L 1281.2,769.1 Z" fill="black" />
   </g>
   <g id="instrument_taps">
     <line x1="360" y1="285" x2="298" y2="285" stroke="black" stroke-width="1" />

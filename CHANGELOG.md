@@ -35,6 +35,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **A bare line number goes without a leader only on its line or in the first
+  band beside it.** The first pass of the label search used to take any anchor
+  `_along` accepted -- out to the last of `stream_label_bands` -- with no
+  leader and without the own-line verdict a leader is held to, so a crowded
+  longest piece could send its number seven bands out, beside another line, and
+  ahead of a shorter piece's own pipe. A farther anchor along the run is now an
+  external halo like any other: tied back by a clean leader, refused where
+  another line along it is nearer (`_OwnLine`), or reported
+  `leader-placement-unresolved` (`_first_band`; owner ruling 2026-10-14). On
+  the corpus 31 numbers move or gain a leader on goldens `09`, `11`, `13`, `14`,
+  `17` and `20`, and `11`'s `AE-305-40-80-SS` is reported unresolved beside
+  `AE-304-150-80-SS`; the gallery sheet `17` is regenerated (the other five
+  were already stale), and `drawio-samples/11_ethanol_pid.drawio` carries its
+  eight new leaders. `17`'s `100-CWR-210-CS` leader leaves its halo's end, a
+  leader to a piece of the run across the words; it is pinned in
+  `tests/test_label_invariants.py` as a known defect.
+  `test_a_line_number_is_written_where_the_sheet_writes_it` now lays the tags
+  down with the sheet's joints and passes the fitted region, as both backends
+  do: its own tag pass ran without the joints and put `AE-309-100-80-SS` 32
+  units from where both backends write it once that number took a leader.
+
 - **A vent on a top nozzle stands on it.** A `Vent` whose one inlet is piped
   from a nozzle that can only leave north -- a tower's `overhead`, a vessel's
   `vent` -- is no longer a free unit in a grid column of its own with its line

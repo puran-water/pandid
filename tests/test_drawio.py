@@ -1354,7 +1354,7 @@ def test_a_line_number_is_written_where_the_sheet_writes_it():
     equipment tags lay down.
     """
     from pandid.render.drawio import _tag_pass
-    from pandid.render.svg import sheet_connections, stream_numbers
+    from pandid.render.svg import fitted_region, sheet_connections, stream_numbers
 
     for stem in SHEETS:
         fs, kwargs = gallery.flowsheet(stem)
@@ -1367,11 +1367,17 @@ def test_a_line_number_is_written_where_the_sheet_writes_it():
         fs.to_svg(**kwargs)
         cells = _drawio_cells(fs, kwargs)
         _boxes, _frame, fit = _drawio_furniture(fs, kwargs)
-        plates = _tag_pass(fs, default_registry, None, "vertical").plates
         # The sheet's own joints, because a flange mark is ink the number search
-        # dodges: asking without them is asking about a different drawing.
+        # dodges: asking without them is asking about a different drawing. Both
+        # backends lay the equipment tags down with them too (`_tag_pass(fs,
+        # registry, joints, direction)`) and pass the fitted region; a number led
+        # back from external paper is searched for among those plates, so the
+        # tags laid without the joints sent 11's AE-309-100-80-SS 32 units from
+        # where both backends write it once it took a leader (2026-10-14).
         joints = sheet_connections(kwargs.get("diagram"), kwargs.get("connections"))
-        wanted = {number.name: number for number in stream_numbers(fs, plates, joints, "vertical")}
+        plates = _tag_pass(fs, default_registry, joints, "vertical").plates
+        wanted = {number.name: number
+                  for number in stream_numbers(fs, plates, joints, "vertical", fitted_region(fs))}
         checked = 0
         for n, s in enumerate(fs.streams):
             cell = cells[f"s{n}"]

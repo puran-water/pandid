@@ -2266,6 +2266,20 @@ def _point_run_distance(point, segments) -> float:
     return nearest
 
 
+def _first_band(depth: float) -> float:
+    """The stand-off of the first band beside a run, centre line to centre.
+
+    The innermost band :func:`_label_anchors` offers off the pipe: half the
+    words' depth across the run plus :data:`_LABEL_GAP`. It is the farthest
+    a bare number may stand from its run and still go without a leader
+    (owner ruling 2026-10-14): there the words fill the paper from the gap
+    to one depth beyond it, and anywhere farther a whole empty band lies
+    between them and their line. The tolerance absorbs only the float
+    arithmetic the anchors were computed with.
+    """
+    return depth / 2 + _LABEL_GAP + 1e-9
+
+
 def _label_travel_bound(depth: float, bands: int) -> float:
     """The outermost centre-line distance the configured bands offer.
 
@@ -2339,7 +2353,10 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
     """Place one un-enclosed number, with a line-only crossing last resort.
 
     Clear positions along any straight piece of the same run are considered
-    before external halos.  External candidates are bounded by
+    before external halos, and they are only the pipe itself and the first
+    band beside it (:func:`_first_band`): a number written there needs no
+    leader.  Every farther anchor, along its run or not, is an external
+    halo.  External candidates are bounded by
     ``stream_label_bands`` and ranked by their leaders: fewest lines crossed
     first, then the shortest leader, and only then the halo's measured
     distance to the whole run.  No leader shorter than :data:`_LEADER_FLOOR`
@@ -2401,18 +2418,32 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
                     and abs(line.at - run.at) < 0.5)
         )
 
-    offered: list[tuple[_NumberRun, float, float, int]] = []
+    # Written without a leader only on its own pipe or in the first band
+    # beside it (owner ruling 2026-10-14). ``_along`` asks whether the run
+    # is there beside the words and not how far across the paper they
+    # stand, so on its own it let the first pass write a number seven
+    # bands out from the longest piece of its run -- 168.7 units at a
+    # 3.5 mm number -- with nothing joining the two and no own-line
+    # verdict, often nearer another stream's line than its own. A
+    # farther anchor along the run is now a halo like any other: the
+    # leadered search below ties it back, or refuses it where another
+    # line is the nearer (owner ruling 2026-09-25).
+    beside = _first_band(text_height)
+
+    def unled(run, box, off):
+        return off <= beside and _along(box, run.vertical, run.lo, run.hi)
+
+    offered: list[tuple[_NumberRun, float, float, int, float]] = []
     for run in described:
         anchors = _label_anchors(
             run.cx, run.cy, run.span, text_width, text_height,
             run.vertical, False, text_width, bands)
-        for order, (x, y, _off) in enumerate(anchors):
+        for order, (x, y, off) in enumerate(anchors):
             box = box_at(run, x, y)
             if not within(box):
                 continue
-            offered.append((run, x, y, order))
-            if (_along(box, run.vertical, run.lo, run.hi)
-                    and halo_is_readable(run, box)):
+            offered.append((run, x, y, order, off))
+            if unled(run, box, off) and halo_is_readable(run, box):
                 return StreamNumber(
                     name, color, run.segment, x, y, run.vertical, box,
                     None, box, (), display_name, font_size)
@@ -2420,10 +2451,10 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
     limit = _label_travel_bound(text_height, bands)
     candidates: list[tuple[float, int, int, _NumberRun, float, float, tuple]] = []
     seen: set[tuple] = set()
-    for run_index, (run, x, y, order) in enumerate(offered):
+    for run_index, (run, x, y, order, off) in enumerate(offered):
         box = box_at(run, x, y)
         distance = _point_run_distance((x, y), segments)
-        if distance > limit or _along(box, run.vertical, run.lo, run.hi):
+        if distance > limit or unled(run, box, off):
             continue
         key = (run.vertical, round(x, 6), round(y, 6))
         if key in seen:

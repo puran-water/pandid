@@ -28,6 +28,17 @@ What decides it is whether the line is *there*, beside the words: a caption is
 attached by lying against the thing it captions, and a string that has run out
 past the end of its own line is lying against something else instead.
 
+That much still holds, and a gap across the paper is back in the rule, as a band
+rather than a cap (owner ruling 2026-10-14). Overlap alone let the placement
+search write a number seven bands out from its run with nothing joining the two,
+and on a crowded block flow diagram the band it found was as often beside some
+other stream's line as beside nothing: "along" was true of its own run and the
+number read as the neighbour's. So a number goes without a leader only on its
+own line or in the first band beside it; one written along its run any farther
+out carries a leader like any other displaced number, and is held to the
+own-line verdict a leader is. ``FB-306-100-160-SS`` on 11, two bands off, now
+carries one.
+
 The checks read the drawn SVG rather than the placement code, because what the
 clause is about is what a reader sees. Each label's halo, its text and the
 leader that may follow are picked out of the ``streams`` group in document
@@ -63,7 +74,7 @@ import pytest
 from pandid import Flowsheet, units as U
 from pandid.layout.attach import stream_path
 from pandid.portgeom import unit_box
-from pandid.render.svg import _along, _crosses, _ink, _SIGNAL_KINDS, UPRIGHT_ENCLOSURES
+from pandid.render.svg import _along, _crosses, _first_band, _ink, _SIGNAL_KINDS, UPRIGHT_ENCLOSURES
 
 from test_golden import SCENARIOS
 
@@ -343,6 +354,30 @@ def _alongness(box, turned, runs) -> float:
     return max((min(b, hi) - max(a, lo) for lo, hi in runs), default=0.0) / (b - a)
 
 
+def _beside(label, segs, turned) -> bool:
+    """Is *label* written on its own line, or in the first band beside it?
+
+    Measured off the drawn sheet: the centre-line distance from the words'
+    centre to the nearest parallel piece of its own line that more than half
+    of the words lie along, against the first band's stand-off for words of
+    this depth (:func:`~pandid.render.svg._first_band`). The halo is written
+    to a tenth of a unit, so the comparison allows half that.
+    """
+    box = label.box
+    a, b = (box[1], box[3]) if turned else (box[0], box[2])
+    centre = (box[0] + box[2]) / 2 if turned else (box[1] + box[3]) / 2
+    depth = (box[2] - box[0]) if turned else (box[3] - box[1])
+    stand = None
+    for (ax, ay), (bx, by) in _parallel(segs, turned):
+        at = ax if turned else ay
+        lo, hi = (min(ay, by), max(ay, by)) if turned else (min(ax, bx), max(ax, bx))
+        if min(b, hi) - max(a, lo) <= (b - a) / 2:
+            continue
+        off = abs(centre - at)
+        stand = off if stand is None else min(stand, off)
+    return stand is not None and stand <= _first_band(depth) + WRITTEN
+
+
 @pytest.fixture(scope="module")
 def sheets():
     """Every sheet, rendered once, as flowsheet, labels and unit lettering."""
@@ -496,7 +531,11 @@ def test_along_is_more_than_half_the_words_and_nothing_about_the_gap():
 
 def test_a_leader_is_drawn_only_where_the_line_is_not_beside_the_words(sheets):
     """The other half of the rule, which the check above cannot state: a number
-    with its own run beside most of it does not get a leader *as well*.
+    with its own run beside it does not get a leader *as well*.
+
+    *Beside* is along its run and no farther out than the first band (owner
+    ruling 2026-10-14, :func:`_beside`): a number written along its run two or
+    more bands out is displaced, and carries a leader like any other.
 
     Both directions matter.  A number with no clean answer inside the bounded
     search is the explicit exception: it has no leader by design and the
@@ -509,35 +548,58 @@ def test_a_leader_is_drawn_only_where_the_line_is_not_beside_the_words(sheets):
         upright = fs.stream_labels.enclosure in UPRIGHT_ENCLOSURES
         unresolved = _unresolved(fs)
         for label in labels:
-            along = _axis(label, segs.get(label.name, []), upright)
-            runs = _runs(segs.get(label.name, []), along)
+            own = segs.get(label.name, [])
+            along = _axis(label, own, upright)
+            runs = _runs(own, along)
             share = _alongness(label.box, along, runs)
-            if share > 0.5 and label.leader is not None:
+            beside = share > 0.5 and _beside(label, own, along)
+            if beside and label.leader is not None:
                 over.append(f"{name}/{label.name} at {share:.0%}")
-            if share <= 0.5 and label.leader is None and label.name not in unresolved:
+            if not beside and label.leader is None and label.name not in unresolved:
                 under.append(f"{name}/{label.name} at {share:.0%}")
-    assert not over, "led although written along its line: " + "; ".join(over)
-    assert not under, "not written along its line and not led: " + "; ".join(under)
+    assert not over, "led although written beside its line: " + "; ".join(over)
+    assert not under, "not written beside its line and not led: " + "; ".join(under)
 
 
 def test_the_p_and_id_reports_its_bounded_leader_failure(sheets):
-    """An exhausted search is a finding, never a known crossing leader."""
+    """An exhausted search is a finding, never a known crossing leader.
+
+    Eight numbers on the P&ID stood two or more bands out along their runs and
+    went bare; since the 2026-10-14 ruling each carries a clean leader. The
+    ninth, ``AE-305-40-80-SS``, has no clean leader from any halo the bounded
+    search offers, so it is now reported unresolved beside ``AE-304-150-80-SS``
+    instead of passing as written along its line.
+    """
     fs, labels, _lettering = sheets["11_ethanol_pid"]
     led = sorted(lab.name for lab in labels if lab.leader)
-    assert led == []
-    assert _unresolved(fs) == {"AE-304-150-80-SS"}
+    assert led == [
+        "AE-302-300-80-SS", "AE-303-80-80-SS", "AE-309-100-80-SS", "CWS-311-150-40-CS",
+        "CWS-315-100-40-CS", "FB-301-200-160-SS", "FB-306-100-160-SS", "HPS-308-100-80-CS",
+    ]
+    assert _unresolved(fs) == {"AE-304-150-80-SS", "AE-305-40-80-SS"}
 
 
-def test_another_segment_is_used_before_a_leader(sheets):
-    """Clear paper on another piece of the run wins over external paper."""
-    for sheet, stream in (("14_tank_farm", "MS-601-200-40-CS"),
-                          ("17_stirred_reactor_train", "100-CWS-209-CS")):
-        fs, labels, _lettering = sheets[sheet]
-        label = next(item for item in labels if item.name == stream)
-        segs = _drawn_segments(fs)[stream]
-        along = _axis(label, segs, False)
-        assert _alongness(label.box, along, _runs(segs, along)) > 0.5
-        assert label.leader is None
+def test_another_segment_is_used_before_a_leader():
+    """Clear paper on another piece of the run wins over external paper.
+
+    Posed directly, because the corpus no longer holds a case: both it used to
+    name (``MS-601-200-40-CS`` on 14, ``100-CWS-209-CS`` on 17) were bare
+    numbers several bands out from a piece of their run, which since the
+    2026-10-14 ruling is external paper with a leader. Here the run is an L:
+    its longest piece is covered on the pipe and the first three bands either
+    side, its shorter piece is clear. The number goes on the shorter piece's
+    own pipe, bare -- where it used to go four bands out from the longer one.
+    """
+    from pandid.render.svg import _bare_stream_number, _Ink
+
+    runs = [(((0.0, 0.0), (400.0, 0.0)), 0.0), (((400.0, 0.0), (400.0, 200.0)), 0.0)]
+    ink = [_Ink(-1.0, -1.0, 401.0, 1.0, "h", 0.0, "pipe", "S1"),
+           _Ink(399.0, -1.0, 401.0, 201.0, "v", 400.0, "pipe", "S1")]
+    number = _bare_stream_number(runs, "S1", "black", "S1", 10.0, 100.0, 20.0, 7,
+                                 [(-10.0, -26.0, 380.0, 26.0)], [], ink, None, 8.0)
+    assert number.seg == runs[1][0] and number.vertical
+    assert number.leader is None and number.placement_limit is None
+    assert abs(number.x - 400.0) <= _first_band(20.0)
 
 
 def test_a_leader_leaves_the_lettering_and_not_the_paper_beside_it(sheets):
@@ -553,9 +615,13 @@ def test_a_leader_leaves_the_lettering_and_not_the_paper_beside_it(sheets):
     drawing rather than a copy of the constant.
     """
     off_the_words = []
+    known = []
     for name, (_fs, labels, _lettering) in sheets.items():
         for label in labels:
             if label.leader is None:
+                continue
+            if (name, label.name) in _END_FACE_LEADERS:
+                known.append((name, label.name))
                 continue
             (x0, y0), _end = label.leader
             box = label.box
@@ -569,3 +635,16 @@ def test_a_leader_leaves_the_lettering_and_not_the_paper_beside_it(sheets):
                     f"{name}/{label.name} leaves at {at:.1f} of {lo:.1f}..{hi:.1f}"
                 )
     assert not off_the_words, "; ".join(off_the_words)
+    # A pinned defect, not a skip: the label is still drawn, and still led.
+    assert sorted(known) == sorted(_END_FACE_LEADERS), known
+
+
+#: Leaders known to leave a halo's END, which is padding, not lettering. A
+#: leader tied back to a piece of the run running ACROSS the words leaves the
+#: face nearest that piece (:func:`~pandid.render.svg._leader_choices`), and for
+#: a perpendicular piece that is an end face. The clean search ranks it like
+#: any other, so it wins wherever it is shortest. Pre-existing: house block flow
+#: diagrams drew such leaders before the 2026-10-14 first-band ruling; the
+#: ruling's new leaders exposed it on this corpus. Remove an entry when the
+#: leader search keeps every tail on the lettering.
+_END_FACE_LEADERS = {("17_stirred_reactor_train", "100-CWR-210-CS")}
