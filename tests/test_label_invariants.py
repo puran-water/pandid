@@ -161,7 +161,11 @@ def _crowded_number() -> "tuple[Flowsheet, dict]":
     fs.connect(feed.outlet, top.shell_in, service="AE", sequence=304, size=150, spec="SS")
     fs.connect(top.shell_out, drum.inlet, service="AE", sequence=305, size=150, spec="SS")
     fs.connect(drum.outlet, prod.inlet, service="AE", sequence=306, size=100, spec="SS")
-    return fs, {}
+    # Drawn as the P&ID its line numbers belong to, which heads no line. On a
+    # sheet that heads its lines the 25-unit drop has no room for a leader's
+    # head clear of the flow head at its foot (owner ruling 2026-10-14), so the
+    # number is unresolved and this sheet would stop guaranteeing a leader.
+    return fs, {"diagram": "p&id"}
 
 
 CORPUS: dict = {name: (lambda b=build, k=kw: (b(), k)) for name, (build, kw) in SCENARIOS.items()}

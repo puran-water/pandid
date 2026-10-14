@@ -68,6 +68,7 @@ from pandid.render.svg import (
     hop_box,
     HOP_R,
     JUMP_DIRECTIONS,
+    draws_arrowheads,
     sheet_connections,
     stream_hops,
     stream_numbers,
@@ -129,12 +130,15 @@ def numbers(fs: Flowsheet, **kwargs) -> list:
     Seeded with the equipment tags, and given the sheet's joints, because both
     are ink the search dodges: asked without them this returns a placement the
     sheet does not draw, which is a check against a different drawing. It is
-    ``tests/test_drawio.py``'s seed for the same reason.
+    ``tests/test_drawio.py``'s seed for the same reason. And told whether the
+    sheet heads its lines: a leader's end is kept clear of every flow head the
+    sheet draws, and a P&ID draws none.
     """
     fs.to_svg(**kwargs)
     joints = sheet_connections(kwargs.get("diagram"), kwargs.get("connections"))
     plates = list(_tag_pass(fs, default_registry, joints, "vertical").plates)
-    return list(stream_numbers(fs, plates, joints, "vertical"))
+    return list(stream_numbers(fs, plates, joints, "vertical", None,
+                               draws_arrowheads(kwargs.get("diagram"))))
 
 
 def halo(name: str) -> "tuple[float, float]":
@@ -1152,13 +1156,27 @@ def findings(fs, codes=None) -> list:
     return [w for w in fs.warnings if w.code in _LABEL_CODES and (codes is None or w.code in codes)]
 
 
+#: The numbers on ``13_mineral_dewatering`` that no leader can reach clear of
+#: their run's flow arrowhead (owner ruling 2026-10-14): single runs of 33 to 38
+#: units, where the third of the run kept off the source end and the keep-out
+#: behind the head leave no free length. Reported at every setting, as an
+#: unresolved number is; before the ruling their leaders landed on the head.
+UNLED_ON_CROWDED = {"S-406", "S-409", "S-415", "S-419"}
+
+
+def unled(fs) -> set:
+    """The numbers the sheet reports ``leader-placement-unresolved`` for."""
+    return {w.message.split("'s number", 1)[0] for w in findings(fs, {"leader-placement-unresolved"})}
+
+
 def test_a_bare_sheet_is_told_nothing_about_enclosures():
     """``"none"`` reserves the plate it always reserved and the search may
     still step off anything it would cover, so a finding here would be about a
     placement the sheet has drawn since long before this option existed."""
     fs, kwargs = gallery.flowsheet(CROWDED)
     fs.to_svg(**kwargs)
-    assert not findings(fs)
+    assert unled(fs) == UNLED_ON_CROWDED
+    assert not [w for w in findings(fs) if w.code != "leader-placement-unresolved"]
 
 
 def test_the_author_is_told_which_unit_a_diamond_was_drawn_over():
@@ -1304,7 +1322,8 @@ def test_a_second_render_replaces_the_findings_rather_than_repeating_them():
     assert [i.message for i in findings(fs)] == [i.message for i in once]
     fs.stream_labels.enclosure = "none"
     fs.to_svg(**kwargs)
-    assert not findings(fs)
+    assert unled(fs) == UNLED_ON_CROWDED
+    assert len(findings(fs)) == len(UNLED_ON_CROWDED)
 
 
 def test_both_backends_report_the_same_findings_and_both_report_some():

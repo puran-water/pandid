@@ -259,7 +259,12 @@ def test_house_line_number_uses_clear_external_paper_when_every_nearby_band_is_t
     fs.layout_options.stream_label_bands = 7
     fs.layout_options.strict_label_clearance = True
     fs.layout(); fs.route()
-    number = stream_numbers(fs, [], None, 'vertical', (200, 50, 800, 450))[0]
+    # Asked without the flow head: the 30-unit link keeps a third of itself off
+    # the source block and the head's keep-out off the target, which leaves no
+    # free length to land on (owner ruling 2026-10-14; the headed case is
+    # tests/test_leader_head_clear_of_arrowhead.py). What this holds is the
+    # external-paper search, which the head does not enter.
+    number = stream_numbers(fs, [], None, 'vertical', (200, 50, 800, 450), False)[0]
     assert number.leader is not None and number.crossed == ()
     assert not any(
         _crosses(*number.leader, unit_box(unit, unit.frame)) for unit in fs.units

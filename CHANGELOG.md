@@ -35,6 +35,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **A line number's leader lands clear of the flow arrowhead on its run.** The
+  head was kept off a run's ends by `_LABEL_CLEAR`, or a third of the run where
+  the run was too short, and off a *marked* end (a drawn flange) through
+  `keep_out`; the flow arrowhead, a mark on its end too, was not counted, so on
+  a short link between two blocks the third-of-the-run clamp landed the head
+  inside the arrowhead's length, on its flank, where at print size the two heads
+  merge. Every leader's end is now kept `_HEAD_KEEP_OUT` clear of each flow head
+  the sheet draws on its run -- the white ISO 128-20 §4.4 asks between two marks
+  (`MIN_HEAD_CLEARANCE`) plus the leader's own head as drawn -- measured to the
+  head as the draw.io export draws it (`_drawn_head`: `size + pen * (3 +
+  sqrt(5)) / 2`, 17.24 units for the 12-unit head on a main flow line), never
+  waived on a short run. A short link lands the head in the free length behind
+  the flow head; a run with none offers no leader and the number is
+  `leader-placement-unresolved`. `stream_numbers` takes `arrows` and `registry`
+  (both exporters pass theirs; a P&ID draws no heads and keeps nothing off).
+  Golden 13 loses four leaders that landed on their run's arrowhead (S-406,
+  S-409, S-415, S-419): their 33-38-unit runs have no free length, and they are
+  reported unresolved. Tests that ask `stream_numbers` for a sheet's placement
+  now pass the sheet's `arrows` (a P&ID heads nothing); `crowded_number` is
+  drawn as the P&ID its line numbers belong to, since its 25-unit headed drop
+  cannot carry a leader clear of the head.
 - **A bare line number goes without a leader only on its line or in the first
   band beside it.** The first pass of the label search used to take any anchor
   `_along` accepted -- out to the last of `stream_label_bands` -- with no

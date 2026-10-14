@@ -9,8 +9,8 @@ from operator import itemgetter
 
 from pandid.render import furniture as F
 from pandid.render.escape import escaped, ident
-from pandid.render.symbols import (ARROWHEAD, closed_marking, fail_marking,
-                                   wears_arrowhead)
+from pandid.render.symbols import (ARROWHEAD, MIN_HEAD_CLEARANCE, closed_marking,
+                                   fail_marking, wears_arrowhead)
 from pandid.render.weights import LineWeight
 from pandid.streams import SIGNAL_KINDS as _SIGNAL_KINDS
 from pandid.validate import Issue
@@ -994,6 +994,127 @@ _LEADER_HEAD = ARROWHEAD / 2
 _LEADER_FLOOR = 2 * _LEADER_HEAD
 
 
+def _drawn_head(size: float, pen: float) -> float:
+    """How far back from the point it ends at a head of *size* is drawn on a line of *pen*.
+
+    Both heads a line number meets -- the flow head
+    (:data:`~pandid.render.symbols.ARROWHEAD`) at the end of its run and its
+    own leader's (:data:`_LEADER_HEAD`) -- are issued through the draw.io
+    export as that format's ``block`` marker, ``endSize`` the head's size.
+    The marker grows the triangle by the line's own pen, ``size + pen`` long
+    and half that either side of the line, sets its point back from the end
+    by ``pen * sqrt(5) / 2`` -- half a pen over the sine of the marker's
+    half-angle, ``atan(1/2)`` -- so that its stroked point lands on the end,
+    and strokes it, which puts the outline of its base half a pen further
+    back. ``size + pen * (3 + sqrt(5)) / 2`` in all: a 12-unit flow head on
+    a 2-unit main flow line is drawn 17.24 units long, which an exported
+    block diagram measures as a 10.5 pt triangle 5.25 pt either side at
+    0.75 pt a unit. The SVG backend draws the same head ``size`` long and
+    unstroked, so it falls inside this; the search serves both backends
+    and keeps to the larger.
+    """
+    return size + pen * (3 + math.sqrt(5)) / 2
+
+
+#: How far a leader's **end** -- the point on its run its head lands on --
+#: must stand clear of a flow arrowhead as drawn. The white ISO 128-20 §4.4
+#: and ISO 10628-1 §5.3.2 ask between two marks
+#: (:data:`~pandid.render.symbols.MIN_HEAD_CLEARANCE`, the one already
+#: kept between two heads side by side on a face), plus the leader's own
+#: head as drawn (:func:`_drawn_head`), since that head stands back from
+#: its end towards wherever the leader came from and the white is owed
+#: between the two heads, not between a head and a point. Without it a
+#: leader landing just past a flow head's length still drew its own head
+#: across the flow head's flank, and at print size the two read as one
+#: arrowhead and the leader as a second line into the block (owner ruling
+#: 2026-10-14).
+_HEAD_KEEP_OUT = MIN_HEAD_CLEARANCE + _drawn_head(_LEADER_HEAD, LineWeight.DETAIL.width)
+
+
+def _arrowhead_keep_outs(fs, arrows: bool, registry=None) -> "dict[str, tuple]":
+    """Every flow arrowhead the sheet draws, by the name of the run it heads.
+
+    A box per head, round the triangle as drawn (:func:`_drawn_head`): from
+    the point at the run's destination back along its last piece, and half
+    as wide either side, the marker's own proportions. A leader's end is
+    kept :data:`_HEAD_KEEP_OUT` clear of every box on the run it names
+    (:func:`_leader_choices`).
+
+    Only what the sheet draws: nothing where ``arrows`` is false (a P&ID
+    heads no line, :func:`draws_arrowheads`) and nothing on a stream
+    :func:`~pandid.render.symbols.wears_arrowhead` leaves bare -- a signal
+    line, or one that ends at a tee and carries straight on. The head is
+    on the line's *pen*, as the exporter draws it, so a secondary run's
+    narrower line draws a smaller head.
+    """
+    if not arrows:
+        return {}
+    if registry is None:
+        from pandid.render.symbols import default_registry as registry
+    out: dict[str, list] = {}
+    for s in fs.streams:
+        if not s.name or not wears_arrowhead(s, registry):
+            continue
+        points = stream_polyline(s)
+        # An internal transfer inside a basin draws no line, and so no head.
+        if len(points) < 2:
+            continue
+        tip = points[-1]
+        # The last piece with any length: a route may repeat its end point.
+        back = next((p for p in reversed(points[:-1])
+                     if math.hypot(p[0] - tip[0], p[1] - tip[1]) > 1e-9), None)
+        if back is None:
+            continue
+        span = math.hypot(back[0] - tip[0], back[1] - tip[1])
+        ux, uy = (tip[0] - back[0]) / span, (tip[1] - back[1]) / span
+        length = _drawn_head(ARROWHEAD, _stream_rung(False, s.flow_class == "secondary").width)
+        bx, by = tip[0] - ux * length, tip[1] - uy * length
+        px, py = -uy * length / 2, ux * length / 2
+        corners = (tip, (bx + px, by + py), (bx - px, by - py))
+        out.setdefault(s.name, []).append((
+            min(c[0] for c in corners), min(c[1] for c in corners),
+            max(c[0] for c in corners), max(c[1] for c in corners)))
+    return {name: tuple(boxes) for name, boxes in out.items()}
+
+
+def _head_room(near: float, far: float, at: float, vertical: bool,
+               heads: tuple) -> "list[tuple[float, float]]":
+    """Where along a run piece a leader's end may land, clear of the flow heads.
+
+    ``near``..``far`` is the piece's own landing band, in its frame (*u*
+    along it, the piece standing at *at* across), and *heads* are the
+    boxes of :func:`_arrowhead_keep_outs`. A point of the piece lies within
+    :data:`_HEAD_KEEP_OUT` of a box over one open stretch of *u* -- the
+    distance to a box is convex along a line -- so each box takes that
+    stretch out of the band, and what is left is returned as the closed
+    stretches still open, in order. Empty where the heads leave the piece
+    no room at all: the leader then lands on another piece or the number
+    is reported unresolved, and is never drawn onto the head.
+    """
+    room = [(near, far)] if near <= far else []
+    for box in heads:
+        u0, u1 = (box[1], box[3]) if vertical else (box[0], box[2])
+        v0, v1 = (box[0], box[2]) if vertical else (box[1], box[3])
+        across = max(v0 - at, at - v1, 0.0)
+        if across >= _HEAD_KEEP_OUT:
+            continue
+        reach = math.sqrt(_HEAD_KEEP_OUT ** 2 - across ** 2)
+        lo, hi = u0 - reach, u1 + reach
+        room = [piece for a, b in room
+                for piece in ((a, min(b, lo)), (max(a, hi), b)) if piece[0] <= piece[1]]
+    return room
+
+
+def _nearest_in(u: float, room: "list[tuple[float, float]]") -> float:
+    """The point of *room* nearest *u*; the earlier stretch on a tie."""
+    best = None
+    for lo, hi in room:
+        c = lo if u < lo else hi if u > hi else u
+        if best is None or abs(c - u) < abs(best - u):
+            best = c
+    return best
+
+
 #: A crossing the sheet could not mark. See :func:`unmarked_crossings`.
 CROSSING_UNMARKED = "crossing-unmarked"
 
@@ -1383,7 +1504,7 @@ def _swept(items, choices, sweep=None):
 
 
 def _clean_leader(box, seg, hard, crossable, keep_out: float = 0.0,
-                  floor: float = 0.0) -> "tuple[tuple | None, list]":
+                  floor: float = 0.0, heads: tuple = ()) -> "tuple[tuple | None, list]":
     """The leader :func:`_leader` would rank first if it cuts nothing, and
     the tails the last resort may still consider where there is none.
 
@@ -1405,7 +1526,7 @@ def _clean_leader(box, seg, hard, crossable, keep_out: float = 0.0,
     resort has nothing to ask. Both bins are gathered once for the sweep
     (:func:`_swept`).
     """
-    choices = [c for c in _leader_choices(box, seg, keep_out)
+    choices = [c for c in _leader_choices(box, seg, keep_out, heads)
                if round(math.hypot(c[0][1][0] - c[0][0][0], c[0][1][1] - c[0][0][1]), 6) >= floor]
     if not choices:
         return None, []
@@ -1521,13 +1642,16 @@ def _near_segment(p, a, b, tol: float = 0.5) -> bool:
 
 
 @lru_cache(maxsize=4096)
-def _leader_choices(box, seg, keep_out: float = 0.0):
+def _leader_choices(box, seg, keep_out: float = 0.0, heads: tuple = ()):
     """Every swept leader and its established angle/face preference keys.
 
     Keeping the geometry in one iterator lets the ordinary clean search and
     the line-only last resort compare the same leaders.  Every landing remains
-    inset from run ends (and from flange marks through ``keep_out``); the keys
-    then prefer 45 degrees and a tail near the middle of the halo face.
+    inset from run ends (and from flange marks through ``keep_out``) and
+    :data:`_HEAD_KEEP_OUT` clear of every flow arrowhead in *heads*
+    (:func:`_head_room`); the keys then prefer 45 degrees and a tail near the
+    middle of the halo face.  Where the heads leave the piece no room, there
+    is no leader to it at all.
 
     Memoised: the last resort asks for the halo and run the clean search
     just asked for, and the sweep is arithmetic on the arguments alone.
@@ -1551,6 +1675,15 @@ def _leader_choices(box, seg, keep_out: float = 0.0):
         lo, hi = lo + keep_out, hi - keep_out
     inset = min(_LABEL_CLEAR, (hi - lo) / 3)
     near, far = lo + inset, hi - inset
+    # A flow arrowhead is a mark on the run's end as a flange is, and is
+    # kept off the same way -- but never waived: the inset above is the
+    # third of a short run, which on a link between two blocks put the head
+    # inside the arrowhead's length, on its flank (owner ruling 2026-10-14).
+    # What is left is the free length behind the head; none, and the piece
+    # offers no leader.
+    room = _head_room(near, far, at, vertical, heads)
+    if not room:
+        return []
 
     # The face, inset at each end so the tail lands on the lettering
     # rather than the halo's padding, never past a quarter of a short
@@ -1567,18 +1700,11 @@ def _leader_choices(box, seg, keep_out: float = 0.0):
         # *furthest* from ``s`` wins, which is the same as the one
         # nearest 45 degrees: an unclamped landing is exactly ``gap``
         # away, and clamping to the run can only bring it closer in.
-        # Forward first, and kept on a tie. ``min``/``max`` are spelt as
-        # the comparison that keeps the first of two equal values.
-        forward = s + gap
-        if forward < near:
-            forward = near
-        if forward > far:
-            forward = far
-        back = s - gap
-        if back < near:
-            back = near
-        if back > far:
-            back = far
+        # Forward first, and kept on a tie. Clamped into the room the
+        # band and the flow heads leave (:func:`_nearest_in`), which with
+        # no head on the piece is the band itself, as it always was.
+        forward = _nearest_in(s + gap, room)
+        back = _nearest_in(s - gap, room)
         u = forward if abs(forward - s) >= abs(back - s) else back
         lead = ((v, s), (at, u)) if vertical else ((s, v), (u, at))
         choices.append((lead, (abs(abs(u - s) - gap), abs(s - mid), order)))
@@ -1586,7 +1712,7 @@ def _leader_choices(box, seg, keep_out: float = 0.0):
 
 
 def _leader(box, seg, occupied, keep_out: float = 0.0,
-            floor: float = 0.0) -> "tuple[tuple | None, int]":
+            floor: float = 0.0, heads: tuple = ()) -> "tuple[tuple | None, int]":
     """How a label's halo at *box* is joined to the run *seg* names.
 
     Returns ``((start, end), crossings)``: the leader, the end being the
@@ -1635,12 +1761,23 @@ def _leader(box, seg, occupied, keep_out: float = 0.0,
     spool with a flange pair at each end put the head in the clear
     middle.
 
+    ``heads`` are the flow arrowheads drawn on the run
+    (:func:`_arrowhead_keep_outs`), and the head is kept
+    :data:`_HEAD_KEEP_OUT` clear of each of them, **never waived**: an
+    arrowhead is a mark on the run's end as a flange is, and a leader
+    landing within its length draws its own head on the flow head's flank,
+    where at print size the two merge and the leader reads as a second
+    line into the block. Unlike ``keep_out`` this is not dropped on a run
+    too short to spare it; on a short link between two blocks the head
+    lands in the free length behind the flow head, and where there is
+    none the piece offers no leader at all (owner ruling 2026-10-14).
+
     ``floor`` drops every tail shorter than itself before any of that
     scoring, so a halo too close to its run to be led cleanly has no
     leader at all (``None``) rather than a tick; see
     :data:`_LEADER_FLOOR`.
     """
-    choices = [c for c in _leader_choices(box, seg, keep_out)
+    choices = [c for c in _leader_choices(box, seg, keep_out, heads)
                if round(math.hypot(c[0][1][0] - c[0][0][0], c[0][1][1] - c[0][0][1]), 6) >= floor]
     if not choices:
         # Every tail from this halo is shorter than *floor*: no leader at
@@ -1667,7 +1804,8 @@ def _leader(box, seg, occupied, keep_out: float = 0.0,
 
 
 def _line_crossing_leader(box, seg, hard, lines, keep_out: float = 0.0,
-                          floor: float = 0.0, survivors: "list | None" = None):
+                          floor: float = 0.0, survivors: "list | None" = None,
+                          heads: tuple = ()):
     """Best leader which clears *hard* obstacles but crosses stream lines.
 
     The count is by named line rather than by the number of its segment boxes.
@@ -1683,7 +1821,9 @@ def _line_crossing_leader(box, seg, hard, lines, keep_out: float = 0.0,
     """
     best = None
     if survivors is None:
-        choices = _leader_choices(box, seg, keep_out)
+        choices = _leader_choices(box, seg, keep_out, heads)
+        if not choices:
+            return None
         sweep = _sweep(choices)
         hard, lines = _swept(hard, choices, sweep), _swept(lines, choices, sweep)
         ordered = sorted(choices, key=_choice_keys)
@@ -2349,7 +2489,7 @@ def _bounded_label_spots(region, protected, width, height, segments, gap, limit)
 
 def _bare_stream_number(runs, name, color, display_name, font_size,
                         text_width, text_height, bands, symbols, placed, ink,
-                        region, label_gap) -> StreamNumber:
+                        region, label_gap, heads: tuple = ()) -> StreamNumber:
     """Place one un-enclosed number, with a line-only crossing last resort.
 
     Clear positions along any straight piece of the same run are considered
@@ -2365,6 +2505,12 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
     which crosses named stream lines; units, flags, symbols, lettering,
     instrument connections, unnamed ink and the number's own other legs remain
     hard obstacles.  If neither search succeeds the number remains unresolved.
+
+    *heads* are the flow arrowheads drawn on the run
+    (:func:`_arrowhead_keep_outs`): every leader's end is kept
+    :data:`_HEAD_KEEP_OUT` clear of them (:func:`_leader_choices`), so a
+    piece they leave no room on offers no leader, and a number with no
+    piece left is reported unresolved rather than led onto a head.
     """
     segments = [segment for segment, _keep in runs]
     foreign = [line for line in ink if line.line != name]
@@ -2566,7 +2712,7 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
                 continue
             _relevant, hard, crossable, _lines = against(target)
             leader, survivors = _clean_leader(box, target.segment, hard, crossable,
-                                              target.keep_out, _LEADER_FLOOR)
+                                              target.keep_out, _LEADER_FLOOR, heads)
             if leader is not None:
                 # Among leaders crossing the same number of lines -- here
                 # none -- the shortest wins, and the halo's distance from
@@ -2598,7 +2744,7 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
             _relevant, hard, _crossable, crossing_lines = against(target)
             fallback = _line_crossing_leader(
                 box, target.segment, hard, crossing_lines, target.keep_out,
-                _LEADER_FLOOR, survivors)
+                _LEADER_FLOOR, survivors, heads)
             if fallback is None:
                 continue
             leader, crossed, leader_keys = fallback
@@ -2656,7 +2802,8 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
 
 def stream_numbers(fs, placed: list, joints: "str | None",
                    direction: str,
-                   region: "tuple[float, float, float, float] | None" = None) -> "list[StreamNumber]":
+                   region: "tuple[float, float, float, float] | None" = None,
+                   arrows: bool = True, registry=None) -> "list[StreamNumber]":
     """Where every line number on the sheet goes.
 
     Lifted out of :meth:`SvgRenderer._draw_streams` for the reason
@@ -2691,6 +2838,14 @@ def stream_numbers(fs, placed: list, joints: "str | None",
     sheet whose rails hang on the band, 303 units of line number centred
     on a 110-unit boundary approach hangs ~96 units past the flag and a
     fixed-scale export refuses the sheet outright.
+
+    ``arrows`` is whether the sheet heads its process lines
+    (:func:`draws_arrowheads`) and ``registry`` the symbols it draws them
+    against, both as the renderer has them: a leader's head is kept clear
+    of every flow arrowhead the sheet draws on its run
+    (:func:`_arrowhead_keep_outs`), so the search has to know which those
+    are. Called directly, a sheet is taken to head its lines, as
+    :func:`pandid.validate.validate` takes it.
     """
     from pandid.portgeom import unit_box
 
@@ -2773,8 +2928,10 @@ def stream_numbers(fs, placed: list, joints: "str | None",
                   for _runs, name, _color in label_items), default=0.0)
     uniform = enclosure_box(shape, widest, halo_deep)
 
+    keep_outs = _arrowhead_keep_outs(fs, arrows, registry)
     out: list[StreamNumber] = []
     for runs, name, color in label_items:
+        heads = keep_outs.get(name, ())
         seg, keep = runs[0]
         (sx1, sy1), (sx2, sy2) = seg
         # What the words occupy, and what is reserved for them. One box
@@ -2815,7 +2972,7 @@ def stream_numbers(fs, placed: list, joints: "str | None",
             number = _bare_stream_number(
                 runs, name, color, display_names[name],
                 fs.stream_labels.font_size, tw, th, bands, symbols, placed,
-                ink, region, fs.layout_options.stream_label_gap)
+                ink, region, fs.layout_options.stream_label_gap, heads)
             placed.append(number.box)
             if number.leader is not None:
                 (ax0, ay0), (ax1, ay1) = number.leader
@@ -2931,7 +3088,7 @@ def stream_numbers(fs, placed: list, joints: "str | None",
             # to stand in for when the line goes through the shape.
             lead, cut = ((None, 0)
                          if shape != "none" or _along(box, vertical, run_lo, run_hi)
-                         else _leader(box, seg, everything, keep))
+                         else _leader(box, seg, everything, keep, heads=heads))
             cost = (erased, *hits, cut)
             if damage is None or cost < damage:
                 spot, damage, leader = (ux, uy), cost, lead
@@ -2972,7 +3129,7 @@ def stream_numbers(fs, placed: list, joints: "str | None",
                     continue
                 if any(_meets(box,b) for b in protected):
                     continue
-                leader,cut=_leader(box,seg,protected,keep)
+                leader,cut=_leader(box,seg,protected,keep,heads=heads)
                 spot,damage=(ux,uy),(0,0,0,cut)
                 break
             if any(damage[:3]):
@@ -2980,7 +3137,7 @@ def stream_numbers(fs, placed: list, joints: "str | None",
                                                 (cx, cy), fs.layout_options.stream_label_gap)
                 if interior is not None:
                     spot, box = interior
-                    leader, cut = _leader(box, seg, protected, keep)
+                    leader, cut = _leader(box, seg, protected, keep, heads=heads)
                     damage = (0, 0, 0, cut)
             # No clear paper inside the drawing is a crowded sheet, not an
             # unrenderable one. The nearby search already chose the least
@@ -3334,7 +3491,8 @@ def label_findings(fs, shape: str, numbers: "list[StreamNumber]",
                 "warning", "leader-placement-unresolved",
                 f"{stream}'s number has no clear position along its run "
                 f"and no halo within {number.placement_limit:g} drawing units "
-                f"whose leader reaches the run without crossing a unit, flag, "
+                f"whose leader reaches the run, clear of its ends and of its "
+                f"flow arrowhead, without crossing a unit, flag, "
                 f"symbol or lettering, or with only named stream lines in "
                 f"its way. No leader is drawn; space the sheet or route "
                 f"{stream} clear with via()"))
@@ -5473,7 +5631,8 @@ class SvgRenderer:
             from pandid.render.nameplates import label_boxes
             tags = _tag_pass(fs,self.registry,joints,jump_direction)
             number_plan = stream_numbers(
-                fs, list(tags.plates), joints, jump_direction, fitted_region(fs))
+                fs, list(tags.plates), joints, jump_direction, fitted_region(fs),
+                arrows, self.registry)
             text_boxes = label_boxes(tags,number_plan)
 
         # 1. Diagram bounding box: union of every unit's drawn box and
@@ -6748,7 +6907,9 @@ class SvgRenderer:
         ] + list(extra_label_boxes)
 
         shape = enclosure_shape(fs)
-        numbers = stream_numbers(fs, placed, joints, jump_direction, fitted_region(fs)) if number_plan is None else number_plan
+        numbers = (stream_numbers(fs, placed, joints, jump_direction, fitted_region(fs),
+                                  arrows, self.registry)
+                   if number_plan is None else number_plan)
         if number_plan is not None:
             from pandid.render.nameplates import label_boxes
             placed += label_boxes(None,numbers)

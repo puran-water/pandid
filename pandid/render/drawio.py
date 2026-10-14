@@ -1699,7 +1699,8 @@ class DrawioRenderer:
         joints = sheet_connections(diagram, connections)
         tags = _tag_pass(fs, self.registry, joints, jump_direction)
         self._findings += tags.findings
-        number_plan = stream_numbers(fs,list(tags.plates),joints,jump_direction,fitted_region(fs))
+        number_plan = stream_numbers(fs,list(tags.plates),joints,jump_direction,fitted_region(fs),
+                                     arrows,self.registry)
         from pandid.render.nameplates import label_boxes
         text_boxes = label_boxes(tags,number_plan) if fs.layout_options.strict_label_clearance else []
         body: list[str] = []
@@ -2736,7 +2737,9 @@ class DrawioRenderer:
         # the equipment tags the sheet seeds it with, so the search is
         # offered the same paper. See :func:`_number_geometry` and
         # :class:`_Tags`.
-        placed = stream_numbers(fs, list(tags.plates), joints, direction, fitted_region(fs)) if number_plan is None else number_plan
+        placed = (stream_numbers(fs, list(tags.plates), joints, direction, fitted_region(fs),
+                                 arrows, self.registry)
+                  if number_plan is None else number_plan)
         numbers = {number.name: number for number in placed}
         shape = enclosure_shape(fs)
         # The same list the sheet reports, from the same placement: both
