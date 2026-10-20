@@ -115,3 +115,19 @@ def test_authored_inverted_departure_remains_an_author_hold():
     stream.route.waypoints = points[:]
     repair(fs)
     assert stream.route.waypoints == points
+
+
+def test_collinear_terminal_projection_keeps_square_nozzle_approach():
+    from pandid.routing.visibility import Rect
+    fs, stream = fixture()
+    fs.units[2].frame = Frame(x=250, y=85, w=20, h=30)
+    stream.route.waypoints = [(0, 0), (300, 0), (300, 100), (175, 100), (200, 100)]
+    before = stream.route.waypoints[:]
+    repair(fs)
+    points = stream.route.waypoints
+    assert points != before
+    assert points[0] == before[0] and points[-1] == before[-1]
+    assert points[-2] == before[-2]
+    assert all(a[0] == b[0] or a[1] == b[1] for a, b in zip(points, points[1:]))
+    box = Rect(250, 270, 85, 115)
+    assert not any(box.intersects_segment(*a, *b) for a, b in zip(points, points[1:]))

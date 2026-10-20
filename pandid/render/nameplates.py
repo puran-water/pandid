@@ -14,7 +14,7 @@ from pandid.render.furniture import measure_annotation, text_width
 def validate(value, units=None):
     if not isinstance(value, dict):
         raise ValueError('equipment_data must be a mapping by unit name')
-    allowed = {'tags', 'rows', 'side', 'width', 'font_size', 'heading_font_size'}
+    allowed = {'tags', 'rows', 'side', 'width', 'font_size', 'heading_font_size', 'gap'}
     sides = set()
     for key, row in value.items():
         if not isinstance(key, str) or not isinstance(row, dict) or set(row) - allowed:
@@ -26,12 +26,14 @@ def validate(value, units=None):
         if not isinstance(row.get('rows'), list) or any(not isinstance(s, str) for s in row['rows']):
             raise ValueError('equipment_data rows must be text')
         sides.add(row.get('side', 'below'))
-        for field, default in (('width', 220), ('font_size', 11), ('heading_font_size', 24)):
+        for field, default in (('width', 220), ('font_size', 11), ('heading_font_size', 24), ('gap', 20)):
             number = row.get(field, default)
             if isinstance(number, bool) or not isinstance(number, (int, float)) or not math.isfinite(number) or number <= 0:
                 raise ValueError('equipment_data ' + field + ' must be positive and finite')
     if sides - {'above', 'below'} or len(sides) > 1:
         raise ValueError('equipment data blocks must share one above/below horizontal')
+    if len({row.get('gap', 20) for row in value.values()}) > 1:
+        raise ValueError('equipment data blocks must share one horizontal gap')
     return value
 
 
@@ -124,7 +126,7 @@ def plan(fs, inner):
         w, h = measure_annotation(annotation)
         x = unit.frame.x
         blocks.append(DataBlock(index, annotation, x, 0, w, h))
-    positions=_aligned_positions([b.x for b in blocks],[b.w for b in blocks],inner[0],right=inner[2])
+    positions=_aligned_positions([b.x for b in blocks],[b.w for b in blocks],inner[0],right=inner[2], gap=next(iter(records.values())).get('gap', 20))
     blocks=[DataBlock(b.unit_index,b.annotation,x,0,b.w,b.h) for b,x in zip(blocks,positions)]
     height = max(b.h for b in blocks)
     y = inner[3] + 65 if next(iter(records.values())).get('side', 'below') == 'below' else inner[1] - height - 65

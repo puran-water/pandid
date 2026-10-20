@@ -107,7 +107,7 @@ def square_interior_micro_jogs(fs):
         while True:
             points = lines[key]
             accepted = None
-            for j in range(2, len(points)-3):
+            for j in range(1, len(points)-2):
                 a, b = points[j:j+2]
                 axis = 1 if a[0] == b[0] else 0
                 other = 1-axis
@@ -115,6 +115,8 @@ def square_interior_micro_jogs(fs):
                         or points[j-1][axis] != a[axis] or points[j+2][axis] != b[axis]):
                     continue
                 for indices, at in (((j-1, j), b[axis]), ((j+1, j+2), a[axis])):
+                    if min(indices) == 0 or max(indices) == len(points)-1:
+                        continue
                     proposed = list(points)
                     for index in indices:
                         point = list(proposed[index]); point[axis] = at; proposed[index] = tuple(point)
@@ -152,15 +154,7 @@ def square_interior_micro_jogs(fs):
             if accepted is None:
                 break
             lines[key] = accepted
-            # Every repair write goes through the anchoring helper, including
-            # this one. Today it is a no-op here: the loop runs
-            # `range(2, len(points)-3)` and moves `j-1, j` or `j+1, j+2`, so the
-            # lowest reachable index is 1 and the highest is len-2, and the
-            # anchors are preserved by construction. But that invariant lives in
-            # two numbers inside a range expression and nothing names it, and
-            # this range is the first thing anyone tuning jog aggressiveness
-            # would widen. A route that starts a unit off its nozzle still
-            # routes, still exports and still looks right on the sheet, which is
-            # the worst class of defect here. Stating the invariant costs
-            # nothing and makes all three repair writes identical.
+            # Endpoint-adjacent micro steps are eligible on their interior
+            # side only. The index guard above and this helper both preserve
+            # the original nozzle anchors.
             stream.route.waypoints = anchored_waypoints(stream, accepted)

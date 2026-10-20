@@ -95,6 +95,18 @@ def repair(fs, *, max_passes=8):
                             )
                         ):
                             continue
+                        # A projection point may be collinear with a terminal
+                        # run. Moving just its interior pair otherwise tilts
+                        # the last leg into a diagonal. Retain the old nozzle
+                        # lead as an extra corner; all clearance tests below
+                        # judge the complete, orthogonal proposal.
+                        diagonal = lambda a, b: abs(a[0]-b[0]) > .01 and abs(a[1]-b[1]) > .01
+                        if diagonal(proposal[0], proposal[1]):
+                            proposal.insert(1, points[1])
+                        if diagonal(proposal[-2], proposal[-1]):
+                            proposal.insert(len(proposal)-1, points[-2])
+                        if any(diagonal(a, b) for a, b in zip(proposal, proposal[1:])):
+                            continue
                         remaining_ends = wrong_ends(proposal)
                         after = hits(key, proposal)
                         # A separated route can have an inverted nozzle lead

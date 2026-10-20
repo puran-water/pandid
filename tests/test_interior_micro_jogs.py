@@ -45,3 +45,17 @@ def test_no_flattening_into_equipment_even_for_a_one_unit_move():
     before = copy.deepcopy(stream.route.waypoints)
     square_interior_micro_jogs(fs)
     assert stream.route.waypoints == before
+
+
+def test_micro_step_beside_terminal_moves_only_the_interior_track():
+    fs, stream = fixture()
+    stream.route.waypoints = [(0, 0), (100, 0), (100, .134),
+                              (300, .134), (300, 150), (400, 150)]
+    before = stream.route.waypoints[:]
+    square_interior_micro_jogs(fs)
+    after = stream.route.waypoints
+    assert len(after) < len(before)
+    assert after[0] == before[0] and after[-1] == before[-1]
+    assert all(a[0] == b[0] or a[1] == b[1] for a, b in zip(after, after[1:]))
+    square_interior_micro_jogs(fs)
+    assert stream.route.waypoints == after

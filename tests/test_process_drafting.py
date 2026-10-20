@@ -677,3 +677,19 @@ def test_a_tie_with_no_alternative_keeps_its_leader():
     assert tuple(round(v, 1) for v in number.box) == (240.0, 171.2, 608.6, 193.3)
     assert math.hypot(number.leader[1][0] - number.leader[0][0],
                       number.leader[1][1] - number.leader[0][1]) == pytest.approx(13.0, abs=0.05)
+
+
+def test_equipment_nameplate_gap_is_explicit_and_does_not_shrink_text():
+    from pandid.render.nameplates import plan
+    from pandid.geometry import Frame
+    fs = Flowsheet("Tight equipment-data row")
+    for i in range(2):
+        unit = fs.add(Block(str(i)))
+        unit.frame = Frame(x=i*50, y=0, w=40, h=40)
+        fs.equipment_data[unit.name] = {"tags": unit.name, "rows": ["SOURCE VALUE"],
+                                        "width": 200, "font_size": 17,
+                                        "heading_font_size": 24, "gap": 8}
+    blocks, _ = plan(fs, (0, 0, 408, 100))
+    assert blocks[1].x - blocks[0].x - blocks[0].w == 8
+    assert all(b.annotation.font_size == 17 for b in blocks)
+    assert all(b.annotation.title_font_size == 24 for b in blocks)

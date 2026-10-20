@@ -2686,6 +2686,40 @@ class DrawioRenderer:
             return .5, y
         return self._fraction(u, sym, port_point(u, u.frame, port_name))
 
+    def _native_stream_polyline(self, stream):
+        """Extend the routed nozzle lead to a native junction's centreline.
+
+        Native junction cells draw a centreline, while the SVG symbol includes
+        the short legs out to its bounding box. Keep those legs as waypoints
+        when a route turns at the box: replacing its endpoint alone would make
+        that first or last run diagonal in Desktop.
+        """
+        points = stream_polyline(stream)
+        if not points:
+            return points
+        for reverse, unit in ((False, stream.source.owner), (True, stream.dest.owner)):
+            if unit.kind not in {"tee", "junction"}:
+                continue
+            if reverse:
+                points.reverse()
+            x0, y0, x1, y1 = self._cell_box(unit)
+            point = ((x0+x1)/2, points[0][1] if unit.kind == "junction" and unit.is_header else (y0+y1)/2)
+            if point != points[0]:
+                points.insert(0, point)
+            if reverse:
+                points.reverse()
+        simplified = []
+        for point in points:
+            if simplified and point == simplified[-1]:
+                continue
+            while len(simplified) >= 2 and (
+                simplified[-2][0] == simplified[-1][0] == point[0]
+                or simplified[-2][1] == simplified[-1][1] == point[1]
+            ):
+                simplified.pop()
+            simplified.append(point)
+        return simplified
+
     @staticmethod
     def _ends(exit_at, entry_at) -> list[str]:
         """The style keys pinning an edge's two ends to fixed points on
@@ -2746,7 +2780,7 @@ class DrawioRenderer:
         # backends ask one function where a number goes, so both owe the
         # author the same account of what the shape landed on.
         self._findings += label_findings(fs, shape, placed, direction)
-        polylines = {n: stream_polyline(s) for n, s in enumerate(fs.streams)}
+        polylines = {n: self._native_stream_polyline(s) for n, s in enumerate(fs.streams)}
         order, hops, lost = _hops(polylines, direction, crossing_style)
 
         def _run(key):
