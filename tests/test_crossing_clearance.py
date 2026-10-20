@@ -122,3 +122,27 @@ def test_explicit_repair_budget_still_limits_work_and_leaves_residual_defects():
     repair(fs, max_passes=8)
     after = {i: stream_polyline(s) for i, s in enumerate(fs.streams)}
     assert _overlaps(after, 14) == 120
+
+
+def test_overlap_cache_keeps_exact_original_score_for_changed_tracks():
+    from pandid.routing.crossing_clearance import _overlaps, _OverlapPlan
+    from pandid.render.crossings import crossing_order, CrossingPlan
+    def original(lines, clearance=0):
+        segments = [(key, a, b) for key, pts in lines.items() for a, b in zip(pts, pts[1:])]
+        total = 0.0
+        for i, (key, a, b) in enumerate(segments):
+            axis = 0 if a[1] == b[1] else 1
+            for peer, c, d in segments[i+1:]:
+                if (peer == key or a[1-axis] != b[1-axis] or c[1-axis] != d[1-axis]
+                        or abs(a[1-axis]-c[1-axis]) > max(0, clearance-1e-6)):
+                    continue
+                total += max(0, min(max(a[axis],b[axis]),max(c[axis],d[axis]))
+                             - max(min(a[axis],b[axis]),min(c[axis],d[axis])))
+        return total
+    paths = {i: [(0, i*.134), (100+i, i*.134), (100+i, 200), (300, 200)] for i in range(20)}
+    for i in range(20):
+        trial = {**paths, i: [(0, i*.134), (90+i, i*.134), (90+i, 200), (300, 200)]}
+        for clearance in (0, 12):
+            assert _overlaps(trial, clearance) == original(trial, clearance)
+            assert _OverlapPlan(paths, clearance).score(i, trial[i]) == original(trial, clearance)
+        assert CrossingPlan(paths, 5).with_path(i, trial[i]) == crossing_order(trial, 5)

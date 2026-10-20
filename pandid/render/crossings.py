@@ -31,7 +31,6 @@ def _pair_constraints(apts, bpts, radius, terminal_clearance):
 
 def crossing_order(polylines, radius, terminal_clearance=18):
     keys = list(polylines)
-    before = {key: set() for key in keys}
     forced = []
     paths = {key: tuple(tuple(point) for point in points) for key, points in polylines.items()}
     for i, left in enumerate(keys):
@@ -40,9 +39,15 @@ def crossing_order(polylines, radius, terminal_clearance=18):
             for source, target, x, y in _pair_constraints(paths[left], paths[right], radius, terminal_clearance):
                 hopper = None if source is None else pair[source]
                 crossed = None if target is None else pair[target]
-                if hopper is not None:
-                    before[hopper].add(crossed)
                 forced.append((hopper,crossed,x,y))
+    return _order(keys, forced)
+
+
+def _order(keys, forced):
+    before = {key: set() for key in keys}
+    for hopper, crossed, _, _ in forced:
+        if hopper is not None:
+            before[hopper].add(crossed)
     order, done = [], set()
     while len(done) < len(keys):
         ready = [key for key in keys if key not in done and before[key] <= done]
@@ -53,3 +58,37 @@ def crossing_order(polylines, radius, terminal_clearance=18):
     rank = {key:i for i,key in enumerate(order)}
     lost = {(a,b,x,y) for a,b,x,y in forced if a is None or rank[a] < rank[b]}
     return order, lost
+
+
+class CrossingPlan:
+    """Exact crossing order after changing one path, reusing all other pairs."""
+    def __init__(self, polylines, radius, terminal_clearance=18):
+        self.keys = list(polylines)
+        self.paths = {k: tuple(tuple(p) for p in v) for k, v in polylines.items()}
+        self.radius, self.terminal_clearance = radius, terminal_clearance
+        self.pairs, self.constraints = [], []
+        self.affected = {k: [] for k in self.keys}
+        for i, left in enumerate(self.keys):
+            for right in self.keys[i+1:]:
+                index = len(self.pairs)
+                self.pairs.append((left, right))
+                self.affected[left].append(index)
+                self.affected[right].append(index)
+                self.constraints.append(self._constraints(left, right, self.paths[left], self.paths[right]))
+
+    def _constraints(self, left, right, a, b):
+        pair = (left, right)
+        return tuple((None if source is None else pair[source],
+                      None if target is None else pair[target], x, y)
+                     for source, target, x, y in
+                     _pair_constraints(a, b, self.radius, self.terminal_clearance))
+
+    def with_path(self, key, points):
+        from itertools import chain
+        path = tuple(tuple(p) for p in points)
+        constraints = self.constraints[:]
+        for index in self.affected[key]:
+            left, right = self.pairs[index]
+            constraints[index] = self._constraints(left, right,
+                path if left == key else self.paths[left], path if right == key else self.paths[right])
+        return _order(self.keys, list(chain.from_iterable(constraints)))

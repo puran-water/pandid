@@ -6,21 +6,72 @@ constraints can form a cycle. Move an interior track only when that strictly
 reduces overlaps or unsatisfied crossing constraints, without moving nozzles or authored
 waypoints, entering equipment, or adding collinear overlaps.
 """
-from pandid.render.crossings import crossing_order
+from functools import lru_cache
+from pandid.render.crossings import crossing_order, CrossingPlan
+
+
+@lru_cache(maxsize=65536)
+def _segment_overlaps(a, b, peer_points, clearance):
+    """Immutable per-segment contributions, in the original summation order."""
+    axis = 0 if a[1] == b[1] else 1
+    if a[1-axis] != b[1-axis]:
+        return ()
+    return tuple(
+        max(0, min(max(a[axis], b[axis]), max(c[axis], d[axis]))
+            - max(min(a[axis], b[axis]), min(c[axis], d[axis])))
+        for c, d in zip(peer_points, peer_points[1:])
+        if c[1-axis] == d[1-axis]
+        and abs(a[1-axis] - c[1-axis]) <= max(0, clearance - 1e-6)
+    )
 
 
 def _overlaps(lines, clearance=0):
-    segments = [(key, a, b) for key, pts in lines.items() for a, b in zip(pts, pts[1:])]
+    # Repair changes one automatic track per trial. All other segment pairs
+    # recur unchanged; caching their contributions avoids repeating geometric
+    # arithmetic for the entire sheet. Keep the original nested summation and
+    # exact candidate scores, rather than estimating a trial by a delta.
+    paths = [tuple(tuple(point) for point in points) for points in lines.values()]
     total = 0.0
-    for i, (key, a, b) in enumerate(segments):
-        axis = 0 if a[1] == b[1] else 1
-        for peer, c, d in segments[i+1:]:
-            if (peer == key or a[1-axis] != b[1-axis] or c[1-axis] != d[1-axis]
-                    or abs(a[1-axis] - c[1-axis]) > max(0, clearance - 1e-6)):
-                continue
-            total += max(0, min(max(a[axis], b[axis]), max(c[axis], d[axis]))
-                         - max(min(a[axis], b[axis]), min(c[axis], d[axis])))
+    for i, points in enumerate(paths):
+        for a, b in zip(points, points[1:]):
+            for peer in paths[i+1:]:
+                for value in _segment_overlaps(a, b, peer, clearance):
+                    total += value
     return total
+
+
+class _OverlapPlan:
+    """Reuse unaffected contributions when a trial moves one route."""
+    def __init__(self, lines, clearance=0):
+        self.paths = {k: tuple(tuple(p) for p in v) for k, v in lines.items()}
+        self.clearance = clearance
+        self.entries, self.chunks = [], []
+        self.affected = {k: [] for k in lines}
+        keys = list(lines)
+        for i, left in enumerate(keys):
+            for segment, (a, b) in enumerate(zip(self.paths[left], self.paths[left][1:])):
+                for right in keys[i+1:]:
+                    index = len(self.entries)
+                    self.entries.append((left, right, segment))
+                    self.affected[left].append(index)
+                    self.affected[right].append(index)
+                    self.chunks.append(_segment_overlaps(a, b, self.paths[right], clearance))
+
+    def score(self, key, points):
+        from itertools import chain
+        path = tuple(tuple(p) for p in points)
+        if len(path) != len(self.paths[key]):
+            raise ValueError("An overlap trial must retain its waypoint count")
+        chunks = self.chunks[:]
+        for index in self.affected[key]:
+            left, right, segment = self.entries[index]
+            apts = path if left == key else self.paths[left]
+            bpts = path if right == key else self.paths[right]
+            chunks[index] = _segment_overlaps(apts[segment], apts[segment+1], bpts, self.clearance)
+        total = 0.0
+        for value in chain.from_iterable(chunks):
+            total += value
+        return total
 
 
 def repair(fs, *, radius=5, max_passes=None):
@@ -50,6 +101,9 @@ def repair(fs, *, radius=5, max_passes=None):
         accepted = None
         old_overlaps = _overlaps(lines, spacing)
         old_exact_overlaps = _overlaps(lines)
+        overlap_plan = _OverlapPlan(lines, spacing)
+        exact_plan = _OverlapPlan(lines)
+        crossing_plan = CrossingPlan(lines, radius)
         affected = {v for a,b,_,_ in lost for v in (a,b)}
         for key in sorted(lines):
             if not old_overlaps and None not in affected and key not in affected:
@@ -78,16 +132,15 @@ def repair(fs, *, radius=5, max_passes=None):
                     if any(sum(box.intersects_segment(*a,*b) for _,(a,b) in changed) >
                            sum(box.intersects_segment(*a,*b) for (a,b),_ in changed) for box in boxes):
                         continue
-                    trial={**lines,key:proposed}
-                    overlap = _overlaps(trial, spacing)
+                    overlap = overlap_plan.score(key, proposed)
                     # Most dense-sheet candidates cannot improve either metric.
                     # Reject them before rebuilding the global crossing order;
                     # this keeps the same candidates and tie-breaking score.
                     if (overlap > old_overlaps + 1e-6
-                            or _overlaps(trial) > old_exact_overlaps + 1e-6
+                            or exact_plan.score(key, proposed) > old_exact_overlaps + 1e-6
                             or (not lost and overlap >= old_overlaps - 1e-6)):
                         continue
-                    remaining=crossing_order(trial,radius)[1]
+                    remaining=crossing_plan.with_path(key, proposed)[1]
                     # Horizontal and vertical separation are computed from the
                     # same original routes. Moving horizontal tracks can make
                     # two formerly disjoint vertical spans overlap afterwards.
