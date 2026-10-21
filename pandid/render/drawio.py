@@ -3583,8 +3583,28 @@ def _number_geometry(number, points, fit: "_Fit"):
         if p == (ax, ay) and q == (bx, by):
             break
         before += lengths[i]
-    else:  # the number names a segment this edge does not carry: leave it centred
-        return None, (fit.length(number.x - foot[0]), fit.length(number.y - foot[1]))
+    else:
+        # Native nozzle constraints can trim/extend the endpoint leg or add
+        # a short junction lead. The planned segment then has no identical
+        # endpoint pair. Centre-on-edge is not a fallback: it displaces the
+        # lettering from its reserved halo, sometimes onto a balloon or the
+        # next line number. Project the old attachment onto the native route
+        # and retain the absolute label position with its offset.
+        candidates = []
+        walked = 0.0
+        for p, q, length in zip(points, points[1:], lengths):
+            if length:
+                vx, vy = q[0] - p[0], q[1] - p[1]
+                fraction = min(1.0, max(0.0, (
+                    (foot[0] - p[0]) * vx + (foot[1] - p[1]) * vy
+                ) / (length * length)))
+                native_foot = (p[0] + fraction * vx, p[1] + fraction * vy)
+                distance = sum((a - b) ** 2 for a, b in zip(foot, native_foot))
+                candidates.append((distance, walked + fraction * length, native_foot))
+            walked += length
+        _distance, reach, native_foot = min(candidates)
+        return (max(-1.0, min(1.0, 2.0 * reach / total - 1.0)),
+                (fit.length(number.x - native_foot[0]), fit.length(number.y - native_foot[1])))
     reach = before + t * span
     return (max(-1.0, min(1.0, 2.0 * reach / total - 1.0)),
             (fit.length(number.x - foot[0]), fit.length(number.y - foot[1])))

@@ -1353,7 +1353,7 @@ def test_a_line_number_is_written_where_the_sheet_writes_it():
     both backends read -- seeded, as the sheet seeds it, with the plates the
     equipment tags lay down.
     """
-    from pandid.render.drawio import _tag_pass
+    from pandid.render.drawio import DrawioRenderer, _tag_pass
     from pandid.render.svg import draws_arrowheads, fitted_region, sheet_connections, stream_numbers
 
     for stem in SHEETS:
@@ -1390,7 +1390,8 @@ def test_a_line_number_is_written_where_the_sheet_writes_it():
             if not name:
                 continue
             landed = _drawio_edge_label(
-                [fit.at(*p) for p in stream_polyline(s)], cell.find("mxGeometry")
+                [fit.at(*p) for p in DrawioRenderer()._native_stream_polyline(s)],
+                cell.find("mxGeometry")
             )
             number = wanted[name]
             # Half a unit, which is `Math.round(dist)` and nothing else.
@@ -1402,6 +1403,25 @@ def test_a_line_number_is_written_where_the_sheet_writes_it():
             assert _style(cell)["labelBackgroundColor"] == "#ffffff"
             checked += 1
         assert checked or not [s for s in fs.streams if s.kind == "material"]
+
+
+@pytest.mark.parametrize("native", [
+    [(0, 0), (99.3, 0)],  # symbol nozzle trims the endpoint
+    [(0, 0), (10, 0), (10, 30), (100, 30)],  # native junction lead
+    [(100, 0), (0.7, 0)],  # same correction on a reversed run
+])
+def test_native_endpoint_adjustment_preserves_the_reserved_label_position(native):
+    from pandid.render.drawio import _Fit, _number_geometry
+    from pandid.render.svg import StreamNumber
+    number = StreamNumber('line-1', 'black', ((0, 0), (100, 0)),
+                          135, -40, False, (110, -48, 160, -32),
+                          None, (110, -48, 160, -32), ())
+    fit = _Fit(1.2375, 20, 30)
+    along, offset = _number_geometry(number, native, fit)
+    geometry = ET.Element('mxGeometry', {'x': str(along), 'relative': '1'})
+    ET.SubElement(geometry, 'mxPoint', {'as': 'offset', 'x': str(offset[0]), 'y': str(offset[1])})
+    landed = _drawio_edge_label([fit.at(*point) for point in native], geometry)
+    assert landed == pytest.approx(fit.at(number.x, number.y), abs=0.6)
 
 
 def test_a_line_number_beside_its_run_carries_a_perpendicular_offset():
