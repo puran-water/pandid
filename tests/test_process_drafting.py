@@ -25,6 +25,24 @@ def style(cell):
     return dict(x.split('=',1) for x in cell.get('style','').split(';') if '=' in x)
 
 
+def test_long_reference_service_grows_its_flag_without_reducing_lettering():
+    from pandid.render.furniture import text_width
+    from pandid.render.reference_flags import parts
+    fs = example()
+    flag = fs.units[0]
+    flag.display_label = 'MONOVALENT-RICH PERMEATE TO INTERNAL SALT REUSE\nTO REUSE HEADER\nTARGET TAG HOLD'
+    lettering(fs, body=17, heading=24)
+    size = flag.width, flag.height
+    lettering(fs, body=17, heading=24)
+    assert (flag.width, flag.height) == size
+    fs.layout()
+    _, _, (_, _, width, height) = parts(flag)
+    assert flag.font_size == 17
+    assert height >= len(flag.reference_body_lines) * 17 * 1.2
+    assert all(text_width(line, 17) < width for line in flag.reference_body_lines)
+    assert ' '.join(flag.reference_body_lines) == ' '.join(flag.tag.split())
+
+
 def test_adding_equipment_does_not_change_printed_flags_balloons_or_text():
     values=[]
     for extra in (False,True):

@@ -17,7 +17,8 @@ def svg(unit):
     divider, code, body = parts(unit)
     x1,y1,x2,y2=divider
     out=[f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="black" stroke-width="1"/>']
-    for text, box, font in ((unit.reference_code, code, getattr(unit, 'font_size', 15)), (unit.tag, body, getattr(unit, 'font_size', 12))):
+    description = '\n'.join(getattr(unit, 'reference_body_lines', unit.tag.splitlines()))
+    for text, box, font in ((unit.reference_code, code, getattr(unit, 'font_size', 15)), (description, body, getattr(unit, 'font_size', 12))):
         x,y,w,h=box
         lines=text.splitlines()
         for n,line in enumerate(lines):

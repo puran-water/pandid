@@ -2333,7 +2333,8 @@ class DrawioRenderer:
         at = lambda x, y: (fit.length(x - ox), fit.length(y - oy))
         x1, y1 = at(*divider[:2]); x2, y2 = at(*divider[2:])
         out = _segment(cid + '-divider', x1, y1, x2, y2, '#111111', fit.length(1))
-        for suffix, text, box, font in [('code', unit.reference_code, code, getattr(unit, 'font_size', 15)), ('description', unit.tag, body, getattr(unit, 'font_size', 12))]:
+        description = '\n'.join(getattr(unit, 'reference_body_lines', unit.tag.splitlines()))
+        for suffix, text, box, font in [('code', unit.reference_code, code, getattr(unit, 'font_size', 15)), ('description', description, body, getattr(unit, 'font_size', 12))]:
             x, y = at(*box[:2]); w, h = map(fit.length, box[2:])
             style = f'text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;strokeColor=none;fillColor=none;spacing=1;fontFamily=Arial;fontSize={fit.length(font):g};'
             cells = _rect(cid + '-' + suffix, x, y, w, h, style)
