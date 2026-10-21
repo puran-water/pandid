@@ -78,6 +78,26 @@ class _InsetNozzle(units.Unit):
 
 
 @pytest.mark.parametrize("manual", [False, True])
+def test_subpixel_single_elbow_keeps_both_nozzles_and_a_native_dogleg(manual):
+    fs = Flowsheet("Near-level signal endpoints")
+    source, target = fs.add(units.Feed("F")), fs.add(units.Product("P"))
+    source.frame = Frame(x=-50, y=-10, w=50, h=20)
+    target.frame = Frame(x=200, y=-9.34, w=50, h=20)
+    stream = fs.connect(source.outlet, target.inlet)
+    before = [(0, 0), (0, .66), (200, .66)]
+    stream.route = Route(waypoints=before[:], manual=manual)
+    square_micro_jogs(fs)
+    points = stream.route.waypoints
+    assert points[0] == before[0] and points[-1] == before[-1]
+    if manual:
+        assert points == before
+    else:
+        assert len(points) == 5
+        assert all(a[0] == b[0] or a[1] == b[1] for a, b in zip(points, points[1:]))
+        assert min(abs(a[0]-b[0]) + abs(a[1]-b[1]) for a, b in zip(points, points[1:])) > 1
+
+
+@pytest.mark.parametrize("manual", [False, True])
 def test_terminal_repair_keeps_inset_nozzles_and_routing_anchors_distinct(manual, monkeypatch):
     fs = Flowsheet("Inset nozzle")
     fs._drawn_as = "pfd"

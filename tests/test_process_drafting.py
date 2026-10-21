@@ -35,12 +35,29 @@ def test_long_reference_service_grows_its_flag_without_reducing_lettering():
     size = flag.width, flag.height
     lettering(fs, body=17, heading=24)
     assert (flag.width, flag.height) == size
+    assert (fs.units[1].width, fs.units[1].height) == size
     fs.layout()
     _, _, (_, _, width, height) = parts(flag)
     assert flag.font_size == 17
     assert height >= len(flag.reference_body_lines) * 17 * 1.2
     assert all(text_width(line, 17) < width for line in flag.reference_body_lines)
     assert ' '.join(flag.reference_body_lines) == ' '.join(flag.tag.split())
+
+
+def test_reference_legend_reserves_the_same_full_flag_width():
+    from pandid.profiles.legend import pages
+    fs = pages([
+        {'kind': 'symbol', 'id': 'flag', 'key': 'boundary.reference',
+         'category': 'boundary', 'meaning': 'Off-sheet continuation'},
+        {'kind': 'line', 'id': 'pipe', 'key': 'material', 'meaning': 'Process pipe'},
+    ], metadata_factory=lambda _: {'cells': {}}, body_font_size=17)[0]
+    lettering(fs, body=17, heading=24)
+    fs.layout()
+    flag = next(u for u in fs.units if u.name == 'entry-flag')
+    left, _, right, _ = unit_box(flag, flag.frame)
+    caption = next(c for c in fs.captions if c.key == 'entry-flag')
+    panel = next(p for p in fs.regions if p.title == 'PIPING AND CONNECTIONS')
+    assert panel.x < left < right < caption.x
 
 
 def test_adding_equipment_does_not_change_printed_flags_balloons_or_text():

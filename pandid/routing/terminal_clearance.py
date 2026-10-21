@@ -30,6 +30,33 @@ def square_micro_jogs(fs):
         for reverse in (False, True):
             if reverse:
                 points.reverse()
+            if len(points) == 3:
+                a, b, c = points
+                axis = 0 if a[1] == b[1] else 1
+                other = 1 - axis
+                span = c[other] - a[other]
+                if (a[other] == b[other] and b[axis] == c[axis]
+                        and 0 < abs(a[axis] - b[axis]) <= 1 and abs(span) > 48):
+                    # An L whose first leg is subpixel cannot be flattened
+                    # without moving a nozzle. Give it a full dogleg instead;
+                    # Desktop otherwise drops the elbow and draws a diagonal.
+                    far = a[axis] + (24 if b[axis] > a[axis] else -24)
+                    near = c[other] - (24 if span > 0 else -24)
+                    first, middle, last = list(a), list(a), list(c)
+                    first[axis] = middle[axis] = far
+                    middle[other] = last[other] = near
+                    proposed = [a, tuple(first), tuple(middle), tuple(last), c]
+                    source, target = ((stream.dest.owner, stream.source.owner) if reverse
+                                      else (stream.source.owner, stream.dest.owner))
+                    def hits(unit, path):
+                        x0, y0, x1, y1 = unit_box(unit, unit.frame)
+                        box = Rect(x0, x1, y0, y1)
+                        return sum(box.intersects_segment(*p, *q)
+                                   for i, (p, q) in enumerate(zip(path, path[1:]))
+                                   if not (unit is source and i == 0)
+                                   and not (unit is target and i == len(path)-2))
+                    if not any(hits(u, proposed) > hits(u, points) for u in fs.units if u.frame):
+                        points = proposed
             if len(points) >= 4:
                 a, b, c = points[:3]
                 axis = 0 if a[1] == b[1] else 1
