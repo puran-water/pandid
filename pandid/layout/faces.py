@@ -42,6 +42,11 @@ _ESCAPE = 25.0
 def select_faces(fs: "Flowsheet") -> None:
     """Choose a face for every movable port with none named or pinned."""
     from pandid.portgeom import pin_intent, port_faces
+    from pandid.render.svg import tap_lines
+
+    taps = {}
+    for instrument, start, end in tap_lines(fs):
+        taps.setdefault(instrument, []).append((start, end))
 
     for unit in fs.units:
         frame = unit.frame
@@ -100,7 +105,8 @@ def select_faces(fs: "Flowsheet") -> None:
             target = _reference(unit.ports[name])
             if target is None:
                 continue
-            face = _best(unit, frame, name, port_faces(unit, name, frame), target, taken)
+            face = _best(unit, frame, name, port_faces(unit, name, frame), target, taken,
+                         taps.get(unit, ()))
             if face is None:
                 continue  # all faces taken; leave the symbol's
             frame.port_faces[name] = face
@@ -140,7 +146,7 @@ def _reference(port: "Port") -> tuple[float, float] | None:
 
 
 def _best(unit: "Unit", frame, port_name: str, menu: list[str],
-          target: tuple[float, float], taken: set[tuple[float, ...]]) -> str | None:
+          target: tuple[float, float], taken: set[tuple[float, ...]], taps=()) -> str | None:
     """The cheapest free face in ``menu`` for a run to ``target``.
 
     Scoring a candidate by resolving it is what keeps the geometry in
@@ -158,6 +164,11 @@ def _best(unit: "Unit", frame, port_name: str, menu: list[str],
         point, anchor, landed = resolve_port(unit, frame, port_name)
         if tuple(round(v, 3) for v in point) in taken:
             continue
+        # A sensing/acting-on stem is a real connection even though it is
+        # not a Stream. A signal leaving on that stem would share its ink
+        # and could run through the sensed equipment before turning away.
+        if any(_on_tap(point, start, end) for start, end in taps):
+            continue
         normal = face_point(unit, frame, landed)[1]
         # Ties are common and expected: a balloon is square, so stepping
         # a signal round to the next face trades exactly as much
@@ -169,6 +180,17 @@ def _best(unit: "Unit", frame, port_name: str, menu: list[str],
                        rank, face))
     frame.port_faces.pop(port_name, None)
     return min(scored)[-1] if scored else None
+
+
+def _on_tap(point, start, end):
+    dx, dy = end[0] - start[0], end[1] - start[1]
+    length2 = dx * dx + dy * dy
+    if not length2:
+        return False
+    fraction = ((point[0] - start[0]) * dx + (point[1] - start[1]) * dy) / length2
+    return (0 <= fraction <= 1 and
+            (point[0] - start[0] - fraction * dx) ** 2 +
+            (point[1] - start[1] - fraction * dy) ** 2 < 1e-6)
 
 
 def _cost(anchor: tuple[float, float], normal: tuple[float, float],

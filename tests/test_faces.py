@@ -204,6 +204,19 @@ def test_two_signals_from_the_same_side_do_not_land_on_one_point():
     assert [i for i in fs.validate() if i.code == "coincident-ports"] == []
 
 
+def test_signal_does_not_use_the_sensing_stem_face_but_near_has_no_stem():
+    for relation in ("sensing", "near"):
+        fs = Flowsheet("analyser protection")
+        vessel = fs.add(units.Vessel("V-1", width=120, height=160)).pin(x=400, y=500)
+        sensor = fs.add(units.Instrument("AIT-1")).attach(vessel, at="N", offset=100,
+                                                         relation=relation)
+        valve = fs.add(units.Valve("XV-1", variant="control")).pin(x=440, y=800)
+        fs.connect(sensor.sig_out, valve.actuator, kind="electric")
+        fs.layout()
+        face = port_anchor(sensor, sensor.frame, "sig_out")[2]
+        assert (face == "S") == (relation == "near")
+
+
 # --- ordering within the layout run ------------------------------------------
 
 
