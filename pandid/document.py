@@ -803,6 +803,17 @@ class StreamLabelOptions:
     #: that carries instruments.
     enclosure: Literal["none", "diamond", "circle", "box"] = "none"
     font_size: float = 10.0
+    #: The streams whose number goes without a leader -- on its run or in
+    #: the first band beside it -- only where no other stream's line
+    #: written along it is as near as its own: the verdict a leadered
+    #: number is held to (:class:`~pandid.render.svg._OwnLine`, owner
+    #: ruling 2026-09-25). Such a number that the first pass would have
+    #: put beside a nearer parallel tries the rest of its run, then a
+    #: leader, and is reported unresolved where neither is clear.
+    #: ``True`` holds every stream; the default holds none, so every
+    #: number goes where the first pass puts it. A renderer that
+    #: measures its own sheet names the numbers it found off their line.
+    own_line_unled: "bool | frozenset[str]" = frozenset()
 
     def __post_init__(self):
         self.validate()
@@ -810,6 +821,15 @@ class StreamLabelOptions:
     def validate(self):
         import math
         self.enclosure = _resolve_enclosure(self.enclosure)
+        held = self.own_line_unled
+        if held is False:
+            held = frozenset()
+        elif held is not True:
+            names = list(held) if not isinstance(held, (str, bytes)) and hasattr(held, '__iter__') else None
+            if names is None or not all(isinstance(name, str) for name in names):
+                raise ValueError('stream_labels.own_line_unled must be True, False or a set of stream names')
+            held = frozenset(names)
+        self.own_line_unled = held
         if (type(self.font_size) not in (int, float) or not math.isfinite(self.font_size)
                 or self.font_size <= 0):
             raise ValueError('stream_labels.font_size must be positive and finite')

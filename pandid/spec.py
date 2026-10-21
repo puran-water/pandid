@@ -1522,6 +1522,8 @@ def to_dict(fs: Flowsheet) -> dict:
         # :class:`ValueError` rather than a :class:`SpecError`: the
         # spec is not wrong, the flowsheet being written is.
         fs.stream_labels.validate()
+        if isinstance(labels.get("own_line_unled"), frozenset):
+            labels["own_line_unled"] = sorted(labels["own_line_unled"])
         spec["stream_labels"] = labels
     if fs.title_block is not None:
         spec["title_block"] = _write_title_block(fs.title_block)

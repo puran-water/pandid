@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`fs.stream_labels.own_line_unled`**: the streams whose number goes bare
+  only where no other stream's line written along it is as near as its own --
+  the verdict a leadered number is already held to. Such a number that the
+  first pass would have written beside a nearer parallel tries the rest of its
+  run, then a leader, and is reported unresolved where neither is clear.
+  `True` holds every stream; the default holds none and moves nothing. A
+  renderer that measures its sheet names the numbers it found off their line.
+
 - **`Degasser` and the house symbol `house.degasser.packed_tower`**: an
   original candidate packed degassing tower -- vent over a demister, a liquid
   distributor above one packed bed, air admitted below it, an integral sump.

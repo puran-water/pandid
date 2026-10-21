@@ -2489,7 +2489,8 @@ def _bounded_label_spots(region, protected, width, height, segments, gap, limit)
 
 def _bare_stream_number(runs, name, color, display_name, font_size,
                         text_width, text_height, bands, symbols, placed, ink,
-                        region, label_gap, heads: tuple = ()) -> StreamNumber:
+                        region, label_gap, heads: tuple = (),
+                        own_line_unled: bool = False) -> StreamNumber:
     """Place one un-enclosed number, with a line-only crossing last resort.
 
     Clear positions along any straight piece of the same run are considered
@@ -2511,6 +2512,11 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
     :data:`_HEAD_KEEP_OUT` clear of them (:func:`_leader_choices`), so a
     piece they leave no room on offers no leader, and a number with no
     piece left is reported unresolved rather than led onto a head.
+
+    *own_line_unled* (``fs.stream_labels.own_line_unled`` names the
+    number) holds the first pass to the verdict the leadered search
+    applies: a spot beside a nearer or as near parallel is passed over
+    there too, so the number tries the rest of its run, then a leader.
     """
     segments = [segment for segment, _keep in runs]
     foreign = [line for line in ink if line.line != name]
@@ -2575,6 +2581,7 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
     # leadered search below ties it back, or refuses it where another
     # line is the nearer (owner ruling 2026-09-25).
     beside = _first_band(text_height)
+    own_line = _OwnLine(name, ink) if own_line_unled else None
 
     def unled(run, box, off):
         return off <= beside and _along(box, run.vertical, run.lo, run.hi)
@@ -2589,7 +2596,8 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
             if not within(box):
                 continue
             offered.append((run, x, y, order, off))
-            if unled(run, box, off) and halo_is_readable(run, box):
+            if unled(run, box, off) and halo_is_readable(run, box) and not (
+                    own_line is not None and own_line.verdict(box, run.vertical)):
                 return StreamNumber(
                     name, color, run.segment, x, y, run.vertical, box,
                     None, box, (), display_name, font_size)
@@ -2643,7 +2651,7 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
     # otherwise score most of the band.
     reach = max(math.hypot(run.width, run.height) / 2 for run in described)
     struck: dict[int, tuple] = {}
-    own_line = _OwnLine(name, ink)
+    own_line = own_line or _OwnLine(name, ink)
 
     def against(target):
         """Every line not collinear with *target*, and the bins a leader to it is scored against.
@@ -2929,6 +2937,7 @@ def stream_numbers(fs, placed: list, joints: "str | None",
     uniform = enclosure_box(shape, widest, halo_deep)
 
     keep_outs = _arrowhead_keep_outs(fs, arrows, registry)
+    held = fs.stream_labels.own_line_unled
     out: list[StreamNumber] = []
     for runs, name, color in label_items:
         heads = keep_outs.get(name, ())
@@ -2972,7 +2981,8 @@ def stream_numbers(fs, placed: list, joints: "str | None",
             number = _bare_stream_number(
                 runs, name, color, display_names[name],
                 fs.stream_labels.font_size, tw, th, bands, symbols, placed,
-                ink, region, fs.layout_options.stream_label_gap, heads)
+                ink, region, fs.layout_options.stream_label_gap, heads,
+                held is True or name in held)
             placed.append(number.box)
             if number.leader is not None:
                 (ax0, ay0), (ax1, ay1) = number.leader
