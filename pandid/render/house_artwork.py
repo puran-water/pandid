@@ -101,15 +101,66 @@ ARTWORK = {
 
 
 ARTWORK.update({
+    "house.tank.atmospheric_vertical": HouseArtwork(
+        "Flat-bottom atmospheric vertical tank with vent; construction and wetted material are source data",
+        200, 240, 30, 36,
+        (("W", 0, .5), ("E", 1, .8)),
+        '<path><move x="30" y="40"/><line x="170" y="40"/><line x="170" y="210"/>'
+        '<line x="30" y="210"/><close/><move x="100" y="40"/><line x="100" y="12"/>'
+        '<line x="120" y="12"/><line x="120" y="22"/>'
+        '<move x="0" y="120"/><line x="30" y="120"/><move x="170" y="192"/>'
+        '<line x="200" y="192"/><move x="20" y="220"/><line x="180" y="220"/></path><stroke/>'),
+    "house.filter.cartridge": HouseArtwork(
+        "Cartridge filter housing with removable cover and internal cartridge; rating remains source data",
+        180, 240, 27, 36,
+        (("W", 0, .35), ("E", 1, .75)),
+        '<path><move x="40" y="40"/><line x="140" y="40"/><line x="140" y="210"/>'
+        '<line x="40" y="210"/><close/><move x="30" y="30"/><line x="150" y="30"/>'
+        '<move x="30" y="40"/><line x="150" y="40"/>'
+        '<move x="0" y="84"/><line x="40" y="84"/><move x="140" y="180"/>'
+        '<line x="180" y="180"/></path><stroke/>'
+        '<rect x="65" y="58" w="50" h="132"/><stroke/>'
+        + ''.join(f'<path><move x="65" y="{y}"/><line x="115" y="{y+16}"/></path><stroke/>'
+                  for y in range(64, 177, 24))),
+    "house.heater.immersion": HouseArtwork(
+        "Electric immersion heater; flange and immersed resistive element, no independent process vessel",
+        240, 100, 36, 15,
+        (("W", 0, .5), ("E", 1, .5)),
+        '<path><move x="0" y="50"/><line x="38" y="50"/>'
+        '<move x="38" y="18"/><line x="38" y="82"/><move x="48" y="18"/>'
+        '<line x="48" y="82"/><move x="48" y="35"/><line x="210" y="35"/>'
+        '<quad x1="230" y1="50" x2="210" y2="65"/><line x="48" y="65"/>'
+        '<move x="230" y="50"/><line x="240" y="50"/></path><stroke/>'
+        '<path><move x="65" y="50"/><line x="85" y="42"/><line x="105" y="58"/>'
+        '<line x="125" y="42"/><line x="145" y="58"/><line x="165" y="42"/>'
+        '<line x="185" y="50"/></path><stroke/>'),
+    "house.valve.pressure_relief": HouseArtwork(
+        "Spring-loaded pressure relief valve; sizing, set pressure and discharge destination require review",
+        180, 180, 27, 27,
+        (("W", 0, .75), ("E", 1, .75)),
+        '<path><move x="0" y="135"/><line x="45" y="135"/>'
+        '<move x="45" y="110"/><line x="90" y="135"/><line x="45" y="160"/><close/>'
+        '<move x="135" y="110"/><line x="90" y="135"/><line x="135" y="160"/><close/>'
+        '<move x="135" y="135"/><line x="180" y="135"/>'
+        '<move x="90" y="135"/><line x="90" y="90"/><line x="75" y="80"/>'
+        '<line x="105" y="65"/><line x="75" y="50"/><line x="105" y="35"/>'
+        '<line x="90" y="25"/><line x="90" y="10"/><move x="70" y="10"/>'
+        '<line x="110" y="10"/></path><stroke/>'),
     "house.basin.concrete": HouseArtwork(
         "Open concrete process basin; enclosed equipment is declared separately, depth is schematic",
         400, 300, 80, 60,
         (("W", 0, .2), ("E", 1, .2)),
         '<path><move x="0" y="0"/><line x="0" y="300"/><line x="400" y="300"/><line x="400" y="0"/>'
-        '<move x="6" y="0"/><line x="6" y="294"/><line x="394" y="294"/><line x="394" y="0"/></path><stroke/>'
+        '<move x="16" y="0"/><line x="16" y="284"/><line x="384" y="284"/><line x="384" y="0"/></path><stroke/>'
+        + ''.join(f'<path><move x="0" y="{y}"/><line x="16" y="{y-12}"/>'
+                  f'<move x="384" y="{y}"/><line x="400" y="{y-12}"/></path><stroke/>'
+                  for y in range(24, 284, 24))
+        + ''.join(f'<path><move x="{x}" y="300"/><line x="{x+12}" y="284"/></path><stroke/>'
+                  for x in range(20, 374, 24))
+        +
         '<path><move x="40" y="34"/><line x="72" y="34"/><move x="45" y="39"/><line x="67" y="39"/>'
         '<move x="51" y="44"/><line x="61" y="44"/></path><stroke/>',
-        aspect="variable", reference_document="Nanded 20000-1-1001 r6.pdf",
+        aspect="variable", version="2", reference_document="Nanded 20000-1-1001 r6.pdf",
         reference_sha256="353c4e188f02b79423a1d59c53a93dd1cfa29b18b5e8e28938610dda2fb919be",
         reference_pages=(8, 9, 10, 11, 12)),
     "house.mixer.agitator": HouseArtwork(
@@ -154,16 +205,22 @@ ARTWORK.update({
         reference_pages=(1,),
     ),
     "house.membrane.pressure_vessel": HouseArtwork(
-        "Pressure membrane vessel; separate feed, concentrate and permeate, no element count implied",
+        "Side-entry pressure membrane vessel; flat end closures, separate feed, concentrate and permeate; multiplicity is labelled",
         360, 160, 54, 24,
         (("W", 0, .5), ("E", 1, .5), ("S", .5, 1)),
-        '<roundrect x="32" y="24" w="296" h="112" arcsize="50"/><stroke/>'
-        '<path><move x="0" y="80"/><line x="32" y="80"/><move x="328" y="80"/><line x="360" y="80"/>'
-        '<move x="72" y="56"/><line x="288" y="56"/><move x="72" y="104"/><line x="288" y="104"/>'
-        '<move x="180" y="104"/><line x="180" y="160"/></path><stroke/>',
-        reference_document="DuPont FilmTec RO/NF Technical Manual, 45-D01504-en Rev.20, August 2026; https://www.dupont.com/content/dam/water/amer/us/en/water/public/documents/en/RO-NF-FilmTec-Manual-45-D01504-en.pdf.",
-        reference_sha256="eb7c8d7f7829e2652fa26896b53618c82cd7d05037f759a3a1c9b647f681fa97",
-        reference_pages=(81, 82, 106),
+        '<rect x="40" y="32" w="280" h="72"/><stroke/>'
+        '<path><move x="52" y="32"/><line x="52" y="104"/><move x="308" y="32"/>'
+        '<line x="308" y="104"/><move x="0" y="80"/><line x="20" y="80"/>'
+        '<line x="20" y="12"/><line x="72" y="12"/><line x="72" y="32"/>'
+        '<move x="288" y="32"/><line x="288" y="12"/><line x="340" y="12"/>'
+        '<line x="340" y="80"/><line x="360" y="80"/>'
+        '<move x="52" y="68"/><line x="320" y="68"/>'
+        '<line x="330" y="68"/><line x="330" y="144"/>'
+        '<line x="180" y="144"/><line x="180" y="160"/></path><stroke/>',
+        version="2",
+        reference_document="MorroBay-WRF-51-I-003.pdf",
+        reference_sha256="4e23817d83df2b4df18d0dc4b83b78032f127e8373e8d9632745bc16562c8a46",
+        reference_pages=(119,),
     ),
     "house.membrane.pressure_array": HouseArtwork(
         "Pressure membrane array; schematic parallel vessels, counts and staging remain source data",

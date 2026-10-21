@@ -6,6 +6,7 @@ placement; both exporters consume the same plan. No engineering is inferred.
 from __future__ import annotations
 
 import math
+import re
 from dataclasses import dataclass
 from pandid.document import Annotation
 from pandid.render.furniture import measure_annotation, text_width
@@ -43,7 +44,10 @@ def _wrapped(text, width, font):
     result = []
     for paragraph in text.splitlines() or ['']:
         line = ''
-        for word in paragraph.split():
+        # A rating and its unit are one typographic token. Keep source text
+        # intact while preventing a line break between e.g. 41.37 and bar.
+        tokens = re.findall(r'\S+(?:[ \t]+(?:m³/h|m3/h|m²|m2|m³|m3|bar|barg|kPa|MPa|kW|µm|mm|m|L/h|°C))?(?=\s|$)', paragraph)
+        for word in tokens:
             candidate = (line + ' ' + word).strip()
             if line and text_width(candidate, font) > width:
                 result.append(line)

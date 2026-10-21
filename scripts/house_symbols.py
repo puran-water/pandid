@@ -15,6 +15,10 @@ from pandid.render.house_artwork import ARTWORK
 from mxgraph_to_svg import convert_shape
 
 KINDS = {
+    'house.tank.atmospheric_vertical': ('tank', 'atmospheric', {'inlet': 'W', 'outlet': 'E'}),
+    'house.filter.cartridge': ('filter', 'cartridge', {'inlet': 'W', 'outlet': 'E'}),
+    'house.heater.immersion': ('heater', 'immersion', {'inlet': 'W', 'outlet': 'E'}),
+    'house.valve.pressure_relief': ('valve', 'pressure_relief', {'inlet': 'W', 'outlet': 'E'}),
     'house.dosing.injection_quill': ('injection_quill', 'default', {'chemical_in': 'W', 'injection': 'E'}),
     'house.membrane.pressure_vessel': ('pressure_membrane', 'default', {'inlet': 'W', 'concentrate': 'E', 'permeate': 'S'}),
     'house.membrane.pressure_array': ('pressure_membrane_array', 'default', {'inlet': 'W', 'concentrate': 'E', 'permeate': 'S'}),
@@ -36,6 +40,9 @@ KINDS = {
 # House artwork that must not be turned, and why: the reason travels into
 # the generated file beside the keyword, as scripts/vendor_symbols.py does.
 GRAVITY_FIXED = {
+    'house.tank.atmospheric_vertical': 'flat bottom and atmospheric vent remain upright',
+    'house.basin.concrete': 'open basin and concrete foundation remain upright',
+    'house.filter.cartridge': 'vertical cartridge housing and cover remain upright',
     'house.degasser.packed_tower': 'liquid falls through the packing onto the sump; air rises',
 }
 
