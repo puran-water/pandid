@@ -61,12 +61,15 @@ def lettering(fs, *, body, heading):
             if unit.kind in {'feed', 'product'} and getattr(unit, 'reference_code', ''):
                 from pandid.render.nameplates import _wrapped
                 from pandid.render.svg import FLAG_POINT, _FLAG_INSET
-                # A divided flag reserves its tail for the code. Measure the
-                # service in the remaining body, and grow the flag rather than
-                # clipping long services or reducing fixed house lettering.
+                # Reference flags share one five-line construction size in
+                # process sheets and legends. Preserve the repeated-size gate:
+                # a long service cannot grow just one flag in the document.
+                unit.width = max(unit.width, 226 * ratio)
+                unit.height = max(unit.height, 5 * body * 1.2 + 2 * _FLAG_INSET + 8)
                 text_width_available = unit.width - max(30, .20 * unit.width) - FLAG_POINT - 8
                 unit.reference_body_lines = _wrapped(unit.tag, text_width_available, body)
-                unit.height = max(unit.height, len(unit.reference_body_lines) * body * 1.2 + 2 * _FLAG_INSET + 8)
+                if len(unit.reference_body_lines) > 5:
+                    raise ValueError('REFERENCE_FLAG_TEXT_CAPACITY: ' + unit.name)
             if unit.kind in {'feed', 'product'} and not getattr(unit, 'reference_code', ''):
                 lines = (unit.tag or '').splitlines() or ['']
                 unit.width = max(unit.width, max(text_width(s, body) for s in lines) + 40)
