@@ -1443,13 +1443,17 @@ def geometry_issues(fs: "Flowsheet", *, arrows: bool = True) -> list["Issue"]:
             src_u, dst_u = s.source.owner, s.dest.owner
             sp = port_point(src_u, src_u.frame, s.source.name)
             dp = port_point(dst_u, dst_u.frame, s.dest.name)
-            pts = [sp] + list(s.route.waypoints) + [dp]
+            pts = []
+            for point in [sp] + list(s.route.waypoints) + [dp]:
+                if not pts or point != pts[-1]:
+                    pts.append(point)
 
             for k in range(len(pts) - 1):
                 (x1, y1), (x2, y2) = pts[k], pts[k + 1]
                 for u, box in boxes:
                     from pandid.containment import accessible
-                    if u is src_u or u is dst_u or u.name in accessible(fs, s) or getattr(u, "host", None) is s:
+                    if ((u is src_u and k == 0) or (u is dst_u and k == len(pts) - 2)
+                            or u.name in accessible(fs, s) or getattr(u, "host", None) is s):
                         continue  # in-line elements own their line
                     if _seg_crosses_box(x1, y1, x2, y2, box):
                         warnings.append(Issue("warning", "route-crosses-unit",

@@ -131,3 +131,21 @@ def test_collinear_terminal_projection_keeps_square_nozzle_approach():
     assert all(a[0] == b[0] or a[1] == b[1] for a, b in zip(points, points[1:]))
     box = Rect(250, 270, 85, 115)
     assert not any(box.intersects_segment(*a, *b) for a, b in zip(points, points[1:]))
+
+
+def test_target_body_is_not_a_corridor_before_the_final_nozzle_approach():
+    from pandid.routing.visibility import Rect
+    fs = Flowsheet("Approach an outlet without cutting through its box")
+    source = fs.add(Feed("source"))
+    target = fs.add(Product("destination"))
+    source.frame = Frame(x=-50, y=-10, w=50, h=20)
+    target.frame = Frame(x=100, y=80, w=160, h=80)
+    stream = fs.connect(source.outlet, target.inlet)
+    stream.route = Route(waypoints=[(0, 0), (170, 0), (170, 112), (75, 112), (75, 120), (100, 120)])
+    endpoints = stream.route.waypoints[0], stream.route.waypoints[-1]
+    fs.layout_options.stream_spacing = 14
+    repair(fs)
+    points = stream.route.waypoints
+    assert (points[0], points[-1]) == endpoints
+    box = Rect(100, 260, 80, 160)
+    assert not any(box.intersects_segment(*a, *b) for a, b in zip(points[:-1], points[1:-1]))

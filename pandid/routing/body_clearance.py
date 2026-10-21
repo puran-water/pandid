@@ -26,12 +26,14 @@ def repair(fs, *, max_passes=8):
         stream = fs.streams[key]
         from pandid.containment import accessible
         allowed = accessible(fs, stream)
-        endpoints = {stream.source.owner, stream.dest.owner}
         return {
             u
             for u, box in bodies.items()
-            if u not in endpoints and u.name not in allowed
-            and any(box.intersects_segment(*a, *b) for a, b in zip(points, points[1:]))
+            if u.name not in allowed
+            and any(box.intersects_segment(*a, *b)
+                    for j, (a, b) in enumerate(zip(points, points[1:]))
+                    if not (u is stream.source.owner and j == 0)
+                    and not (u is stream.dest.owner and j == len(points) - 2))
         }
 
     spacing = max(4, fs.layout_options.stream_spacing)
@@ -42,7 +44,6 @@ def repair(fs, *, max_passes=8):
             if stream.route.manual:
                 continue
             before = hits(key, points)
-            old_overlap = _overlaps(lines)
             source_normal = COMPASS[
                 port_anchor(stream.source.owner, stream.source.owner.frame, stream.source.name)[2]
             ]
@@ -58,6 +59,7 @@ def repair(fs, *, max_passes=8):
             bad_ends = wrong_ends(points)
             if not before and not bad_ends:
                 continue
+            old_overlap = _overlaps(lines)
             affected = before | {stream.source.owner if end == 0 else stream.dest.owner
                                  for end in bad_ends}
             candidates = []
