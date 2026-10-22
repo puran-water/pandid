@@ -3220,7 +3220,13 @@ def test_the_hop_is_the_radius_the_sheet_draws_it_at():
     # the default mark -- see CROSSING_STYLE_DEFAULT.
     fs.to_svg(**kwargs, crossing_style="arc")
     _boxes, _frame, fit = _drawio_furniture(fs, dict(kwargs, crossing_style="arc"))
-    cells = _drawio_cells(fs, dict(kwargs, crossing_style="arc"))
+    # Inspect the physical master. The geometry helper inversely scales
+    # lengths to CSS units, but jumpSize is an affine integer style, not a
+    # length; applying that helper invents a fractional parseInt input.
+    document = ET.fromstring(fs.to_drawio(**{k: v for k, v in
+        dict(kwargs, crossing_style="arc").items() if k in _DRAWIO_KWARGS}))
+    cells = {c.get('id'): c for c in document.iter('mxCell')}
+    paper_scale = fs.print_scale*100/96 if kwargs.get('page_size') else 1
     hopping = [c for c in cells.values() if _style(c).get("jumpStyle", "none") != "none"]
     assert len(hopping) == 6, "11_ethanol_pid has six runs that hop another"
     for cell in hopping:
@@ -3231,7 +3237,7 @@ def test_the_hop_is_the_radius_the_sheet_draws_it_at():
         weight = float(style["strokeWidth"])
         radius = (size - 2) / 2 + weight
         # Within the half unit rounding jumpSize to an integer can cost.
-        assert radius == pytest.approx(fit.length(HOP_R), abs=0.5)
+        assert radius / paper_scale == pytest.approx(fit.length(HOP_R), abs=0.5)
 
 
 def test_only_a_stream_hops_or_is_hopped():

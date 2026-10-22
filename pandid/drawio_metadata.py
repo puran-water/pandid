@@ -26,7 +26,7 @@ def physical_page(document: str, sheet) -> str:
     graph.set("pageWidth", str(round(sheet.width_mm * 100 / 25.4)))
     graph.set("pageHeight", str(round(sheet.height_mm * 100 / 25.4)))
     lengths = {"fontSize", "strokeWidth", "spacing", "spacingTop", "spacingBottom",
-               "spacingLeft", "spacingRight", "startSize", "endSize", "jumpSize",
+               "spacingLeft", "spacingRight", "startSize", "endSize",
                "labelWidth", "exitDx", "exitDy", "entryDx", "entryDy"}
     for cell in graph.iter("mxCell"):
         style = []
@@ -35,6 +35,15 @@ def physical_page(document: str, sheet) -> str:
             if sep and key in lengths:
                 try:
                     value = f"{float(value) * factor:.6g}"
+                except ValueError:
+                    pass
+            elif sep and key == "jumpSize":
+                # mxConnector's radius is (parseInt(jumpSize)-2)/2 + pen.
+                # The pen scales separately; the constant two does not.
+                # Multiplying the whole style made physical-page gaps larger
+                # than the clearances checked in drawing coordinates.
+                try:
+                    value = str(max(1, round((int(float(value)) - 2) * factor + 2)))
                 except ValueError:
                     pass
             style.append(key + sep + value)

@@ -9,6 +9,7 @@ new parallel overlaps. Unresolved cases remain publication holds.
 from pandid.portgeom import COMPASS, port_anchor, unit_box
 from pandid.routing.crossing_clearance import _overlaps
 from pandid.routing.visibility import Rect
+from pandid.render.native_routes import NATIVE_BODY_MARGIN
 
 
 def repair(fs, *, max_passes=8):
@@ -19,7 +20,7 @@ def repair(fs, *, max_passes=8):
         for u in fs.units
         if u.frame is not None
         for x0, y0, x1, y1 in [unit_box(u, u.frame)]
-        for pad in [clearance if u.kind == 'instrument' else 0]
+        for pad in [max(NATIVE_BODY_MARGIN, clearance) if u.kind == 'instrument' else NATIVE_BODY_MARGIN]
     }
 
     def hits(key, points):

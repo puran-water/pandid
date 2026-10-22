@@ -126,6 +126,7 @@ def route_obstacles(fs, stream):
     from pandid.portgeom import unit_box
     from pandid.routing.visibility import Rect
     from pandid.drawing_regions import captions
+    from pandid.render.native_routes import NATIVE_BODY_MARGIN
     allowed=accessible(fs,stream)
     boxes=[]
     for unit in fs.units:
@@ -139,6 +140,13 @@ def route_obstacles(fs, stream):
             # already inside a clearance halo must never be moved through
             # the symbol while retaining the same halo-intersection count.
             boxes.append(Rect(x0,x1,y0,y1))
+            if unit not in {stream.source.owner, stream.dest.owner}:
+                # Native odd-width strokes align by half a paper pixel. A
+                # mathematical track just outside a box can therefore touch
+                # its exported ink. Retain a small body margin in repairs,
+                # in addition to the separately measured instrument halo.
+                pad = NATIVE_BODY_MARGIN
+                boxes.append(Rect(x0-pad,x1+pad,y0-pad,y1+pad))
             if unit.kind == 'instrument' and unit not in {stream.source.owner, stream.dest.owner}:
                 pad=getattr(fs.layout_options, 'instrument_clearance', 0)
                 if pad:

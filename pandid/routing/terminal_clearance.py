@@ -104,6 +104,17 @@ def protect(fs):
         stream.route.waypoints = anchored_waypoints(stream, proposed)
 
 
+def arrow_lead_preserved(fs, stream, before, after):
+    """A clearance repair cannot consume a native PFD arrow's straight lead."""
+    from pandid.render.svg import draws_arrowheads
+    from pandid.render.symbols import default_registry, wears_arrowhead
+    kind=getattr(fs,'_drawn_as',None)
+    if kind is None or not draws_arrowheads(kind) or not wears_arrowhead(stream, default_registry):
+        return True
+    distance = lambda points: sum(abs(a-b) for a,b in zip(points[-1], points[-2]))
+    return distance(after) >= min(24, distance(before)) - 1e-6
+
+
 def short_terminal_stubs(fs, stream, points, minimum):
     """The ends of ``points`` that turn back along their own block nearer its face than ``minimum``.
 
@@ -289,10 +300,10 @@ def hold_terminal_stubs(fs, *, minimum, preferred=None, unplaced=None, spacing=N
 def square_interior_micro_jogs(fs):
     """Collapse tiny internal steps that Desktop otherwise exports diagonally.
 
-    Only automatic tracks move, by at most one drawing unit. A step can be
-    flattened onto either neighbouring track, provided endpoints, direction,
-    equipment/caption clearance, parallel spacing and crossing gaps survive.
-    Each accepted move removes points, so this pass terminates without a cap.
+    Only automatic tracks move. A step is flattened onto a neighbouring
+    track, or replaced by a visible dogleg when both ends belong to nozzles.
+    Endpoints, direction, equipment/caption clearance, parallel spacing and
+    crossing gaps survive. Each move removes a tiny step and terminates.
     """
     from pandid.render.svg import stream_polyline
     from pandid.render.crossings import crossing_order
@@ -316,6 +327,44 @@ def square_interior_micro_jogs(fs):
         while True:
             points = lines[key]
             accepted = None
+            # With only four points both long tracks belong to a nozzle.
+            # Flattening their tiny offset would move an endpoint. Give the
+            # connector a visible orthogonal dogleg through the free gap;
+            # Desktop otherwise removes the tiny middle leg and draws a
+            # diagonal between the two exact, differently aligned nozzles.
+            if len(points) == 4:
+                a,b,c,d = points
+                axis = 0 if a[1] == b[1] else 1
+                other = 1-axis
+                span = d[axis]-a[axis]
+                if (a[other] == b[other] and c[other] == d[other]
+                        and b[axis] == c[axis] and 0 < abs(b[other]-c[other]) <= 1
+                        and abs(span) > 30):
+                    from itertools import product
+                    for (first, last), offset in product(((1/3, 2/3), (.25, .75), (.2, .8)),
+                                                        (-24, 24, -48, 48, -12, 12)):
+                        route=[a]
+                        for along,across in ((a[axis]+first*span,a[other]),
+                                (a[axis]+first*span,a[other]+offset),
+                                (a[axis]+last*span,a[other]+offset),
+                                (a[axis]+last*span,d[other])):
+                            point=list(a);point[axis]=along;point[other]=across;route.append(tuple(point))
+                        route.append(d)
+                        old=list(zip(points,points[1:]));new=list(zip(route,route[1:]))
+                        if any(sum(box.intersects_segment(*x,*y) for x,y in new) >
+                               sum(box.intersects_segment(*x,*y) for x,y in old) for box in obstacles):
+                            continue
+                        trial={**lines,key:route}
+                        if (_overlaps(trial,spacing) > _overlaps(lines,spacing)+1e-6
+                                or _overlaps(trial) > _overlaps(lines)+1e-6
+                                or not crossing_order(trial,5)[1] <= crossing_order(lines,5)[1]):
+                            continue
+                        accepted=route
+                        break
+                if accepted is not None:
+                    lines[key]=accepted
+                    stream.route.waypoints=anchored_waypoints(stream,accepted)
+                    continue
             for j in range(1, len(points)-2):
                 a, b = points[j:j+2]
                 axis = 1 if a[0] == b[0] else 0

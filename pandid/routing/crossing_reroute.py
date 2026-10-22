@@ -67,6 +67,9 @@ def repair_one(fs, lines, lost, spacing, radius):
                 proposal.pop()
             proposal.append(point)
         before,after=list(zip(lines[key],lines[key][1:])),list(zip(proposal,proposal[1:]))
+        from pandid.routing.terminal_clearance import arrow_lead_preserved
+        if not arrow_lead_preserved(fs,stream,lines[key],proposal):
+            continue
         if any(sum(box.intersects_segment(*a,*b) for a,b in after)>
                sum(box.intersects_segment(*a,*b) for a,b in before)
                for box in route_obstacles(fs,stream)):

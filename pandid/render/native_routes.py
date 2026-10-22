@@ -1,5 +1,9 @@
 """Native edge geometry, shared by routing clearance and draw.io export."""
 
+# Guard against native odd-stroke half-pixel alignment at a symbol boundary.
+# This is a rendering margin, not an engineering or ISO clearance claim.
+NATIVE_BODY_MARGIN = 1.0
+
 
 def stream_polyline(stream):
     from pandid.portgeom import unit_box

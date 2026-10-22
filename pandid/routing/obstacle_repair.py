@@ -19,8 +19,9 @@ def repair(fs):
     from pandid.routing.captions import foreign_line_plates
     from pandid.routing.crossing_clearance import _overlaps
     from pandid.streams import Route
+    from pandid.render.native_routes import NATIVE_BODY_MARGIN as pad
 
-    bodies = {u: Rect(x0, x1, y0, y1) for u in fs.units if u.frame is not None
+    bodies = {u: Rect(x0-pad, x1+pad, y0-pad, y1+pad) for u in fs.units if u.frame is not None
               for x0, y0, x1, y1 in [unit_box(u, u.frame)]}
     tags = equipment_tags(fs,settled=True)
     fs._resolved_tag_boxes=tags

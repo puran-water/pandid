@@ -177,14 +177,46 @@ def _spot(fs: "Flowsheet", inst: "Unit", w: float, h: float,
             from pandid.layout.attach import _signal_escape_clear
             boxes=[(f.x,f.y,f.x_max,f.y_max) for f in taken]
             predicate=lambda x,y: _signal_escape_clear(inst,(x,y,x+w,y+h),boxes)
-        return _nearest_free(want[0], want[1], w, h, taken, True, True,
+        x, y = _nearest_free(want[0], want[1], w, h, taken, True, True,
                              bounds=bounds, predicate=predicate)
+        return _align_measurement(inst, x, y, w, h, taken, bounds, predicate)
 
     cols, rows = _grid(fs)
     x = pin.x if pin.x is not None else _lane(cols, pin.col, COL_GAP)
     y = pin.y if pin.y is not None else _lane(rows, pin.row, ROW_GAP)
     return _nearest_free(want[0] if x is None else x, want[1] if y is None else y,
                          w, h, taken, x is None, y is None, bounds=bounds)
+
+
+def _align_measurement(inst, x, y, w, h, taken, bounds=None, predicate=None):
+    """Keep a nearly aligned free controller on its frozen transmitter axis.
+
+    Grid rounding can leave a fraction-unit staircase between facing signal
+    nozzles, which Desktop collapses into a diagonal. Only an incoming hosted
+    measurement supplies this axis: free controller cycles must not chase
+    each other. At most one unit moves, through the same placement checks.
+    Explicitly pinned controls never call this helper.
+    """
+    peers = {port.stream.source.owner for port in inst.ports.values()
+             if port.stream is not None and port.stream.dest.owner is inst
+             and getattr(port.stream.source.owner, 'host', None) is not None
+             and port.stream.source.owner.frame is not None}
+    if len(peers) != 1:
+        return x, y
+    peer = next(iter(peers)).frame
+    position = [x, y]
+    for axis, desired in enumerate((peer.cx-w/2, peer.cy-h/2)):
+        if not 0 < abs(position[axis]-desired) <= 1:
+            continue
+        proposal = position.copy()
+        proposal[axis] = desired
+        a, b = proposal
+        if bounds and not (bounds[0] <= a and a+w <= bounds[2]
+                           and bounds[1] <= b and b+h <= bounds[3]):
+            continue
+        if not _hits(a, b, w, h, taken) and (predicate is None or predicate(a, b)):
+            position = proposal
+    return tuple(position)
 
 
 def _actuator_axis(inst: "Unit") -> tuple[int, float] | None:

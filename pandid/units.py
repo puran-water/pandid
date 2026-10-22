@@ -8721,4 +8721,6 @@ class HeldPipeEnd(Unit):
         base=default_registry.get(self.kind,self.variant)
         face='W' if self.pipe.direction=='inlet' else 'E'
         point=(0 if face=='W' else base.width,base.height/2)
-        return replace(base,ports={'pipe':point},port_faces={'pipe':{face:point}})
+        # This is a cut in continuing pipe, not a receiving device. Like a
+        # header, it must not acquire a terminal PFD equipment arrowhead.
+        return replace(base,ports={'pipe':point},port_faces={'pipe':{face:point}},bare_run=True)

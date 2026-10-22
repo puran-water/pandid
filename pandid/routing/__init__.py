@@ -394,3 +394,9 @@ class DefaultRouter:
                 repair(fs)
                 if before==[tuple(s.route.waypoints) if s.route else None for s in fs.streams]:
                     break
+            # A late crossing move must retain the full arrow footprint and
+            # the native square connector. Recheck after caption reroutes;
+            # the crossing repair now preserves existing full arrow leads.
+            protect(fs)
+            square_interior_micro_jogs(fs)
+            repair(fs)

@@ -145,6 +145,9 @@ def repair(fs, *, radius=5, max_passes=None):
                     if any(sum((b[n]-a[n])*(d[n]-c[n]) for n in (0,1)) <= 0
                            for (a,b),(c,d) in changed):
                         continue
+                    from pandid.routing.terminal_clearance import arrow_lead_preserved
+                    if not arrow_lead_preserved(fs,stream,points,proposed):
+                        continue
                     if any(sum(box.intersects_segment(*a,*b) for _,(a,b) in changed) >
                            sum(box.intersects_segment(*a,*b) for (a,b),_ in changed) for box in boxes):
                         continue
@@ -178,6 +181,11 @@ def repair(fs, *, radius=5, max_passes=None):
             if hasattr(fs,'drawio_metadata') and declared(fs):
                 from pandid.routing.crossing_reroute import repair_one
                 accepted = repair_one(fs, lines, lost, spacing, radius)
+        if accepted is None and _overlaps(lines,4):
+            from pandid.layout.subsystems import declared
+            if hasattr(fs,'drawio_metadata') and declared(fs):
+                from pandid.routing.overlap_reroute import repair_one
+                accepted = repair_one(fs,lines,spacing,radius)
         if accepted is None:
             return  # The export gate retains the unresolved hold.
         _,key,points,lost=accepted
@@ -224,6 +232,9 @@ def _detour(fs, lines, lost, spacing, radius):
                                           (last,a[other]+shift),(last,a[other])):
                         p=list(a);p[axis]=along;p[other]=across;corners.append(tuple(p))
                     proposed = [*points[:j+1], *corners, *points[j+1:]]
+                    from pandid.routing.terminal_clearance import arrow_lead_preserved
+                    if not arrow_lead_preserved(fs,stream,points,proposed):
+                        continue
                     new = list(zip([a,*corners,b],[*corners,b]))
                     if any(sum(box.intersects_segment(*c,*d) for c,d in new) >
                            box.intersects_segment(*a,*b) for box in boxes):
