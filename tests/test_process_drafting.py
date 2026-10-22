@@ -60,6 +60,29 @@ def test_reference_legend_reserves_the_same_full_flag_width():
     assert panel.x < left < right < caption.x
 
 
+def test_reference_flags_keep_one_size_across_pfd_pid_and_legend():
+    from pandid.profiles.legend import pages
+    signatures = []
+    for numbered in (False, True):
+        fs = example()
+        if numbered:
+            for stream in fs.streams:
+                stream.display_label = '101-L-01'
+        lettering(fs, body=17, heading=24)
+        signatures.extend((u.width, u.height, u.font_size) for u in fs.units
+                          if getattr(u, 'reference_code', ''))
+    gallery = pages([
+        {'kind': 'symbol', 'id': 'flag', 'key': 'boundary.reference',
+         'category': 'boundary', 'meaning': 'Off-sheet continuation'},
+        {'kind': 'line', 'id': 'pipe', 'key': 'material', 'meaning': 'Process pipe'},
+    ], metadata_factory=lambda _: {'cells': {}}, body_font_size=17)[0]
+    lettering(gallery, body=17, heading=24)
+    signatures.extend((u.width, u.height, u.font_size) for u in gallery.units
+                      if getattr(u, 'reference_code', ''))
+    assert len(signatures) == 5
+    assert len(set(signatures)) == 1
+
+
 def test_adding_equipment_does_not_change_printed_flags_balloons_or_text():
     values=[]
     for extra in (False,True):

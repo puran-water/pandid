@@ -78,24 +78,11 @@ def lettering(fs, *, body, heading):
                 # One four-line construction plant-wide. Controlled drawing
                 # paths may wrap at a slash; every character is retained at the
                 # same body size instead of widening both rails for one token.
-                maximum = max(unit.width, REFERENCE_FLAG_WIDTH * ratio)
-                # Measure the four-line flag instead of spending the widest
-                # permitted rectangle for every short reference. The font,
-                # full destination and four-line construction are unchanged.
-                from pandid.render.reference_flags import wrap_reference
-                for candidate in range(math.ceil(unit.width), math.ceil(maximum) + 1, 5):
-                    available = candidate - max(30, .20*candidate) - FLAG_POINT - 8
-                    try:
-                        fits = len(wrap_reference(unit.tag, available, body)) <= REFERENCE_FLAG_LINES
-                    except ValueError:
-                        fits = False
-                    if fits:
-                        unit.width = candidate
-                        break
-                else:
-                    unit.width = maximum
-                if any(s.kind in {'material','energy'} and s.label for s in fs.streams):
-                    unit.width = maximum
+                # A plant set includes numbered P&IDs, unnumbered PFDs and
+                # legends. They share one construction, even when a short
+                # reference could fit inside a narrower flag. Per-sheet
+                # compaction silently violated the set's fixed-size audit.
+                unit.width = max(unit.width, REFERENCE_FLAG_WIDTH * ratio)
                 unit.height = max(h * ratio, REFERENCE_FLAG_LINES * body * 1.2 + 2 * _FLAG_INSET + 8)
                 text_width_available = unit.width - max(30, .20 * unit.width) - FLAG_POINT - 8
                 from pandid.render.reference_flags import wrap_reference
