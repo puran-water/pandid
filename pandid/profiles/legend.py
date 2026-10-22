@@ -122,7 +122,19 @@ def pages(entries, *, metadata_factory, title='SYMBOLS AND CONVENTIONS', body_fo
                 elif entry['kind'] == 'line':
                     specimens.append((entry, key, x, y, row_height))
                 y += row_height
-        fs = from_template(title, rows, [], metadata=meta, pins=pins)
+        held_samples = [row for row in rows if row['symbol'] == 'house.pipe.held_end']
+        ordinary = [row for row in rows if row not in held_samples]
+        fs = from_template(title, ordinary, [], metadata=meta,
+                           pins={key:value for key,value in pins.items()
+                                 if key in {row['key'] for row in ordinary}})
+        # A gallery has no process graph from which to infer interface
+        # direction. Construct this typed sample here and connect its one
+        # port below; process templates retain their one-connection guard.
+        from pandid.units import HeldPipeEnd
+        for row in held_samples:
+            unit = fs.add(HeldPipeEnd(row['key']))
+            unit.display_label = ''
+            fs.drawio_metadata['units'][unit.name] = {'id': row['id'], 'attributes': row['attributes']}
         fs.regions, fs.captions = panels, descriptions
         fs.layout_options.aligned_boundaries = False
         fs.stream_labels.enclosure = 'none'
@@ -145,6 +157,10 @@ def pages(entries, *, metadata_factory, title='SYMBOLS AND CONVENTIONS', body_fo
                         unit.display_label = 'WATER\nTO SH. 2'
                 if unit.kind == 'instrument':
                     unit.pin(x=x + 30, y=y + 12)
+                if unit.kind == 'held_pipe_end':
+                    unit.pin(x=x+94, y=y+row_height/2-6)
+                    anchor = fs.add(_LegendAnchor(key+'-approach')).pin(x=x+15,y=y+row_height/2)
+                    fs.connect(anchor.p_out,unit.pipe,name=key+'-approach').display_label=''
                 if unit.kind == 'junction':
                     unit.pin(x=x+50, y=y+row_height/2-2)
                     positions = [(x+15,y+row_height/2),(x+94,y+row_height/2),(x+52,y+row_height-8)]

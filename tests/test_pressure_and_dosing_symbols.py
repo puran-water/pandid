@@ -56,3 +56,18 @@ def test_generator_is_deterministic_and_existing_versions_stay_unchanged():
         'house.air.diffuser_grid': '1', 'house.basin.concrete': '2', 'house.mbr.airlift': '1',
         'house.mbr.membrane_cage': '2', 'house.mixer.agitator': '1', 'house.mixer.submersible': '1',
         'house.pump.rotary_lobe': '1'}
+def test_universal_legend_connects_a_typed_held_interface_sample():
+    from pandid.profiles.legend import pages
+
+    entries=[{'id':'held','kind':'symbol','key':'house.pipe.held_end',
+              'meaning':'Unresolved pipe destination','category':'boundary'},
+             {'id':'material','kind':'line','key':'material','meaning':'Process pipe'}]
+    sheets=pages(entries,metadata_factory=lambda number:{'cells':{}})
+    units=[u for fs in sheets for u in fs.units if u.kind=='held_pipe_end']
+    assert len(units)==1 and units[0].pipe.stream is not None
+    assert units[0].pipe.direction=='inlet' and not units[0].tag
+    for fs in sheets:
+        fs.layout()
+        fs.route()
+        assert not [i for i in fs.validate() if i.severity=='error']
+
