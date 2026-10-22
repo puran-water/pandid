@@ -83,6 +83,13 @@ def _place_free(fs: "Flowsheet") -> bool:
     # still avoid the resulting control bodies and check all visible ink.
     taken.extend(Frame(x=b.x_min,y=b.y_min,w=b.x_max-b.x_min,h=b.y_max-b.y_min)
                  for b in equipment_tags(fs,use_cached=False).values())
+    from pandid.routing.captions import line_plates
+    # A free controller cannot consume the only measured lettering span on
+    # a short process connection. At this point pending free controls have
+    # no frame, so these reservations depend only on frozen process geometry
+    # and nominal equipment tags, not on last pass's routed placement.
+    taken.extend(Frame(x=b.x_min,y=b.y_min,w=b.x_max-b.x_min,h=b.y_max-b.y_min)
+                 for b in line_plates(fs,use_cached_tags=False).values())
     moved = False
     # Resolved in the order the sheet holds them, and a balloon wired
     # only to balloons still waiting is placed against whatever *is*

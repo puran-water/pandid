@@ -2959,7 +2959,9 @@ def stream_numbers(fs, placed: list, joints: "str | None",
     uniform = enclosure_box(shape, widest, halo_deep)
 
     keep_outs = group_heads
-    held = {aliases.get(name, name) for name in fs.stream_labels.own_line_unled}
+    held = fs.stream_labels.own_line_unled
+    if not isinstance(held, bool):
+        held = {aliases.get(name, name) for name in held}
     out: list[StreamNumber] = []
     for runs, name, color in label_items:
         heads = keep_outs.get(name, ())

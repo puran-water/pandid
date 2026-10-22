@@ -43,7 +43,7 @@ def equipment_tags(fs, *, settled=False, use_cached=True):
     return result
 
 
-def line_plates(fs):
+def line_plates(fs, *, use_cached_tags=True):
     """Reserve lettering on straight process spans before other lines cross.
 
     Only a span with enough measured paper and no equipment or tag beneath
@@ -59,7 +59,7 @@ def line_plates(fs):
         return {}
     bodies = [Rect(x0,x1,y0,y1) for u in fs.units if u.frame
               for x0,y0,x1,y1 in [unit_box(u,u.frame)]]
-    bodies += list(equipment_tags(fs).values())
+    bodies += list(equipment_tags(fs, use_cached=use_cached_tags).values())
     result = {}
     for members in groups(fs)[0]:
         offers = []
