@@ -168,3 +168,27 @@ def test_overlap_cache_keeps_exact_original_score_for_changed_tracks():
             assert _overlaps(trial, clearance) == original(trial, clearance)
             assert _OverlapPlan(paths, clearance).score(i, trial[i]) == original(trial, clearance)
         assert CrossingPlan(paths, 5).with_path(i, trial[i]) == crossing_order(trial, 5)
+
+
+def test_preferred_spacing_never_recreates_tighter_native_ink_overlap():
+    # Several short peer tracks leave a cheaper preferred-spacing route
+    # beside the long centre track. That route is worse at the tighter ink
+    # margin, so accepting it makes overlap rerouting undo the move forever.
+    paths = [[(0, 0), (100, 0), (100, 200), (250, 200)]]
+    paths += [[(x, 80), (x, 100)] for x in (47, 61, 75, 89, 117, 131, 145, 159)]
+    paths += [[(107, 20), (107, 180)]]
+    fs = Flowsheet('Preferred spacing preserves the native ink corridor')
+    fs.layout_options.stream_spacing = 14
+    for i, path in enumerate(paths):
+        source, target = fs.add(Feed(f'source-{i}')), fs.add(Product(f'target-{i}'))
+        # Explicit compact frames exercise the router's actual rendered
+        # anchors, including the reference symbol's wider native footprint.
+        source.frame = Frame(x=path[0][0]-.01, y=path[0][1]-.005, w=.01, h=.01)
+        target.frame = Frame(x=path[-1][0], y=path[-1][1]-.005, w=.01, h=.01)
+        fs.connect(source.outlet, target.inlet).route = Route(waypoints=path, manual=bool(i))
+    before = {i: stream_polyline(s) for i, s in enumerate(fs.streams)}
+    assert not crossing_order(before, 5)[1]
+    repair(fs, max_passes=1)
+    after = {i: stream_polyline(s) for i, s in enumerate(fs.streams)}
+    assert not crossing_order(after, 5)[1]
+    assert _overlaps(after, 4) <= _overlaps(before, 4)

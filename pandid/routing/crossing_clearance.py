@@ -141,8 +141,10 @@ def repair(fs, *, radius=5, max_passes=None):
         accepted = None
         old_overlaps = _overlaps(lines, spacing)
         old_exact_overlaps = _overlaps(lines)
+        old_ink_overlaps = _overlaps(lines, 4)
         overlap_plan = _OverlapPlan(lines, spacing)
         exact_plan = _OverlapPlan(lines)
+        ink_plan = _OverlapPlan(lines, 4)
         crossing_plan = CrossingPlan(lines, radius)
         affected = {v for a,b,_,_ in lost for v in (a,b)}
         for key in sorted(lines):
@@ -184,6 +186,13 @@ def repair(fs, *, radius=5, max_passes=None):
                             or (not lost and overlap >= old_overlaps - 1e-6)):
                         continue
                     remaining=crossing_plan.with_path(key, proposed)[1]
+                    # Preferred spacing cannot recreate the tighter native
+                    # ink defect that overlap_reroute just removed. Otherwise
+                    # those two repairs alternate between the same paths until
+                    # their finite budget expires. A removed crossing hold can
+                    # still take precedence; equal hold counts preserve ink.
+                    if len(remaining) == len(lost) and ink_plan.score(key, proposed) > old_ink_overlaps + 1e-6:
+                        continue
                     # Horizontal and vertical separation are computed from the
                     # same original routes. Moving horizontal tracks can make
                     # two formerly disjoint vertical spans overlap afterwards.

@@ -1925,12 +1925,17 @@ class Flowsheet:
         # always ends on a route, converged or not, so no signal line is
         # left pointing at where a balloon used to be.
         self.route_converged = False
+        from dataclasses import asdict
         for _ in range(self.layout_options.control_passes):
+            before = [(asdict(u.frame) if u.frame else None, getattr(u, 'tap', None)) for u in self.units]
             if not place_control(self):
                 # place_control can commit a small final movement and report
                 # convergence within its tolerance. Route against those exact
                 # frozen frames so native endpoints never inherit stale legs.
-                if any(u.kind == "instrument" for u in self.units):
+                # An exactly unchanged placement already owns the current
+                # routes; repeating a dense repair adds no geometry evidence.
+                after = [(asdict(u.frame) if u.frame else None, getattr(u, 'tap', None)) for u in self.units]
+                if after != before:
                     router.route(self)
                 self.route_converged = True
                 break

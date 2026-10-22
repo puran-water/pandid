@@ -1051,3 +1051,25 @@ def test_frozen_manual_geometry_is_recorded_without_offset():
         f"s2 was recorded at its raw, pre-separation position rather than "
         f"the one actually drawn: {s2_recordings[-1]}"
     )
+
+
+@pytest.mark.parametrize('movement,expected', [(0., 1), (.005, 2)])
+def test_final_control_route_runs_only_for_an_actual_geometry_change(monkeypatch, movement, expected):
+    from pandid import Flowsheet, Instrument
+    from pandid.geometry import Frame
+    fs = Flowsheet('Exact final control geometry')
+    instrument = fs.add(Instrument('PI', 1))
+    instrument.frame = Frame(x=0, y=0, w=30, h=30)
+    fs._layout_stale = False
+    class Router:
+        calls = 0
+        def route(self, sheet):
+            self.calls += 1
+    def place(sheet):
+        instrument.frame.x += movement
+        return False
+    monkeypatch.setattr('pandid.layout.control.place_control', place)
+    router = Router()
+    fs.route(router=router)
+    assert fs.route_converged
+    assert router.calls == expected

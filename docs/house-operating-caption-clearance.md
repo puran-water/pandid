@@ -20,10 +20,16 @@ Instrument placement uses frozen nominal equipment-tag reservations. Route-based
 tag placements cannot make a fixed instrument tap chase a moving caption.
 Capacity failures preserve diagnostic geometry before atomic state restoration.
 
+Preferred-spacing repair cannot recreate a tighter native ink-clearance defect
+at the same crossing-hold count. This gives the spacing and overlap rerouters a
+consistent improvement direction instead of alternating between two paths.
+An exactly unchanged control-placement pass retains its already settled routes;
+even a sub-tolerance change to a frame or tap still triggers a final reroute.
+
 Qualification against the preceding 505a101 pin: the checked drafting, composition,
 caption, portable-delivery, crossing and native-clearance suites have no regressed
-failure node IDs (baseline 305 passing tests; candidate 327, including new tests).
+failure node IDs (baseline 305 passing tests; candidate 328, including new tests).
 The instrument and routing suites also have no regressed node IDs (207 passing
-tests at both revisions). These are bounded suite comparisons, not a claim that
+tests at the baseline, 209 at the candidate). These are bounded suite comparisons, not a claim that
 every test in the fork or every drawing is qualified. Publication still requires
 the actual native, physical and drafting checks for every rendered sheet.
