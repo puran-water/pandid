@@ -6956,11 +6956,17 @@ class SvgRenderer:
             color = escaped(number.color)
             lines += _enclosure_svg(shape, number.box, number.words, color, fill)
             turn = f' transform="rotate(-90, {tx:.1f}, {ty:.1f})"' if number.vertical else ""
+            caption = name.splitlines()
+            lettering = escaped(name)
+            if len(caption) > 1:
+                step = number.font_size * 1.2
+                lettering = ''.join(f'<tspan x="{tx:.1f}" y="{ty + (i - (len(caption)-1)/2)*step:.1f}">{escaped(line)}</tspan>'
+                                    for i, line in enumerate(caption))
             lines.append(
                 f'    <text x="{tx:.1f}" y="{ty:.1f}" font-family="sans-serif" '
                 f'font-size="{number.font_size:g}" '
                 f'text-anchor="middle" dominant-baseline="middle" '
-                f'fill="{color}"{turn}>{escaped(name)}</text>'
+                f'fill="{color}"{turn}>{lettering}</text>'
             )
             # Over the words, because a halo has no outline for the tail
             # to meet and a tail buried under one would be a leader

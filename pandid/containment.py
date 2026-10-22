@@ -35,7 +35,11 @@ def validate(fs):
             raise ValueError("Unknown stream representation: " + str(s.representation))
         if s.representation == "internal":
             a,b=s.source.owner.name,s.dest.owner.name
-            if a == b or fs.containments.get(a,a) != fs.containments.get(b,b) or s.kind not in {"material", "energy"}:
+            metadata = fs.drawio_metadata.get('units', {})
+            pack_delivery = (s.kind == 'material' and s.source.owner.kind == 'feed'
+                and s.dest.owner.kind in {'tank', 'block'}
+                and metadata.get(b, {}).get('attributes', {}).get('semantic-class') == 'PortableReagentStore')
+            if a == b or (not pack_delivery and fs.containments.get(a,a) != fs.containments.get(b,b)) or s.kind not in {"material", "energy"}:
                 raise ValueError("INTERNAL_CONNECTION_OUTSIDE_BASIN: " + s.name)
             if s.route and s.route.manual:
                 raise ValueError("An internal bulk connection has no pipe waypoints")

@@ -9,7 +9,9 @@ def caption_size(text, font_size):
     scale = font_size / NUMBER_TYPE
     # Preserve the renderer's arithmetic order: a different last floating
     # point bit can change whether a plate exactly on a region edge fits.
-    return len(text) * (_HALO_CHAR * scale) + _HALO_PAD * scale, _HALO_DEEP * scale
+    lines = text.splitlines() or ['']
+    return (max(map(len, lines)) * (_HALO_CHAR * scale) + _HALO_PAD * scale,
+            _HALO_DEEP * scale + (len(lines) - 1) * font_size * 1.2)
 
 
 def groups(fs):
