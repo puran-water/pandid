@@ -51,6 +51,8 @@ def repair(fs):
         return result
 
     graphs = {}
+    trace=getattr(fs,'_obstacle_repair_trace',[])
+    fs._obstacle_repair_trace=trace
     for key, points in list(lines.items()):
         stream = fs.streams[key]
         before = hits(stream, points)
@@ -75,6 +77,7 @@ def repair(fs):
         path = find_path(graph, sp, gp, sd, gd, {}, stream.is_recycle, index,
                          forbidden=foreign_line_plates(fs,stream),overlap_weight=100.)
         if not path:
+            trace.append({'stream':stream.name,'status':'no_path','hits':sorted(before)})
             continue
         proposal = [start] + path + [goal]
         after = hits(stream, proposal)
@@ -86,6 +89,7 @@ def repair(fs):
         # Accept only a strict reduction in hard geometric defects. The
         # native body, overlap, crossing and lettering gates remain unchanged.
         if severity(after) >= severity(before):
+            trace.append({'stream':stream.name,'status':'no_improvement','before':sorted(before),'after':sorted(after)})
             continue
         simplified = []
         for point in proposal:
@@ -98,3 +102,4 @@ def repair(fs):
             simplified.append(point)
         stream.route = Route(waypoints=simplified)
         lines[key] = simplified
+        trace.append({'stream':stream.name,'status':'repaired','before':sorted(before),'after':sorted(after)})

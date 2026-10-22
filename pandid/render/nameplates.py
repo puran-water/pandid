@@ -48,7 +48,7 @@ def _wrapped(text, width, font):
         line = ''
         # A rating and its unit are one typographic token. Keep source text
         # intact while preventing a line break between e.g. 41.37 and bar.
-        tokens = re.findall(r'\S+(?:[ \t]+(?:m³/h|m3/h|m²|m2|m³|m3|bar|barg|kPa|MPa|kW|µm|mm|m|L/h|°C))?(?=\s|$)', paragraph)
+        tokens = re.findall(r'\[[^\]]+\]|\S+(?:[ \t]+(?:m³/h|m3/h|m²|m2|m³|m3|bar|barg|kPa|MPa|kW|µm|mm|m|L/h|°C))?(?=\s|$)', paragraph)
         for word in tokens:
             candidate = (line + ' ' + word).strip()
             if line and text_width(candidate, font) > width:

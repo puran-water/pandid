@@ -27,6 +27,8 @@ def test_pack_delivery_has_no_drawn_fill_and_outlet_is_preserved():
     assert receipt.route is None
     assert root.find(".//mxCell[@id='receipt']").get('visible') == '0'
     assert root.find(".//mxCell[@id='outlet']").get('visible') != '0'
+    from pandid.render.svg import _ink
+    assert not any(mark.line == 'pack-delivery' for mark in _ink(fs, 'auto'))
     restored = Flowsheet.from_dict(fs.to_dict())
     validate(restored)
     assert len(restored.streams) == 3

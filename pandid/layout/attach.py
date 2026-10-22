@@ -435,7 +435,11 @@ def place_attached(fs: "Flowsheet") -> bool:
     from pandid.render.nameplates import fixed_boxes
     obstacles.extend(fixed_boxes(fs))
     from pandid.routing.captions import equipment_tags
-    obstacles.extend((b.x_min,b.y_min,b.x_max,b.y_max) for b in equipment_tags(fs).values())
+    # Attached bubbles need the same frozen nominal tag reservation as
+    # free controllers. A route-dependent cached tag can move after every
+    # routing pass and make an otherwise fixed unit tap chase it forever.
+    obstacles.extend((b.x_min,b.y_min,b.x_max,b.y_max)
+                     for b in equipment_tags(fs,use_cached=False).values())
     stacks = shared_tap_stacks(fs)
     row_positions = {}
     # Balloons chain (an interlock hung under a controller hung off a

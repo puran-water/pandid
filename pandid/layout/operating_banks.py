@@ -13,6 +13,7 @@ class Assembly:
     frames: dict
     width: float
     height: float
+    caption_bays: tuple = ()
 
 
 def footprint(fs, assembly, pads):
@@ -39,7 +40,56 @@ def footprint(fs, assembly, pads):
             x0,y0=max(0,min(a[0],b[0])-margin),max(0,min(a[1],b[1])-margin)
             x1,y1=min(assembly.width,max(a[0],b[0])+margin),min(assembly.height,max(a[1],b[1])+margin)
             parts.append((x0,y0,x1-x0,y1-y0))
-    return parts
+    return [*parts,*assembly.caption_bays]
+
+
+def reserve_caption_bays(fs, assemblies, pads):
+    """Charge a full multiline inscription to its rigid process assembly.
+
+    A spool's thin pipe reservation does not reserve the text above and
+    below it. Shape packing could otherwise put a neighbouring filter tag
+    in that apparently empty corner, leaving no route-local caption.
+    """
+    from pandid.render.line_groups import groups, caption_size, caption_span
+    if not any('\n' in s.label for s in fs.streams):
+        return
+    owner={u:a for a in assemblies for u in a.members}
+    bays={a:[] for a in assemblies}
+    for members in groups(fs)[0]:
+        if '\n' not in members[0].label:
+            continue
+        offers=[]
+        for stream in members:
+            assembly=owner.get(stream.source.owner)
+            if assembly is None or owner.get(stream.dest.owner) is not assembly:
+                continue
+            endpoints=[]
+            for port in (stream.source,stream.dest):
+                x,y,w,h=assembly.frames[port.owner]
+                endpoints.append(port_point(port.owner,Frame(x=x,y=y,w=w,h=h),port.name))
+            a,b=endpoints
+            if a[0]!=b[0] and a[1]!=b[1]:
+                continue
+            span=abs(a[0]-b[0])+abs(a[1]-b[1])
+            if span<caption_span(stream.label,fs.stream_labels.font_size,fs.layout_options.stream_label_gap):
+                continue
+            w,h=caption_size(stream.label,fs.stream_labels.font_size)
+            if a[0]==b[0]:w,h=h,w
+            x,y=(a[0]+b[0]-w)/2-2,(a[1]+b[1]-h)/2-2
+            offers.append((span,assembly,(x,y,w+4,h+4)))
+        if offers:
+            _,assembly,box=max(offers,key=lambda item:item[0])
+            bays[assembly].append(box)
+    for assembly,boxes in bays.items():
+        if not boxes:
+            continue
+        left=min(0.,*(x for x,y,w,h in boxes))
+        top=min(0.,*(y for x,y,w,h in boxes))
+        right=max(assembly.width,*(x+w for x,y,w,h in boxes))
+        bottom=max(assembly.height,*(y+h for x,y,w,h in boxes))
+        assembly.frames={u:(x-left,y-top,w,h) for u,(x,y,w,h) in assembly.frames.items()}
+        assembly.caption_bays=tuple((x-left,y-top,w,h) for x,y,w,h in boxes)
+        assembly.width,assembly.height=right-left,bottom-top
 
 
 def banks(fs, membership, pads):
@@ -133,9 +183,9 @@ def banks(fs, membership, pads):
                           and s.source.owner in peers and s.label]
                 reserved = min((pads.get(left, Pad()).east + pads.get(right, Pad()).west
                                 for (left, _), (right, _) in zip(column, columns[index+1])), default=0) if index+1 < len(columns) else 0
-                from pandid.render.line_groups import caption_size
-                gap = max([gap] + [caption_size(label, fs.stream_labels.font_size)[0]
-                                  + 2*fs.layout_options.stream_label_gap - reserved for label in labels])
+                from pandid.render.line_groups import caption_span
+                gap = max([gap] + [caption_span(label, fs.stream_labels.font_size,
+                                  fs.layout_options.stream_label_gap) - reserved for label in labels])
             x += width + gap
         target_pad = pads.get(target, Pad())
         x += target_pad.west

@@ -64,6 +64,38 @@ def test_held_end_has_one_real_port_and_visible_hold():
     assert restored.symbol().port_faces==end.symbol().port_faces
 
 
+def test_held_interface_reserves_its_caption_overhang_beside_the_line_text():
+    from pandid.units import HeldPipeEnd
+    from pandid.geometry import Frame
+    from pandid.layout.halo import Pad
+    from pandid.layout.operating_banks import Assembly
+    from pandid.layout.operating_terminals import attach
+    from pandid.portgeom import port_point
+    from pandid.render.line_groups import caption_size
+    fs=Flowsheet('Held interface caption')
+    source=fs.add(HeldPipeEnd('source',direction='outlet'))
+    valve=fs.add(Valve('valve'))
+    line=fs.connect(source.pipe,valve.inlet)
+    line.display_label='LINE HOLD\nDN20 / SD1\nAcid provision - no duty'
+    own=Assembly('source',(source,),{source:(80,20,40,12)},200,32)
+    peer=Assembly('valve',(valve,),{valve:(10,20,40,30)},60,50)
+    assemblies=[own,peer]
+    pads={source:Pad(west=80,east=80,north=20),valve:Pad(west=10,east=10,north=20)}
+    attach(fs,assemblies,pads,2000)
+    def endpoint(unit,port):
+        x,y,w,h=peer.frames[unit]
+        return port_point(unit,Frame(x=x,y=y,w=w,h=h),port)
+    a,b=endpoint(source,'pipe'),endpoint(valve,'inlet')
+    assert b[0]-a[0] >= caption_size(line.label,fs.stream_labels.font_size)[0]+50+90
+    assert a[1]==b[1] and len(assemblies)==1
+    from pandid.layout.operating_banks import reserve_caption_bays, footprint
+    before=peer.height
+    reserve_caption_bays(fs,assemblies,pads)
+    assert peer.height>before
+    assert peer.caption_bays and all(box in footprint(fs,peer,pads) for box in peer.caption_bays)
+    assert all(y>=0 and y+h<=peer.height for x,y,w,h in peer.caption_bays)
+
+
 def test_measured_rectangle_pack_preserves_all_sizes():
     from pandid.layout.rectangle_pack import pack
     rectangles=[('large',100,90),('wide',100,40),('small',30,30)]
@@ -432,5 +464,85 @@ def test_intermediate_tag_plan_does_not_call_the_final_crossing_gate():
         stream.route=Route(waypoints=points,manual=True)
     fs.drawio_metadata['units']={u.name:{'attributes':{'layout-subsystem':'process'}} for u in fs.units}
     equipment_tags(fs,settled=True)
+    from pandid.routing.captions import reserve_leaders
+    reserve_leaders(fs)
+    assert fs._caption_repair_trace
     with pytest.raises(ValueError,match='CROSSING_CLEARANCE_REQUIRED'):
         _tag_pass(fs,default_registry,None,'auto')
+
+
+def test_serial_path_wrap_keeps_its_final_station_with_its_predecessor():
+    from pandid import Pump
+    from pandid.layout.operating_paths import paths
+    fs=Flowsheet('Serial path wrap')
+    source,target=fs.add(Feed('source')),fs.add(Product('target'))
+    pumps=[fs.add(Pump('station-'+str(i),width=70,height=70)) for i in range(4)]
+    previous=source.outlet
+    for pump in pumps:
+        s=fs.connect(previous,pump.suction)
+        s.display_label='LINE HOLD\nDN80 / DS1\nmembrane feed'
+        previous=pump.discharge
+    fs.connect(previous,target.inlet)
+    fs.layout()
+    assemblies=paths(fs,{u:'process' for u in pumps},{},set(),650)
+    assert {u for a in assemblies for u in a.members}==set(pumps)
+    assert all(len(a.members)>=2 and a.width<=650 for a in assemblies)
+def test_shape_pack_tolerates_only_float_roundoff_at_the_assembly_origin():
+    from pandid.layout.shape_pack import pack
+    assert pack([('a',100,100,[(-2.8e-14,0,100,100)])],200,200) is not None
+    with pytest.raises(ValueError,match='ASSEMBLY_FOOTPRINT_OUTSIDE_ENVELOPE'):
+        pack([('a',100,100,[(-1.,0,100,100)])],200,200)
+
+
+def test_compound_packing_keeps_connected_stations_near_each_other():
+    from pandid.layout.shape_pack import pack
+    shapes=[('a',180,50,[(0,0,180,50)]),('b',80,120,[(0,0,80,120)]),
+            ('c',160,80,[(0,0,160,80)]),('d',60,60,[(0,0,60,60)])]
+    links=[('a','d'),('a','b')]
+    ordinary=pack(shapes,450,300)
+    connected=pack(shapes,450,300,links=links)
+    dimensions={key:(w,h) for key,w,h,_ in shapes}
+    def length(result):
+        return sum(abs(result[a][0]+dimensions[a][0]/2-result[b][0]-dimensions[b][0]/2)
+                   +abs(result[a][1]+dimensions[a][1]/2-result[b][1]-dimensions[b][1]/2)
+                   for a,b in links)
+    assert length(connected)<length(ordinary)
+    assert connected==pack(shapes,450,300,links=links)
+    assert all(0<=connected[key][0]<=450-w and 0<=connected[key][1]<=300-h for key,w,h,_ in shapes)
+
+
+def test_dense_flag_rail_follows_connected_equipment_instead_of_declaration_order(monkeypatch):
+    from pandid import Pump
+    from pandid.geometry import Frame
+    from pandid.layout.operating_banks import Assembly
+    from pandid.layout import dense_operating
+    fs=Flowsheet('Composed feeds')
+    lower,upper=fs.add(Feed('lower feed')),fs.add(Feed('upper feed'))
+    a,b=fs.add(Pump('lower pump')),fs.add(Pump('upper pump'))
+    fs.connect(lower.outlet,a.suction)
+    fs.connect(upper.outlet,b.suction)
+    for unit in fs.units:
+        unit.frame=Frame(x=0,y=0,w=100,h=60)
+    assemblies=[Assembly(p.name,(p,),{p:(0,0,100,60)},100,60) for p in (a,b)]
+    monkeypatch.setattr(dense_operating,'pack',lambda *args,**kwargs:{a.name:(300,500),b.name:(300,100)})
+    dense_operating.place(fs,assemblies,{},[],1000,1000)
+    assert fs._dense_boundaries[upper.name][1] < fs._dense_boundaries[lower.name][1]
+    assert fs._dense_boundaries[upper.name][0] == fs._dense_boundaries[lower.name][0]
+    assert [u.name for u in fs.units]==['lower feed','upper feed','lower pump','upper pump']
+
+
+def test_unit_tapped_balloon_does_not_chase_a_route_dependent_tag_cache():
+    from pandid import Pump, Instrument
+    from pandid.geometry import Frame
+    from pandid.layout.attach import place_attached
+    from pandid.routing.visibility import Rect
+    fs=Flowsheet('Stable instrument attachment')
+    pump=fs.add(Pump('pump'))
+    pump.frame=Frame(x=200,y=200,w=70,h=70)
+    instrument=fs.add(Instrument('PIT',1)).attach(pump,at='N',offset=80)
+    fs.drawio_metadata['units']={pump.name:{'attributes':{'layout-subsystem':'process'}}}
+    place_attached(fs)
+    before=(instrument.frame.x,instrument.frame.y)
+    fs._resolved_tag_boxes={pump:Rect(50,450,0,190)}
+    assert not place_attached(fs)
+    assert (instrument.frame.x,instrument.frame.y)==before

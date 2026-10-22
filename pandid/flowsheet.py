@@ -2202,6 +2202,15 @@ class Flowsheet:
                 self.warnings = [i for i in found if i.severity == "warning"]
             return
         self._resolve_geometry()
+        # Operating compositions can reserve the full fixed band for their
+        # common data row. A late automatic escape track must fit that same
+        # measured band; it cannot enlarge the page or shrink the lettering.
+        from pandid.layout.subsystems import declared
+        if declared(self) and self.drawing_scale and arguments.get('page_size'):
+            from pandid.render.drawio import DrawioRenderer, fitted_band
+            from pandid.routing.extent import fit
+            width, height = fitted_band(self, arguments['page_size'])
+            fit(self, width=width, height=height, measure=DrawioRenderer._drawing_box)
         if check:
             found += geometry_issues(self, arrows=draws_arrowheads(diagram))
             self.warnings = [i for i in found if i.severity == "warning"]

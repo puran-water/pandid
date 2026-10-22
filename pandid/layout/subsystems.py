@@ -73,6 +73,8 @@ def place(fs):
         owner[unit] = a
     from pandid.layout.operating_terminals import attach
     attach(fs,assemblies,pads,core_width)
+    from pandid.layout.operating_banks import reserve_caption_bays
+    reserve_caption_bays(fs,assemblies,pads)
     owner = {u:a for a in assemblies for u in a.members}
     groups = {}
     # Authored subsystem order is stable even when a bank has collapsed many
@@ -125,7 +127,8 @@ def place(fs):
                 clearance=fs.layout_options.parallel_train_clearance
                 cursor = py+a.height+(100. if clearance is None else clearance)
                 bottom = max(bottom,cursor)
-            captions = [text_width(s.label,fs.stream_labels.font_size)+2*fs.layout_options.stream_label_gap
+            from pandid.render.line_groups import caption_span
+            captions = [caption_span(s.label,fs.stream_labels.font_size,fs.layout_options.stream_label_gap)
                         for left,_,s in edges if left in column and s.label and counts[s.label_group or s.name]==1]
             x += span+max(fs.layout_options.column_gap,max(captions,default=0))
         w = max(px+a.width for a,(px,py) in local.items())
@@ -181,7 +184,7 @@ def place(fs):
             shapes=[]
             for a in assemblies:
                 shapes.append((a.name,a.width,a.height,footprint(fs,a,pads)))
-            packed=pack_shapes(shapes,core_width,budget)
+            packed=pack_shapes(shapes,core_width,budget,links=links)
             if packed is None:
                 from pandid.layout.constraint_pack import pack as solve_shapes
                 try:

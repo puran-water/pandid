@@ -6,13 +6,21 @@ a member within its assembly, or reduces an instrument/lettering reservation.
 import math
 
 
-def pack(shapes, width, height, *, step=5., gap=20., obstacles=(), below=()):
+def pack(shapes, width, height, *, step=5., gap=20., obstacles=(), below=(), links=()):
     nx,ny=math.floor(width/step),math.floor(height/step)
     masks={}
     for name,w,h,parts in shapes:
         sw,sh=math.ceil((w+gap)/step),math.ceil((h+gap)/step)
         rows=[0]*sh
         for x,y,pw,ph in parts:
+            # Subtracting a measured balloon pad from its translated frame
+            # can leave -2.8e-14 at the origin. It is zero geometric distance,
+            # but floor() turns it into a negative bit index. Retain genuine
+            # negative extents as an invalid assembly, never clip its ink.
+            if -1e-9 < x < 0:x=0.
+            if -1e-9 < y < 0:y=0.
+            if x<0 or y<0:
+                raise ValueError('ASSEMBLY_FOOTPRINT_OUTSIDE_ENVELOPE: '+str(name))
             left,top=math.floor(x/step),math.floor(y/step)
             right,bottom=math.ceil((x+pw+gap)/step),math.ceil((y+ph+gap)/step)
             bits=((1<<(right-left))-1)<<left
@@ -32,6 +40,7 @@ def pack(shapes, width, height, *, step=5., gap=20., obstacles=(), below=()):
         weights={key:rng.uniform(.45,1.55) for key in sorted(masks)}
         orders.append(lambda v,weights=weights:(-area[v[0]]*weights[v[0]],v[0]))
     dimensions={name:(w,h) for name,w,h,_ in shapes}
+    candidates=[]
     for order in orders:
         occupied=[0]*ny
         for x,y,w,h in obstacles:
@@ -63,5 +72,10 @@ def pack(shapes, width, height, *, step=5., gap=20., obstacles=(), below=()):
             for dy,bits in rows:occupied[y+dy] |= bits<<x
             result[name]=(x*step+gap/2,y*step+gap/2)
         if len(result)==len(shapes):
-            return result
-    return None
+            if not links:
+                return result
+            length=sum(abs(result[a][0]+dimensions[a][0]/2-result[b][0]-dimensions[b][0]/2)
+                       +abs(result[a][1]+dimensions[a][1]/2-result[b][1]-dimensions[b][1]/2)
+                       for a,b in links if a in result and b in result)
+            candidates.append((length,len(candidates),result))
+    return min(candidates,key=lambda item:item[:2])[2] if candidates else None

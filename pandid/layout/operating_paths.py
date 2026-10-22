@@ -4,7 +4,7 @@ from pandid.layout.halo import Pad
 from pandid.layout.stages import slot
 from pandid.layout.operating_banks import Assembly
 from pandid.portgeom import port_point
-from pandid.render.line_groups import caption_size
+from pandid.render.line_groups import caption_span
 
 
 def paths(fs, membership, pads, claimed, width):
@@ -42,10 +42,20 @@ def paths(fs, membership, pads, claimed, width):
             placed = {u:(px-left,py-top,w,h) for u,(px,py,w,h) in frames.items()}
             result.append(Assembly('path:'+next(iter(frames)).name,tuple(frames),placed,right-left,bottom-top))
 
-        for unit in chain:
+        remaining=list(chain)
+        while remaining:
+            unit=remaining.pop(0)
             s,p = slot(unit),pads.get(unit,Pad())
             if frames and x+p.west+s.w+p.east > width:
-                finish();frames={};x=ordinate=0.
+                if not remaining and len(frames)>=3:
+                    # Keep a final measurement or injection beside its
+                    # predecessor instead of dropping a singleton row.
+                    preceding=next(reversed(frames))
+                    del frames[preceding]
+                    finish();frames={};x=ordinate=0.;labelled=set()
+                    remaining=[preceding,unit]
+                    continue
+                finish();frames={};x=ordinate=0.;labelled=set()
             frame = Frame(x=0,y=0,w=s.w,h=s.h,orientation=s.orientation,
                           mirrored=s.mirrored,mirror_y=s.mirror_y)
             inlet = port_point(unit,frame,incoming[unit][0].dest.name)[1]
@@ -57,8 +67,8 @@ def paths(fs, membership, pads, claimed, width):
             gap=fs.layout_options.column_gap
             identity = (stream.label_group or stream.name) if stream else None
             if stream and stream.label and identity not in labelled:
-                gap=max(gap,caption_size(stream.label,fs.stream_labels.font_size)[0]
-                        +2*fs.layout_options.stream_label_gap)
+                gap=max(gap,caption_span(stream.label,fs.stream_labels.font_size,
+                                        fs.layout_options.stream_label_gap))
                 labelled.add(identity)
             x+=p.west+s.w+p.east+gap
         finish()

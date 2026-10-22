@@ -710,6 +710,8 @@ def _ink(fs, direction: str, *, include_hops=True) -> "list[_Ink]":
                         max(ax, bx) + pad, max(ay, by) + pad, axis, at, kind, line))
 
     for s in fs.streams:
+        if s.representation == 'internal':
+            continue  # semantic delivery/mixing has no drawn ink to reserve
         # Half the pen is the ink itself; the unit beyond it is paper
         # a halo may not crowd. Two quantities, and stated as two
         # since #490: written as the whole pen they were one number,
@@ -2345,8 +2347,34 @@ def fitted_region(fs):
     boxes = [unit_box(u, u.frame) for u in fs.units if u.frame is not None]
     if not boxes:
         return None
-    return (min(b[0] for b in boxes), min(b[1] for b in boxes),
+    region=(min(b[0] for b in boxes), min(b[1] for b in boxes),
             max(b[2] for b in boxes), max(b[3] for b in boxes))
+    from pandid.layout.subsystems import declared
+    if declared(fs):
+        from pandid.render.drawio import fitted_band, DrawioRenderer
+        _,height=fitted_band(fs,fs.layout_options.boundary_page)
+        # Operating sheets reserve paper below their last nozzle for routed
+        # pipes, captions and equipment cards. The equipment bounding box is
+        # not the bottom of that paper: clipping to it rejected multiline
+        # captions beside the lowest pipe despite a valid fixed-scale fit.
+        # Cards remain hard obstacles and final export measures the full ink.
+        raw=DrawioRenderer._drawing_box(fs,equipment_data=False)
+        top=raw[1]
+        tags=getattr(fs,'_resolved_tag_boxes',None) or {}
+        top=min(top,*(box.y_min for box in tags.values())) if tags else top
+        if fs.equipment_data and not getattr(fs,'_dense_nameplates',None):
+            from pandid.render.nameplates import plan
+            cards,_=plan(fs,raw)
+            clearance=max(row.get('clearance',65) for row in fs.equipment_data.values())
+            # A floating common data row docks below the complete process
+            # ink. Reserve its measured height before offering caption paper;
+            # otherwise the final dock adds it after an already full page.
+            height-=max((card.h for card in cards),default=0)+clearance
+        # Overhead route detours and equipment lettering consume the same
+        # paper budget. Starting it at the first symbol instead placed a
+        # low caption beyond the true fixed-scale band by that top overhang.
+        region=(region[0],top,region[2],top+height)
+    return region
 
 
 def _interior_label_spot(region, protected, width, height, centre, gap):
@@ -2492,7 +2520,7 @@ def _bounded_label_spots(region, protected, width, height, segments, gap, limit)
 def _bare_stream_number(runs, name, color, display_name, font_size,
                         text_width, text_height, bands, symbols, placed, ink,
                         region, label_gap, heads: tuple = (),
-                        own_line_unled: bool = False) -> StreamNumber:
+                        own_line_unled: bool = False, preferred=None) -> StreamNumber:
     """Place one un-enclosed number, with a line-only crossing last resort.
 
     Clear positions along any straight piece of the same run are considered
@@ -2587,6 +2615,22 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
 
     def unled(run, box, off):
         return off <= beside and _along(box, run.vertical, run.lo, run.hi)
+
+    # A router reservation is a preferred position, never an exemption.
+    # Reusing it stops successive repairs moving a clear caption onto the
+    # paper just reserved for another line. Recheck the actual pipe, every
+    # body/ink obstacle, the own-line verdict and the fitted paper region.
+    if preferred is not None:
+        x=(preferred.x_min+preferred.x_max)/2
+        y=(preferred.y_min+preferred.y_max)/2
+        for run in described:
+            if abs((x if run.vertical else y)-run.at)>1e-7:
+                continue
+            box=box_at(run,x,y)
+            if (within(box) and unled(run,box,0) and halo_is_readable(run,box)
+                    and not (own_line is not None and own_line.verdict(box,run.vertical))):
+                return StreamNumber(name,color,run.segment,x,y,run.vertical,box,
+                                    None,box,(),display_name,font_size)
 
     offered: list[tuple[_NumberRun, float, float, int, float]] = []
     for run in described:
@@ -2833,10 +2877,36 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
         None if damaged else box, crossed, display_name, font_size, limit)
 
 
+def caption_symbols(fs, joints=None, direction="auto", *, pending_routes=False):
+    """The exact symbol envelopes a line caption must clear in both passes."""
+    from pandid.portgeom import unit_box
+    symbols: list[tuple[float, float, float, float]] = [
+        _obstacle(unit_box(u, u.frame)) for u in fs.units if u.frame is not None
+    ]
+    from pandid.render.nameplates import fixed_boxes
+    symbols += fixed_boxes(fs)
+
+    # A flange mark is a symbol on a run, so it goes in with the
+    # symbols: the search dodges it as it dodges a valve body, and both
+    # the halo and the leader are scored against it. The mark is drawn
+    # hard against a nozzle and a leader wants the clear middle of a
+    # segment -- on the short spool between a condenser and the drum
+    # beneath it, "the clear middle" was the two units between the two
+    # flanges. See :func:`flange_boxes`.
+    symbols += [_obstacle(b) for b in flange_boxes(fs, joints)]
+    # A letter code written outside a balloon is a mark on the sheet the
+    # same way: it is placed before either label pass runs (see
+    # :func:`quadrant_labels`), so both can be told where it went.
+    symbols += [b for b in map(_unit_label_box, quadrant_labels(fs, direction, include_hops=not pending_routes))
+                if b is not None]
+
+    return symbols
+
+
 def stream_numbers(fs, placed: list, joints: "str | None",
                    direction: str,
                    region: "tuple[float, float, float, float] | None" = None,
-                   arrows: bool = True, registry=None) -> "list[StreamNumber]":
+                   arrows: bool = True, registry=None, *, pending_routes=False) -> "list[StreamNumber]":
     """Where every line number on the sheet goes.
 
     Lifted out of :meth:`SvgRenderer._draw_streams` for the reason
@@ -2880,34 +2950,18 @@ def stream_numbers(fs, placed: list, joints: "str | None",
     are. Called directly, a sheet is taken to head its lines, as
     :func:`pandid.validate.validate` takes it.
     """
-    from pandid.portgeom import unit_box
-
-    ink = _ink(fs, direction)
-    symbols: list[tuple[float, float, float, float]] = [
-        _obstacle(unit_box(u, u.frame)) for u in fs.units if u.frame is not None
-    ]
-    from pandid.render.nameplates import fixed_boxes
-    symbols += fixed_boxes(fs)
-
-    # A flange mark is a symbol on a run, so it goes in with the
-    # symbols: the search dodges it as it dodges a valve body, and both
-    # the halo and the leader are scored against it. The mark is drawn
-    # hard against a nozzle and a leader wants the clear middle of a
-    # segment -- on the short spool between a condenser and the drum
-    # beneath it, "the clear middle" was the two units between the two
-    # flanges. See :func:`flange_boxes`.
-    symbols += [_obstacle(b) for b in flange_boxes(fs, joints)]
-    # A letter code written outside a balloon is a mark on the sheet the
-    # same way: it is placed before either label pass runs (see
-    # :func:`quadrant_labels`), so both can be told where it went.
-    symbols += [b for b in map(_unit_label_box, quadrant_labels(fs, direction))
-                if b is not None]
+    ink = _ink(fs, direction, include_hops=not pending_routes)
+    symbols = caption_symbols(fs, joints, direction, pending_routes=pending_routes)
 
     # A template can explicitly identify the physical line across its valve
     # and instrument-tap segments. All those segments offer their paper to the
     # one caption; short suction stubs no longer force a crossing leader.
     from pandid.render.line_groups import groups as line_groups, caption_size
     groups, aliases = line_groups(fs)
+    reserved={**getattr(fs,'_planned_line_plates',{}),
+              **{key:boxes[0] for key,boxes in getattr(fs,'_planned_label_leaders',{}).items() if boxes}}
+    preferred={members[0].name:reserved.get(members[0].label_group or members[0].name)
+               for members in groups}
     ink = [line._replace(line=aliases.get(line.line, line.line)) for line in ink]
     label_items, display_names, group_heads = [], {}, {}
     arrowheads = _arrowhead_keep_outs(fs, arrows, registry)
@@ -2963,6 +3017,8 @@ def stream_numbers(fs, placed: list, joints: "str | None",
     if not isinstance(held, bool):
         held = {aliases.get(name, name) for name in held}
     out: list[StreamNumber] = []
+    # Reserve the promised paper before free-placement captions claim it.
+    label_items.sort(key=lambda item: preferred.get(item[1]) is None)
     for runs, name, color in label_items:
         heads = keep_outs.get(name, ())
         seg, keep = runs[0]
@@ -3006,7 +3062,26 @@ def stream_numbers(fs, placed: list, joints: "str | None",
                 runs, name, color, display_names[name],
                 fs.stream_labels.font_size, tw, th, bands, symbols, placed,
                 ink, region, fs.layout_options.stream_label_gap, heads,
-                held is True or name in held)
+                held is True or name in held, preferred=preferred.get(name))
+            if number.placement_limit is not None or number.leader_crossed or number.crossed:
+                # A five-row fluid description is compact on a horizontal
+                # pipe but broad across a vertical corridor. Try measured
+                # alternative line breaks before declaring that corridor
+                # full. Every candidate repeats the same complete ink gate.
+                from pandid.render.line_groups import caption_forms
+                def burden(value):
+                    return (value.placement_limit is not None,
+                            len(value.leader_crossed),len(value.crossed))
+                for text in caption_forms(display_names[name],fs.stream_labels.font_size):
+                    width,height=caption_size(text,fs.stream_labels.font_size)
+                    trial=_bare_stream_number(
+                        runs,name,color,text,fs.stream_labels.font_size,width,height,bands,
+                        symbols,placed,ink,region,fs.layout_options.stream_label_gap,heads,
+                        held is True or name in held,preferred=preferred.get(name))
+                    if burden(trial)<burden(number):
+                        number=trial
+                    if burden(number)==(False,0,0):
+                        break
             placed.append(number.box)
             if number.leader is not None:
                 (ax0, ay0), (ax1, ay1) = number.leader

@@ -61,6 +61,14 @@ def lettering(fs, *, body, heading):
     if any(type(v) not in (int, float) or not math.isfinite(v) or v <= 0 for v in (body, heading)):
         raise ValueError('Process lettering sizes must be positive and finite')
     fs.stream_labels.font_size = body
+    # Multi-row line-list inscriptions keep their identity and size/class
+    # rows intact. Wrap the full fluid description into a compact plate,
+    # without shrinking type or abbreviating engineering data.
+    from pandid.render.nameplates import _wrapped
+    for stream in fs.streams:
+        rows = stream.label.splitlines()
+        if len(rows) >= 3:
+            stream.display_label = '\n'.join(rows[:2] + _wrapped(' '.join(rows[2:]), 9 * body, body))
     for unit in fs.units:
         unit.font_size = body
         if unit.kind in {'instrument', 'feed', 'product'}:

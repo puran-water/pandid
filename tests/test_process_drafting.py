@@ -118,8 +118,13 @@ def test_adding_equipment_does_not_change_printed_flags_balloons_or_text():
 
 def test_fixed_drafting_refuses_capacity_instead_of_shrinking():
     fs=example(True);fs.units[2].pin(x=100,y=100);fs.units[3].pin(x=10000,y=100)
-    with pytest.raises(ValueError,match='FIXED_SCALE_CAPACITY'):
+    before=[u.frame for u in fs.units]
+    with pytest.raises(ValueError,match='FIXED_SCALE_CAPACITY') as failed:
         fs.to_drawio(page_size='A1')
+    evidence=failed.value.drawing_geometry
+    assert len(evidence['positions'])==len(fs.units) and evidence['routes']
+    assert evidence['fit']['needed'][0]>evidence['fit']['available'][0]
+    assert [u.frame for u in fs.units]==before
 
 
 def test_house_line_number_search_can_leave_a_crowded_corridor():

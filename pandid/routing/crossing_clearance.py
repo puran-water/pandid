@@ -59,22 +59,46 @@ class _OverlapPlan:
                     self.chunks.append(_segment_overlaps(a, b, self.paths[right], clearance))
         self.totals = [fsum(chunk) for chunk in self.chunks]
         self.total = fsum(self.totals)
+        self.nonzero = {i: chunk for i,chunk in enumerate(self.chunks) if any(chunk)}
 
     def score(self, key, points):
         path = tuple(tuple(p) for p in points)
         if len(path) != len(self.paths[key]):
             raise ValueError("An overlap trial must retain its waypoint count")
-        chunks = self.chunks[:]
+        # Adding an exact zero never changes the original floating sum.
+        # Dense diagrams have mostly disjoint route pairs: retain just their
+        # nonzero chunks, still in the original nested summation order.
+        chunks = self.nonzero.copy()
         for index in self.affected[key]:
             left, right, segment = self.entries[index]
             apts = path if left == key else self.paths[left]
             bpts = path if right == key else self.paths[right]
-            chunks[index] = _segment_overlaps(apts[segment], apts[segment+1], bpts, self.clearance)
+            chunk = _segment_overlaps(apts[segment], apts[segment+1], bpts, self.clearance)
+            if any(chunk):
+                chunks[index] = chunk
+            else:
+                chunks.pop(index,None)
         total = 0.0
-        for chunk in chunks:
-            for value in chunk:
+        for index in sorted(chunks):
+            for value in chunks[index]:
                 total += value
         return total
+
+
+class _IntersectionPlan:
+    """Cache unchanged segment/body intersections during track trials."""
+    def __init__(self, boxes):
+        self.boxes = tuple(boxes)
+        self.hits = lru_cache(maxsize=8192)(self._hits)
+
+    def _hits(self, a, b):
+        return tuple(i for i,box in enumerate(self.boxes) if box.intersects_segment(*a,*b))
+
+    def adds(self, changed):
+        from collections import Counter
+        before=Counter(i for (a,b),_ in changed for i in self.hits(tuple(a),tuple(b)))
+        after=Counter(i for _,(a,b) in changed for i in self.hits(tuple(a),tuple(b)))
+        return any(count>before[i] for i,count in after.items())
 
 
 def repair(fs, *, radius=5, max_passes=None):
@@ -130,6 +154,7 @@ def repair(fs, *, radius=5, max_passes=None):
                 boxes = route_obstacles(fs, stream)
             if stream.route.manual:
                 continue
+            body_plan = _IntersectionPlan(boxes)
             points = lines[key]
             for j in range(1,len(points)-2):
                 a,b = points[j:j+2]
@@ -148,8 +173,7 @@ def repair(fs, *, radius=5, max_passes=None):
                     from pandid.routing.terminal_clearance import arrow_lead_preserved
                     if not arrow_lead_preserved(fs,stream,points,proposed):
                         continue
-                    if any(sum(box.intersects_segment(*a,*b) for _,(a,b) in changed) >
-                           sum(box.intersects_segment(*a,*b) for (a,b),_ in changed) for box in boxes):
+                    if body_plan.adds(changed):
                         continue
                     overlap = overlap_plan.score(key, proposed)
                     # Most dense-sheet candidates cannot improve either metric.

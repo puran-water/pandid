@@ -34,6 +34,12 @@ def attach(fs, assemblies, pads, maximum_width):
         # contributes a vertical approach beside its end.
         gap = max(90,caption_size(stream.label,fs.stream_labels.font_size)[0]
                   +2*max(25.,fs.layout_options.stream_label_gap))
+        # A held interface carries a service/destination caption wider than
+        # its short pipe stub. Its overhang and the peer's tag halo occupy
+        # real paper at the ends of the intervening inscription bay.
+        terminal_pad,peer_pad=pads.get(terminal,Pad()),pads.get(peer,Pad())
+        gap += ((terminal_pad.east+peer_pad.west) if incoming
+                else (terminal_pad.west+peer_pad.east))
         x = anchor[0]+(-gap if incoming else gap)-local[0]
         y = anchor[1]-local[1]
         frames = {**parent.frames,terminal:(x,y,tw,th)}

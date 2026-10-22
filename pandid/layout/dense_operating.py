@@ -41,13 +41,32 @@ def place(fs, assemblies, pads, cards, width, height):
     from pandid.layout.operating_banks import footprint
     shapes = [(a.name, a.width, a.height, footprint(fs, a, pads)) for a in assemblies]
     spacing = max(2*fs.layout_options.instrument_clearance, gap)
-    packed = pack(shapes, width, budget, obstacles=obstacles, gap=spacing)
+    owners = {u: a for a in assemblies for u in a.members}
+    links=[(owners[s.source.owner].name,owners[s.dest.owner].name) for s in fs.streams
+           if s.kind=='material' and s.source.owner in owners and s.dest.owner in owners
+           and owners[s.source.owner] is not owners[s.dest.owner]]
+    packed = pack(shapes, width, budget, obstacles=obstacles, gap=spacing,links=links)
     if packed is None:
         from pandid.layout.constraint_pack import pack as solve
         packed = solve(shapes, width, budget, obstacles=obstacles, gap=spacing)
         if packed is None:
             return None
-    owners = {u: a for a in assemblies for u in a.members}
+    # Match each flag rail to the vertical order of the real process
+    # connections after packing. Declaration order can put chemical feeds
+    # above a later-composed break-tank inlet, forcing all four pipes to
+    # cross before they reach the equipment. Flag identities do not change.
+    for kind in ('feed','product'):
+        rail=[u for u in fs.units if u.kind==kind]
+        def destination_y(unit):
+            peers=[s.dest.owner if kind=='feed' else s.source.owner for s in fs.streams
+                   if (s.source.owner if kind=='feed' else s.dest.owner) is unit]
+            ordinates=[packed[owners[p].name][1]+owners[p].frames[p][1]+owners[p].frames[p][3]/2
+                       for p in peers if p in owners]
+            return sum(ordinates)/len(ordinates) if ordinates else float('inf')
+        y=50.
+        for unit in sorted(rail,key=destination_y):
+            rails[unit.name]=(rails[unit.name][0],y)
+            y += unit.frame.h+fs.layout_options.boundary_flag_gap
     ordered = sorted(cards, key=lambda c: (packed[owners[fs.units[c.unit_index]].name][0]
                     + owners[fs.units[c.unit_index]].frames[fs.units[c.unit_index]][0], c.unit_index))
     desired = [packed[owners[fs.units[c.unit_index]].name][0]

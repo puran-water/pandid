@@ -3217,9 +3217,24 @@ class DrawioRenderer:
                 'available_mm': tuple(v * paper for v in free[2:]),
                 'drawing_scale': fs.drawing_scale, 'units': 'pre-print fitting coordinates',
             }
-        fit = _Fit.identity() if free is None else _Fit(
-            *_fitted(inner, free, fs.drawing_scale,
-                     getattr(fs, "drawing_scale_tolerance", 0.0)))
+        try:
+            fit = _Fit.identity() if free is None else _Fit(
+                *_fitted(inner, free, fs.drawing_scale,
+                         getattr(fs, "drawing_scale_tolerance", 0.0)))
+        except ValueError as exc:
+            # The public render operation correctly restores its input on
+            # failure. Keep measured failure geometry on the exception so a
+            # caller's diagnostics do not become an empty, unrestored sheet.
+            exc.drawing_geometry = {
+                'positions':{u.name:{'x':u.frame.x,'y':u.frame.y,'width':u.frame.w,'height':u.frame.h}
+                             for u in fs.units if u.frame is not None},
+                'routes':{s.name:s.route.waypoints if s.route else None for s in fs.streams},
+                'fit':getattr(fs,'drawing_fit',None),
+                'drawing_bounds':inner,
+                'caption_repair':getattr(fs,'_caption_repair_trace',[]),
+                'obstacle_repair':getattr(fs,'_obstacle_repair_trace',[]),
+            }
+            raise
         # What the title strip's own three variable fields fall back to,
         # all three of them the sheet's answer rather than this file's:
         # the drawing name a block with no title takes, today's date
