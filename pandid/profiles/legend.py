@@ -82,6 +82,15 @@ def pages(entries, *, metadata_factory, title='SYMBOLS AND CONVENTIONS', body_fo
                 row_height = max(row_height, REFERENCE_FLAG_LINES * body_font_size * 1.2 + 30 + 8 + 24)
             if entry['key'] in {'house.mixer.agitator', 'house.mbr.membrane_cage'}:
                 row_height = max(row_height, 210)
+            if entry['kind'] == 'symbol':
+                # Some house symbols retain their construction dimensions
+                # after the gallery's ordinary sample scaling. Charge those
+                # dimensions to the row before placing the next specimen.
+                from pandid.profiles.templates import ALIASES
+                from pandid.render._house_symbols import HOUSE_SYMBOL_TYPES
+                from pandid.profiles.process import UNIT_SIZES
+                kind, _ = ALIASES.get(entry['key'], HOUSE_SYMBOL_TYPES.get(entry['key'], ('', '')))
+                row_height = max(row_height, UNIT_SIZES.get(kind, (0, 0))[1] + 24)
             if entry['key'] == 'stencil.pid.flow_sensors.magnetic':
                 row_height = max(row_height, 130)
             if height + row_height > 1300 and column:

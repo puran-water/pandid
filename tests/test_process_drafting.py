@@ -83,6 +83,25 @@ def test_reference_flags_keep_one_size_across_pfd_pid_and_legend():
     assert len(set(signatures)) == 1
 
 
+def test_legend_reserves_fixed_construction_symbol_height():
+    from pandid.profiles.legend import pages
+    entries = [
+        {'kind': 'symbol', 'id': 'basin', 'key': 'house.basin.concrete',
+         'category': 'equipment', 'meaning': 'Concrete basin'},
+        {'kind': 'symbol', 'id': 'tower', 'key': 'house.degasser.packed_tower',
+         'category': 'equipment', 'meaning': 'Packed tower'},
+        {'kind': 'line', 'id': 'pipe', 'key': 'material', 'meaning': 'Process pipe'},
+    ]
+    fs = pages(entries, metadata_factory=lambda _: {'cells': {}})[0]
+    lettering(fs, body=17, heading=24)
+    fs.layout()
+    basin, tower = (next(u for u in fs.units if u.name == 'entry-' + key)
+                    for key in ('basin', 'tower'))
+    assert basin.frame.h == 120
+    assert unit_box(basin, basin.frame)[3] + 12 <= unit_box(tower, tower.frame)[1]
+    assert not [f for f in fs.validate() if f.severity == 'error']
+
+
 def test_adding_equipment_does_not_change_printed_flags_balloons_or_text():
     values=[]
     for extra in (False,True):
