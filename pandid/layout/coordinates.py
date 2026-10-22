@@ -356,7 +356,7 @@ def _filled_gap(columns: dict[int, _Column], band: list[int],
         return minimum
     if all(c in fixed_gaps for c in band if core_columns[0] < c <= core_columns[-1]):
         return minimum
-    from pandid.profiles.process import BOUNDARY_APPROACH, ESCAPE_LANE
+    from pandid.profiles.process import boundary_approach, ESCAPE_LANE
     from pandid.render.drawio import fitted_band
 
     # A pipe's turn and its lettering may extend beyond the equipment box.
@@ -367,7 +367,7 @@ def _filled_gap(columns: dict[int, _Column], band: list[int],
     if boundaries and options.aligned_boundaries:
         # align_boundaries owns the rails. Leave their flags and the two
         # 110-unit approaches intact, and fill the paper between those runs.
-        target -= 2 * BOUNDARY_APPROACH + sum(
+        target -= 2 * boundary_approach(fs) + sum(
             max((slot(u).w for u in boundaries if u.kind == kind), default=0.0)
             for kind in ('feed', 'product'))
     def width(gap):

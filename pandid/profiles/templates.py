@@ -115,6 +115,11 @@ def _unit(row, incoming, outgoing):
             # it is a house convention, not a claim of general conformance.
             unit.quadrants['c'] = unit.quadrants.pop('b')
         return unit
+    if symbol == 'house.pipe.held_end':
+        from pandid.units import HeldPipeEnd
+        if len(incoming) + len(outgoing) != 1:
+            raise ValueError('HELD_PIPE_END_REQUIRES_ONE_CONNECTION: ' + key)
+        return HeldPipeEnd(key,direction='inlet' if incoming else 'outlet')
     if symbol in {'boundary', 'boundary.reference'}:
         cls = Feed if not incoming else Product
         return cls(key, reference=row.get('reference', ''), width=190 if row.get('connector') else None, height=85 if row.get('connector') else None)
@@ -269,6 +274,7 @@ def from_template(name, nodes, edges, *, metadata, print_scale=2.7, pins=None, f
         stream.representation = edge.get('representation', 'pipe')
         stream.flow_class = edge.get('flow_class') or 'main'
         stream.display_label = edge.get('label', '')
+        stream.label_group = edge.get('attributes', {}).get('line-label-group') or None
         fs.drawio_metadata['streams'][stream.name] = {'id': edge['id'],
                                                      'attributes': edge['attributes']}
         if edge.get('via'):

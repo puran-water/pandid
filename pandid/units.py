@@ -38,6 +38,7 @@ if TYPE_CHECKING:
 
 __all__ = [
     "Unit",
+    "HeldPipeEnd",
     "Feed",
     "Product",
     "Pump",
@@ -8639,16 +8640,22 @@ class Junction(Unit):
             return Symbol(svg='<g id="sym_junction"><circle cx="2" cy="2" r="2" fill="black"/></g>',
                           width=4, height=4, ports=ports, bare_run=True,
                           label_pos="center", id_suffix=f"_{len(self.inlets)}_{len(self.outlets)}")
-        height = 30 * max(len(self.inlets), len(self.outlets))
-        ports, legs = {}, []
+        count = max(len(self.inlets), len(self.outlets))
+        compact = getattr(self, '_operating_header', False)
+        tail = 12. if compact else 0.
+        height = getattr(self, '_operating_header_height', 30*max(1,count-1)+2*tail) if compact else 30*count
+        ports, faces, legs = {}, {}, []
         for family, x in ((self.inlets, 0), (self.outlets, 4)):
             for i, port in enumerate(family):
-                y = height * (i + .5) / len(family)
+                fraction = (i/(len(family)-1) if len(family)>1 else .5) if compact else (i+.5)/len(family)
+                y = tail+(height-2*tail)*fraction
+                y = getattr(self, '_operating_port_y', {}).get(port.name, y)
                 ports[port.name] = (x, y)
+                faces[port.name] = {'W' if x == 0 else 'E': (x,y)}
                 legs.append(f'<path d="M {x} {y:g} H 2"/>')
         return Symbol(svg=f'<g id="sym_junction" stroke="black" stroke-width="2"><path d="M 2 0 V {height:g}"/>{"".join(legs)}</g>',
-                      width=4, height=height, ports=ports, bare_run=True,
-                      label_pos="center", id_suffix=f"_{len(self.inlets)}_{len(self.outlets)}")
+                      width=4, height=height, ports=ports, port_faces=faces, bare_run=True,
+                      label_pos="center", id_suffix=f"_{len(self.inlets)}_{len(self.outlets)}"+('_compact' if compact else ''))
 
 
 class ConcreteBasin(Unit):
@@ -8693,3 +8700,25 @@ class SubmersibleMixer(Unit):
     kind = "submersible_mixer"
     PORTS = [("shaft", "outlet", "energy")]
     PLACES = {"shaft": "E"}
+
+
+class HeldPipeEnd(Unit):
+    """Unengineered pipe continuation, explicitly held; no destination inferred."""
+    kind = 'held_pipe_end'
+    PORTS = [('pipe', 'inlet', 'process')]
+    PLACES = {'pipe': 'W'}
+
+    def __init__(self, name, variant='default', width=None, height=None,
+                 label_pos='top', description='', reference='', *, direction='inlet'):
+        if direction not in {'inlet', 'outlet'}:
+            raise ValueError('Held pipe end direction must be inlet or outlet')
+        super().__init__(name,variant,width,height,label_pos,description,reference)
+        self.pipe.direction=direction
+
+    def symbol(self):
+        from dataclasses import replace
+        from pandid.render.symbols import default_registry
+        base=default_registry.get(self.kind,self.variant)
+        face='W' if self.pipe.direction=='inlet' else 'E'
+        point=(0 if face=='W' else base.width,base.height/2)
+        return replace(base,ports={'pipe':point},port_faces={'pipe':{face:point}})

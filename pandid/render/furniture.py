@@ -461,7 +461,7 @@ def _ann_layout(ann):
 
 def measure_annotation(ann) -> tuple[float, float]:
     size, row_h, title_h, col_w = _ann_layout(ann)
-    pad, gap = 9.0, 12.0
+    pad, gap = getattr(ann, 'horizontal_padding', 9.0), 12.0
     body_w = _total(col_w) + gap * (len(col_w) - 1)
     inner = max(body_w, text_width(ann.title, annotation_title_font(ann), bold=True))
     w = ann.width if ann.width is not None else inner + 2 * pad
@@ -493,7 +493,7 @@ def draw_annotation(ann, x: float, y: float, *,
     through the side of the box.
     """
     size, row_h, title_h, col_w = _ann_layout(ann)
-    pad, gap = 9.0, 12.0
+    pad, gap = getattr(ann, 'horizontal_padding', 9.0), 12.0
     w, h = measure_annotation(ann)
     if report is not None and ann.width is not None:
         body_w = _total(col_w) + gap * (len(col_w) - 1)

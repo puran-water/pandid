@@ -559,7 +559,7 @@ _QUADRANT_PITCH = 15.0
 _QUADRANT_REACH = 60.0
 
 
-def quadrant_labels(fs, direction: str) -> list:
+def quadrant_labels(fs, direction: str, *, include_hops=True) -> list:
     """Every letter code written outside a symbol, placed.
 
     Items in :meth:`SvgRenderer._draw_unit_labels`' own form, so the
@@ -576,8 +576,10 @@ def quadrant_labels(fs, direction: str) -> list:
                  if u.frame is not None and getattr(u, "quadrants", None)]
     if not annotated:
         return []
-    ink = _ink(fs, direction)
+    ink = _ink(fs, direction, include_hops=include_hops)
     symbols = [_obstacle(unit_box(u, u.frame)) for u in fs.units if u.frame is not None]
+    from pandid.render.nameplates import fixed_boxes
+    symbols += fixed_boxes(fs)
     symbols += [_obstacle(b) for b in flange_boxes(fs, None)]
 
     out: list = []
@@ -668,7 +670,7 @@ def _quadrant_stand_off(block, side: int, ink, symbols):
     return best, cost
 
 
-def _ink(fs, direction: str) -> "list[_Ink]":
+def _ink(fs, direction: str, *, include_hops=True) -> "list[_Ink]":
     """Every line the sheet draws, as the rectangle its stroke covers.
 
     Padded by a whole stroke width: half is the ink itself, drawn
@@ -739,7 +741,7 @@ def _ink(fs, direction: str) -> "list[_Ink]":
     # length; `_erases` scores it with the pipes, which is where a
     # broken one belongs. Padded off the hopping run's own rung, the
     # same way its straight length is: the arc is drawn at that weight.
-    for hop in stream_hops(fs, direction):
+    for hop in stream_hops(fs, direction) if include_hops else ():
         run = fs.streams[hop.stream]
         pad = _ink_pad(_stream_rung(run.kind in _SIGNAL_KINDS, run.flow_class == "secondary"))
         x0, y0, x1, y1 = hop_box(hop, pad)
@@ -2602,6 +2604,29 @@ def _bare_stream_number(runs, name, color, display_name, font_size,
                     name, color, run.segment, x, y, run.vertical, box,
                     None, box, (), display_name, font_size)
 
+    # Regular anchors can miss a clear interval only a few units off the
+    # midpoint. Search the exact obstacle edges along the same pipe before
+    # offering an external leader. The existing ink and containment checks
+    # remain authoritative for every added position.
+    obstacles = symbols + placed + [line.box for line in ink]
+    for run in described:
+        axis = 1 if run.vertical else 0
+        extent = run.height if run.vertical else run.width
+        lower, upper = run.lo+extent/2, run.hi-extent/2
+        if lower > upper:
+            continue
+        stops = {lower, upper}
+        for box in obstacles:
+            stops.update((max(lower,min(upper,box[axis]-extent/2-1.)),
+                          max(lower,min(upper,box[axis+2]+extent/2+1.))))
+        centre = run.cy if run.vertical else run.cx
+        for coordinate in sorted(stops,key=lambda value:(abs(value-centre),value)):
+            x,y = (run.cx,coordinate) if run.vertical else (coordinate,run.cy)
+            box = box_at(run,x,y)
+            if within(box) and unled(run,box,0) and halo_is_readable(run,box):
+                return StreamNumber(name,color,run.segment,x,y,run.vertical,box,
+                                    None,box,(),display_name,font_size)
+
     limit = _label_travel_bound(text_height, bands)
     candidates: list[tuple[float, int, int, _NumberRun, float, float, tuple]] = []
     seen: set[tuple] = set()
@@ -2861,6 +2886,8 @@ def stream_numbers(fs, placed: list, joints: "str | None",
     symbols: list[tuple[float, float, float, float]] = [
         _obstacle(unit_box(u, u.frame)) for u in fs.units if u.frame is not None
     ]
+    from pandid.render.nameplates import fixed_boxes
+    symbols += fixed_boxes(fs)
 
     # A flange mark is a symbol on a run, so it goes in with the
     # symbols: the search dodges it as it dodges a valve body, and both
@@ -2876,39 +2903,34 @@ def stream_numbers(fs, placed: list, joints: "str | None",
     symbols += [b for b in map(_unit_label_box, quadrant_labels(fs, direction))
                 if b is not None]
 
-    # A number names a *run*, and a run survives the valves and fittings
-    # in it: renumber_streams() gives every segment the same name and
-    # the sheet writes it once, on the longest piece.
-    label_items: list = []
-    labeled_names: set = set()
-    display_names = {s.name: s.label for s in fs.streams}
-    for s in fs.streams:
-        if s.kind in _SIGNAL_KINDS or s.name in labeled_names or not s.label:
-            continue
-        points = stream_polyline(s)
-        segments = []
-        for i in range(len(points) - 1):
-            x1, y1 = points[i]
-            x2, y2 = points[i + 1]
-            length = abs(x2 - x1) + abs(y2 - y1)
-            if length:
-                segments.append((((x1, y1), (x2, y2)), length))
+    # A template can explicitly identify the physical line across its valve
+    # and instrument-tap segments. All those segments offer their paper to the
+    # one caption; short suction stubs no longer force a crossing leader.
+    from pandid.render.line_groups import groups as line_groups, caption_size
+    groups, aliases = line_groups(fs)
+    ink = [line._replace(line=aliases.get(line.line, line.line)) for line in ink]
+    label_items, display_names, group_heads = [], {}, {}
+    arrowheads = _arrowhead_keep_outs(fs, arrows, registry)
+    for members in groups:
+        first = members[0]
+        segments, heads = [], []
+        for s in members:
+            points = stream_polyline(s)
+            marks = flange_marks(s, points, resolve_connections(s, joints))
+            heads.extend(arrowheads.get(s.name, ()))
+            for p, q in zip(points, points[1:]):
+                length = abs(q[0]-p[0]) + abs(q[1]-p[1])
+                if length:
+                    segment = (p, q)
+                    keep = FLANGE_STANDOFF + FLANGE_GAP / 2 if any(
+                        _near_segment((mark.x, mark.y), *segment) for mark in marks) else 0.0
+                    segments.append((length, segment, keep))
         if not segments:
             continue
-        labeled_names.add(s.name)
-        # Longest first preserves the established first choice, while retaining
-        # every other straight piece so a crowded longest segment does not send
-        # the number away before the rest of its own run has been tried.
-        segments.sort(key=lambda item: item[1], reverse=True)
-        marks = flange_marks(s, points, resolve_connections(s, joints))
-        runs = []
-        for segment, _length in segments:
-            keep = FLANGE_STANDOFF + FLANGE_GAP / 2 if any(
-                _near_segment((mark.x, mark.y), *segment)
-                for mark in marks
-            ) else 0.0
-            runs.append((segment, keep))
-        label_items.append((runs, s.name, s.color or "black"))
+        segments.sort(key=lambda row: row[0], reverse=True)
+        display_names[first.name] = first.label
+        group_heads[first.name] = tuple(heads)
+        label_items.append(([(segment, keep) for _, segment, keep in segments], first.name, first.color or "black"))
 
     # An enclosure is ruled at **one size for the whole sheet**: measured
     # over the longest label on it, and given to every label, so a sheet
@@ -2936,8 +2958,8 @@ def stream_numbers(fs, placed: list, joints: "str | None",
                   for _runs, name, _color in label_items), default=0.0)
     uniform = enclosure_box(shape, widest, halo_deep)
 
-    keep_outs = _arrowhead_keep_outs(fs, arrows, registry)
-    held = fs.stream_labels.own_line_unled
+    keep_outs = group_heads
+    held = {aliases.get(name, name) for name in fs.stream_labels.own_line_unled}
     out: list[StreamNumber] = []
     for runs, name, color in label_items:
         heads = keep_outs.get(name, ())
@@ -2945,7 +2967,7 @@ def stream_numbers(fs, placed: list, joints: "str | None",
         (sx1, sy1), (sx2, sy2) = seg
         # What the words occupy, and what is reserved for them. One box
         # with no enclosure; with one, the second contains the first.
-        tw, th = len(display_names[name]) * halo_char + halo_pad, halo_deep
+        tw, th = caption_size(display_names[name], fs.stream_labels.font_size)
         hw, hh = (tw, th) if shape == "none" else uniform
         cx, cy = (sx1 + sx2) / 2, (sy1 + sy2) / 2
         vertical = abs(sx2 - sx1) < abs(sy2 - sy1)
@@ -5670,7 +5692,7 @@ class SvgRenderer:
         dx0, dy0, dx1, dy1 = region_bounds(fs, (dx0, dy0, dx1, dy1))
         from pandid.render.nameplates import plan as nameplate_plan, extend_bounds
         dx0, dy0, dx1, dy1 = extend_bounds((dx0,dy0,dx1,dy1),text_boxes)
-        nameplates, (dx0, dy0, dx1, dy1) = nameplate_plan(fs, (dx0, dy0, dx1, dy1))
+        nameplates, (dx0, dy0, dx1, dy1) = nameplate_plan(fs, (dx0, dy0, dx1, dy1), fit_to_ink=True)
 
         # 2. The stream table, measured. Shared with the draw.io
         #    exporter, which docks and rules the same one.
@@ -6163,6 +6185,8 @@ class SvgRenderer:
         # either end of it, and _tag_item's `v is not u` test then lets
         # every tag see every one of them.
         symbols = [(u, unit_box(u, u.frame)) for u in fs.units if u.frame is not None]
+        from pandid.render.nameplates import fixed_boxes
+        symbols += [(None,b) for b in fixed_boxes(fs)]
         symbols += [(None, b) for b in flange_boxes(fs, joints)]
         # A letter code outside a balloon is under no unit either, and
         # for the same reason: it is lettering, not artwork, so every

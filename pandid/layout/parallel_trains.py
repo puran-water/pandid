@@ -3,11 +3,16 @@ from dataclasses import replace
 
 
 def _groups(fs):
-    process = [s for s in fs.streams if s.kind == 'material']
+    from pandid.layout.subsystems import declared
+    operating = declared(fs)
+    primary = {s.source.owner for s in fs.streams if s.kind == 'material' and s.flow_class == 'main'}
+    process = [s for s in fs.streams if s.kind == 'material'
+               and (not operating or s.flow_class == 'main' or s.source.owner not in primary)]
     incoming = {u: [s for s in process if s.dest.owner is u] for u in fs.units}
     outgoing = {u: [s for s in process if s.source.owner is u] for u in fs.units}
     for source in fs.units:
-        if source.kind != 'junction' or len(outgoing[source]) < 2:
+        source_kinds = {'junction', 'tank', 'concrete_basin'} if operating else {'junction'}
+        if source.kind not in source_kinds or len(outgoing[source]) < 2:
             continue
         paths, ends = [], []
         for first in outgoing[source]:
@@ -15,7 +20,7 @@ def _groups(fs):
             while edge.dest.owner not in seen:
                 unit = edge.dest.owner
                 seen.add(unit)
-                if unit.kind == 'junction':
+                if unit.kind == 'junction' and not (operating and len(incoming[unit]) == len(outgoing[unit]) == 1):
                     ends.append(unit)
                     paths.append(chain)
                     break
@@ -28,7 +33,7 @@ def _groups(fs):
             continue
         signatures = {tuple((u.kind, u.variant) for u, _ in path) for path in paths}
         group = {source, ends[0]} | {u for path in paths for u, _ in path}
-        if (len(signatures) != 1 or not any(u.kind == 'pump' for u in group)
+        if (len(signatures) != 1 or not any(u.kind in ({'pump', 'filter'} if operating else {'pump'}) for u in group)
                 or any(u.pin_ is not None for u in group)):
             continue
         yield source, ends[0], paths, group, incoming, outgoing
@@ -36,8 +41,16 @@ def _groups(fs):
 
 def prepare(fs):
     """Declare expanded headers before sizes and port claims are solved."""
+    from pandid.layout.subsystems import declared
+    operating = declared(fs)
     for unit in fs.units:
-        if unit.kind == "junction":unit._parallel_header=False
+        if unit.kind == "junction":
+            unit._parallel_header=False
+            unit._operating_header=operating
+            if hasattr(unit, '_operating_header_height'):
+                del unit._operating_header_height
+            if hasattr(unit, '_operating_port_y'):
+                del unit._operating_port_y
     for source,target,*_ in _groups(fs):
         source._parallel_header=target._parallel_header=True
 

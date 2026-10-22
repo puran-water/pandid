@@ -129,6 +129,46 @@ def balloon_pads(fs: "Flowsheet") -> dict["Unit", Pad]:
         reach, girth, face, hosts = charge
         for host in hosts:
             pads[host] = pads.get(host, Pad()).widened(face, reach, girth)
+    from pandid.layout.subsystems import declared
+    if declared(fs):
+        from pandid.render.furniture import text_width
+        from pandid.portgeom import resolve_size, port_anchor
+        from pandid.render.symbols import default_registry
+        from pandid.render.svg import SvgRenderer, _unit_label_box, escaped
+        from pandid.geometry import Frame
+        renderer = SvgRenderer()
+        for unit in fs.units:
+            if is_core(unit):
+                w,h=resolve_size(unit)
+                frame=Frame(x=0,y=0,w=w,h=h)
+                branches=[s for s in fs.streams if s.source.owner is unit
+                          and s.kind=='material' and s.flow_class=='secondary' and s.label]
+                for stream in branches:
+                    _,_,face=port_anchor(unit,frame,stream.source.name)
+                    if face in {'N','S'}:
+                        # A branch leaving above/below the main train needs
+                        # a lettering track before another assembly can occupy
+                        # that space. Body-only packing left return numbers
+                        # trapped between the vessel and its neighbouring pipe.
+                        reach=25.+fs.stream_labels.font_size*1.2+2*fs.layout_options.stream_spacing
+                        pads[unit]=pads.get(unit,Pad()).widened(face,reach)
+            if is_core(unit) and unit.tag:
+                w,h=resolve_size(unit)
+                symbol=default_registry.for_unit(unit)
+                frame=Frame(x=0,y=0,w=w,h=h,
+                            label_pos=unit.label_pos or symbol.label_pos or 'top')
+                box=_unit_label_box(renderer._unit_label_item(unit,frame,0,0,w,h,escaped(unit.tag)))
+                if box is not None:
+                    old=pads.get(unit,Pad())
+                    pads[unit]=Pad(max(old.north,-box[1]),max(old.south,box[3]-h),
+                                   max(old.east,box[2]-w),max(old.west,-box[0]))
+            if unit.kind != 'held_pipe_end':
+                continue
+            width, _ = resolve_size(unit)
+            font = unit.font_size or 12
+            lines = unit.tag.splitlines()
+            half = max(0, (max(text_width(s,font) for s in lines) - width)/2) + 10
+            pads[unit] = Pad(north=len(lines)*font*1.2+20,east=half,west=half)
     return pads
 
 
@@ -169,8 +209,22 @@ def _charge(inst: "Unit", stacks: dict | None = None) -> tuple[float, float, str
         # walk holds is whatever the last host was -- a balloon, a unit
         # or a stream -- so it is read off the object and not the class.
         root, node = node, getattr(node, "host")
-    reach += CLEARANCE
-    girth += CLEARANCE
+    clearance = reach_clearance = CLEARANCE
+    fs = inst.flowsheet
+    if fs is not None:
+        from pandid.layout.subsystems import declared
+        if declared(fs):
+            # These symbols put the complete tag inside the bubble. Reserve
+            # the actual external descriptor and one body-text line instead
+            # of the legacy allowance for a second full tag outside it.
+            from pandid.render.furniture import text_width
+            font = getattr(inst, 'font_size', None) or 12
+            descriptor = max((text_width(str(text), font) for values in inst.quadrants.values()
+                              for text in values), default=0)
+            clearance = max(font * 1.2, descriptor, fs.layout_options.instrument_clearance)
+            reach_clearance = max(font, 12) * 1.2
+    reach += reach_clearance
+    girth += clearance
 
     if isinstance(node, Stream):
         src, dst = node.source.owner, node.dest.owner

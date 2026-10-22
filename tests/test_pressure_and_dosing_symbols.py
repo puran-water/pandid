@@ -18,8 +18,8 @@ from pandid.render.symbols import default_registry
 ])
 def test_artwork_has_real_ports_reference_hook_and_native_paths(key, cls, ports):
     art = ARTWORK[key]
-    assert art.version == '1'
-    assert art.reference_document.startswith(('DuPont ', 'SAF-T-FLO '))
+    assert art.version == ('2' if key == 'house.membrane.pressure_vessel' else '1')
+    assert art.reference_document.startswith(('DuPont ', 'SAF-T-FLO ', 'MorroBay-WRF-'))
     assert len(art.reference_sha256) == 64 and art.reference_pages
     unit = cls('candidate')
     assert {p.name: p.direction for p in unit.ports.values()} == ports
@@ -53,6 +53,6 @@ def test_generator_is_deterministic_and_existing_versions_stay_unchanged():
         'house.air.diffuser_grid', 'house.basin.concrete', 'house.mbr.airlift',
         'house.mbr.membrane_cage', 'house.mixer.agitator', 'house.mixer.submersible',
         'house.pump.rotary_lobe')} == {
-        'house.air.diffuser_grid': '1', 'house.basin.concrete': '1', 'house.mbr.airlift': '1',
+        'house.air.diffuser_grid': '1', 'house.basin.concrete': '2', 'house.mbr.airlift': '1',
         'house.mbr.membrane_cage': '2', 'house.mixer.agitator': '1', 'house.mixer.submersible': '1',
         'house.pump.rotary_lobe': '1'}

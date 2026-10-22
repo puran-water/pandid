@@ -47,7 +47,8 @@ def pages(entries, *, metadata_factory, title='SYMBOLS AND CONVENTIONS', body_fo
     """
     # Lettering is supplied by the physical policy, not chosen to fit a panel.
     flag_ratio = max(1.0, body_font_size / 12)
-    sample_width = max(220, 226 * flag_ratio + 24)
+    from pandid.profiles.process import REFERENCE_FLAG_WIDTH, REFERENCE_FLAG_LINES
+    sample_width = max(220, REFERENCE_FLAG_WIDTH * flag_ratio + 24)
     meaning_width = 660 - sample_width
     groups = OrderedDict((name, []) for name in ('PROCESS EQUIPMENT', 'VALVES AND ACTUATORS',
         'PIPING AND CONNECTIONS', 'INSTRUMENTATION', 'PROCESS AND SIGNAL LINES',
@@ -78,7 +79,7 @@ def pages(entries, *, metadata_factory, title='SYMBOLS AND CONVENTIONS', body_fo
             if entry['key'] in {'boundary', 'boundary.reference'}:
                 row_height = max(row_height, 85 * flag_ratio + 24)
             if entry['key'] == 'boundary.reference':
-                row_height = max(row_height, 5 * body_font_size * 1.2 + 30 + 8 + 24)
+                row_height = max(row_height, REFERENCE_FLAG_LINES * body_font_size * 1.2 + 30 + 8 + 24)
             if entry['key'] in {'house.mixer.agitator', 'house.mbr.membrane_cage'}:
                 row_height = max(row_height, 210)
             if entry['key'] == 'stencil.pid.flow_sensors.magnetic':
@@ -138,7 +139,7 @@ def pages(entries, *, metadata_factory, title='SYMBOLS AND CONVENTIONS', body_fo
                     unit.width, unit.height = 44, 44
                 if unit.kind in {'feed', 'product'}:
                     unit.width, unit.height = 190, 85
-                    flag_width = 226 if getattr(unit, 'reference_code', '') else 190
+                    flag_width = REFERENCE_FLAG_WIDTH if getattr(unit, 'reference_code', '') else 190
                     unit.pin(x=x + 12 + (flag_width * flag_ratio if unit.kind == 'feed' else 0), y=y + row_height/2)
                     if getattr(unit, 'reference_code', ''):
                         unit.display_label = 'WATER\nTO SH. 2'

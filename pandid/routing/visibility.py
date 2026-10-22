@@ -76,7 +76,7 @@ def clear_escape_projection(
     anchor (its own symbol or label) do not define a forward gap; nor may the
     shortened projection land inside one of them.
     """
-    if not any(obstacle.contains(*projection) for obstacle in obstacles):
+    if not any(obstacle.intersects_segment(*anchor, *projection) for obstacle in obstacles):
         return projection
     axis, sign = TRAVEL[direction]
     distance = sign * (projection[axis] - anchor[axis])
@@ -163,6 +163,22 @@ def share_escape_room(
 
 
 class VisibilityGraph:
+    def connected(self, start, goal):
+        """Connectivity of this immutable geometry, before route-specific costs."""
+        if not hasattr(self,'_components'):
+            components={}
+            for node in self.edges:
+                if node in components:
+                    continue
+                component=len(components)
+                pending=[node];components[node]=component
+                while pending:
+                    for peer in self.edges[pending.pop()]:
+                        if peer not in components:
+                            components[peer]=component;pending.append(peer)
+            self._components=components
+        return start in self._components and self._components.get(start)==self._components.get(goal)
+
     def __init__(self, fs: "Flowsheet", margin: float = 15.0, accessible=frozenset()):
         from pandid.layout.attach import is_attached
         from pandid.portgeom import port_anchor
@@ -170,6 +186,20 @@ class VisibilityGraph:
         self.obstacles: List[Rect] = []
         x_set: Set[float] = set()
         y_set: Set[float] = set()
+        from pandid.render.nameplates import fixed_boxes
+        for x0,y0,x1,y1 in fixed_boxes(fs):
+            self.obstacles.append(Rect(x0,x1,y0,y1))
+            x_set.update((x0-margin,x1+margin))
+            y_set.update((y0-margin,y1+margin))
+        # The graph carries lanes around planned line lettering. Each search
+        # exempts its own physical line's plate, so these are not global walls.
+        for box in getattr(fs, '_planned_line_plates', {}).values():
+            x_set.update((box.x_min-margin,box.x_max+margin))
+            y_set.update((box.y_min-margin,box.y_max+margin))
+        for boxes in getattr(fs,'_planned_label_leaders',{}).values():
+            for box in boxes:
+                x_set.update((box.x_min-margin,box.x_max+margin))
+                y_set.update((box.y_min-margin,box.y_max+margin))
         from pandid.drawing_regions import captions
         for caption in captions(fs):
             if not caption.text:
@@ -185,6 +215,9 @@ class VisibilityGraph:
         self.port_anchors: Dict[Tuple[str, str], Tuple[float, float]] = {}
         self.port_dirs: Dict[Tuple[str, str], str] = {}
         self.port_projs: Dict[Tuple[str, str], Tuple[float, float]] = {}
+        from pandid.layout.subsystems import declared
+        from pandid.routing.captions import equipment_tags
+        operating, tag_boxes = declared(fs), equipment_tags(fs)
 
         for u in fs.units:
             f = u.frame
@@ -221,7 +254,7 @@ class VisibilityGraph:
             # `label_w` away from not being. One guard, computing it once,
             # is the same result without relying on that staying true.
             lpos = f.label_pos or "top"
-            if u.kind not in ("feed", "product") and lpos != "center":
+            if not operating and u.kind not in ("feed", "product") and lpos != "center":
                 label_w = min(150.0, max(40.0, len(u.name) * 7.5))
                 if lpos == "top":
                     cx = f.x + u_width / 2
@@ -243,6 +276,12 @@ class VisibilityGraph:
                     self.obstacles.append(Rect(f.x + u_width, f.x + u_width + label_w + 15, cy - 10, cy + 10))
                     x_set.add(f.x + u_width + label_w + 15.0 + margin)
                     x_set.add(f.x + u_width + 5.0)
+
+            caption = tag_boxes.get(u)
+            if caption is not None:
+                self.obstacles.append(caption)
+                x_set.update((caption.x_min-margin, caption.x_max+margin))
+                y_set.update((caption.y_min-margin, caption.y_max+margin))
 
             # Routing lanes around the unit
             x_set.add(f.x - margin)

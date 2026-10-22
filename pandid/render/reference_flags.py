@@ -25,3 +25,25 @@ def svg(unit):
             cy=y+h/2+(n-(len(lines)-1)/2)*font*1.2
             out.append(f'<text x="{x+w/2}" y="{cy}" font-family="sans-serif" font-size="{font}" text-anchor="middle" dominant-baseline="middle">{escaped(line)}</text>')
     return out
+
+
+def wrap_reference(text, width, font):
+    """Wrap controlled paths at slashes without altering any character."""
+    import re
+    from pandid.render.furniture import text_width
+    result=[]
+    for paragraph in text.splitlines() or ['']:
+        line, space = '', ''
+        for part in re.findall(r'[^/\s]+/?|/', paragraph):
+            # A slash continues the same identifier; ordinary words keep one
+            # space. Wrapping is presentation only, not a shortened reference.
+            separator = '' if not line or line.endswith('/') else ' '
+            trial = line + separator + part
+            if line and text_width(trial,font)>width:
+                result.append(line);line=part
+            else:
+                line=trial
+            if text_width(line,font)>width:
+                raise ValueError('REFERENCE_FLAG_TOKEN_CAPACITY: '+line)
+        result.append(line)
+    return result

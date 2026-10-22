@@ -109,11 +109,16 @@ class ConstraintLayoutEngine:
         _seed_slots(fs)
         break_cycles(fs)
         assign_positions(fs)
-        assign_coordinates(fs)
+        from pandid.layout.subsystems import declared, place as place_subsystems
+        operating = declared(fs)
+        if operating:
+            place_subsystems(fs)
+        else:
+            assign_coordinates(fs)
         # A vent on a top nozzle stands on it; again after the passes
         # that may move its host (see pandid.layout.dock).
         dock(fs)
-        if fs.layout_options.parallel_trains:
+        if fs.layout_options.parallel_trains and not operating:
             from pandid.layout.parallel_trains import align
             align(fs)
             dock(fs)

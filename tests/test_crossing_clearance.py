@@ -124,6 +124,28 @@ def test_explicit_repair_budget_still_limits_work_and_leaves_residual_defects():
     assert _overlaps(after, 14) == 120
 
 
+def test_parallel_clearance_repair_never_trades_a_halo_touch_for_a_body_crossing():
+    from pandid import Instrument
+    from pandid.routing.visibility import Rect
+    fs=Flowsheet('A clear signal beside a controller halo')
+    fs.layout_options.stream_spacing=14
+    fs.layout_options.instrument_clearance=14
+    points=[[(0,220),(0,170),(200,170),(200,220)],[(0,175),(200,175)]]
+    for i,path in enumerate(points):
+        source=fs.add(Feed('source-'+str(i)))
+        target=fs.add(Product('target-'+str(i)))
+        source.frame=Frame(x=-50,y=path[0][1]-10,w=50,h=20)
+        target.frame=Frame(x=200,y=path[-1][1]-10,w=50,h=20)
+        fs.connect(source.outlet,target.inlet).route=Route(waypoints=path,manual=bool(i))
+    controller=fs.add(Instrument('AIC',1))
+    controller.frame=Frame(x=100,y=100,w=30,h=66)
+    body=Rect(100,130,100,166)
+    repair(fs)
+    line=stream_polyline(fs.streams[0])
+    assert not any(body.intersects_segment(*a,*b) for a,b in zip(line,line[1:]))
+    assert _overlaps({i:stream_polyline(s) for i,s in enumerate(fs.streams)},14)==0
+
+
 def test_overlap_cache_keeps_exact_original_score_for_changed_tracks():
     from pandid.routing.crossing_clearance import _overlaps, _OverlapPlan
     from pandid.render.crossings import crossing_order, CrossingPlan

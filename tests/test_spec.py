@@ -1449,6 +1449,7 @@ def test_annotation_boxes():
                     "title": "HOLD",
                     "rows": ["Awaiting vendor data"],
                     "position": [1200, 90],
+                    "horizontal_padding": 7,
                 },
                 {
                     "type": "table",
@@ -1466,6 +1467,7 @@ def test_annotation_boxes():
     assert note_box.rows == [("1.", "Sample every product line.")]
     assert legend_box.rows == [("SS", "316L")]
     assert hold.position == (1200, 90)
+    assert Flowsheet.from_dict(fs.to_dict()).annotations[3].horizontal_padding == 7
     assert isinstance(hold, Annotation) and isinstance(table, TableBox)
     assert table.headers == ["Tag", "Line"] and table.col_align == ["l", "c"]
 

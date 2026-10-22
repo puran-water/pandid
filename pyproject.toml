@@ -49,6 +49,7 @@ Changelog = "https://github.com/Alpha9463/pandid/blob/main/CHANGELOG.md"
 Issues = "https://github.com/Alpha9463/pandid/issues"
 
 [project.optional-dependencies]
+process-layout = ["ortools==9.15.6755"]
 pdf = ["svglib>=2.0", "reportlab>=4.4.3", "pypdfium2>=4", "pillow>=9.1"]
 yaml = ["PyYAML>=6"]      # enables Flowsheet.from_yaml(); from_dict/from_json need nothing
 dev = ["pytest>=7", "ruff==0.15.14", "mypy>=1.8", "pyright==1.1.411", "PyYAML>=6",

@@ -39,6 +39,14 @@ class HouseArtwork:
 
 
 ARTWORK = {
+    "house.pipe.held_end": HouseArtwork(
+        "Unengineered pipe continuation; destination HOLD, no cap, vent or receiving system prescribed",
+        80, 24, 12, 3.6,
+        (("W", 0, .5), ("E", 1, .5)),
+        '<path><move x="0" y="12"/><line x="30" y="12"/>'
+        '<line x="36" y="2"/><line x="44" y="22"/>'
+        '<line x="50" y="12"/><line x="80" y="12"/></path><stroke/>',
+    ),
     "house.mbr.membrane_cage": HouseArtwork(
         "Submerged membrane cage; crossed frame and feet per reference, no module count implied",
         90,
@@ -137,7 +145,7 @@ ARTWORK.update({
     "house.valve.pressure_relief": HouseArtwork(
         "Spring-loaded pressure relief valve; sizing, set pressure and discharge destination require review",
         180, 180, 27, 27,
-        (("W", 0, .75), ("E", 1, .75)),
+        (("W", 0, .75), ("E", 1, .75), ("N", .5, 0)),
         '<path><move x="0" y="135"/><line x="45" y="135"/>'
         '<move x="45" y="110"/><line x="90" y="135"/><line x="45" y="160"/><close/>'
         '<move x="135" y="110"/><line x="90" y="135"/><line x="135" y="160"/><close/>'
@@ -145,7 +153,8 @@ ARTWORK.update({
         '<move x="90" y="135"/><line x="90" y="90"/><line x="75" y="80"/>'
         '<line x="105" y="65"/><line x="75" y="50"/><line x="105" y="35"/>'
         '<line x="90" y="25"/><line x="90" y="10"/><move x="70" y="10"/>'
-        '<line x="110" y="10"/></path><stroke/>'),
+        '<line x="110" y="10"/><move x="90" y="10"/><line x="90" y="0"/></path><stroke/>',
+        version="2"),
     "house.basin.concrete": HouseArtwork(
         "Open concrete process basin; enclosed equipment is declared separately, depth is schematic",
         400, 300, 80, 60,

@@ -310,6 +310,8 @@ def find_path(
     edge_penalties: Optional[Dict[Tuple[Tuple[float, float], Tuple[float, float]], float]] = None,
     is_recycle: bool = False,
     crossing_index: Optional[CrossingIndex] = None,
+    forbidden=(),
+    overlap_weight=0.,
 ) -> List[Tuple[float, float]]:
     """Find the shortest orthogonal path on the visibility graph using A*.
 
@@ -368,6 +370,47 @@ def find_path(
 
     if edge_penalties is None:
         edge_penalties = {}
+    # An isolated endpoint cannot be reached by searching every other node
+    # on a dense sheet. Preserve the ordinary no-path result and its drawing
+    # diagnostics, without allocating a frontier for an impossible search.
+    if start != goal and (not graph.edges.get(start) or not graph.edges.get(goal)):
+        return []
+    if hasattr(graph,'connected') and not graph.connected(start,goal):
+        return []
+    from functools import lru_cache
+    @lru_cache(maxsize=16384)
+    def blocked(a,b):
+        return any(box.intersects_segment(*a,*b) for box in forbidden)
+    @lru_cache(maxsize=16384)
+    def overlap(a,b):
+        if crossing_index is None:
+            return 0.
+        axis = 0 if a[1] == b[1] else 1
+        tracks = crossing_index.h if axis == 0 else crossing_index.v
+        lo,hi=sorted((a[axis],b[axis]))
+        return sum(max(0.,min(hi,right)-max(lo,left))
+                   for left,right in tracks.get(a[1-axis],()))
+    if start != goal and forbidden and (
+            all(blocked(start,n) for n in graph.edges[start])
+            or all(blocked(goal,n) for n in graph.edges[goal])):
+        return []
+    if start != goal and forbidden:
+        # Caption reservations are per physical line and therefore are not
+        # baked into the shared visibility graph. They can disconnect an
+        # otherwise connected graph. Prove reachability in the permitted
+        # edges before allocating the more expensive direction/cost frontier.
+        fronts=[{start},{goal}]
+        seen=[{start},{goal}]
+        while fronts[0] and fronts[1] and not seen[0].intersection(seen[1]):
+            side=0 if len(fronts[0])<=len(fronts[1]) else 1
+            following=set()
+            for point in fronts[side]:
+                for peer in graph.edges[point]:
+                    if peer not in seen[side] and not blocked(point,peer):
+                        following.add(peer);seen[side].add(peer)
+            fronts[side]=following
+        if not seen[0].intersection(seen[1]):
+            return []
 
     budget = max(MIN_EXPANSION_BUDGET, MAX_EXPANSIONS_PER_NODE * len(graph.nodes))
     expansions = 0
@@ -375,12 +418,21 @@ def find_path(
     # Priority queue: (f_score, g_score, counter, current_node, current_dir, path)
     # The counter breaks ties so equal (f, g) entries never fall through to
     # comparing the node tuples themselves.
-    queue: list[tuple[float, float, int, tuple[float, float], Optional[str], list[tuple[float, float]]]] = []
-    heapq.heappush(queue, (0, 0, 0, start, start_dir, [start]))
+    queue = []
+    # Immutable parent links retain the exact chosen path and tie order;
+    # copying its entire point list for every grid expansion is quadratic.
+    heapq.heappush(queue, (0, 0, 0, start, start_dir, (start, None)))
     
     # State key: ((x, y), dir)
     visited: Dict[Tuple[Tuple[float, float], Optional[str]], float] = {}
     
+    # Dominated queued states cannot improve a path with the same arrival
+    # direction. Keep the earliest equal-cost state, preserving the existing
+    # tie-break, without copying its path into the heap again at every edge.
+    best_cost = {(start, start_dir): 0.0}
+    from functools import lru_cache
+    along = lru_cache(maxsize=65536)(crossing_index.crossings_along) if crossing_index else None
+    across = lru_cache(maxsize=65536)(crossing_index.crosses) if crossing_index else None
     # Count for tie-breaking
     counter = 1
     
@@ -397,7 +449,11 @@ def find_path(
         f, g, _, current, cur_dir, path = heapq.heappop(queue)
 
         if current == goal:
-            return path
+            result=[]
+            while path is not None:
+                point,path=path
+                result.append(point)
+            return list(reversed(result))
             
         state_key = (current, cur_dir)
         if state_key in visited and visited[state_key] <= g:
@@ -405,6 +461,8 @@ def find_path(
         visited[state_key] = g
         
         for neighbor in graph.edges.get(current, []):
+            if forbidden and blocked(current,neighbor):
+                continue
             ndir = get_dir(current, neighbor)
             
             # 1. Never reverse along the axis just travelled. A reversal
@@ -454,7 +512,9 @@ def find_path(
             # ``neighbor`` themselves -- the node checks below already do, or
             # will once that node is ``current`` in a later iteration.
             if crossing_index is not None:
-                cost += CROSSING_PENALTY * crossing_index.crossings_along(current, neighbor)
+                cost += CROSSING_PENALTY * along(current, neighbor)
+                if overlap_weight:
+                    cost += overlap_weight * overlap(current,neighbor)
 
             # No edge offered here lies along an obstacle boundary, so there is
             # nothing to charge one for. ``Rect.intersects_segment`` bounds the
@@ -501,7 +561,7 @@ def find_path(
                 # earlier streams can each cross this same node, and a route
                 # through it crosses both, not one -- ``crosses`` counts
                 # rather than answers yes/no for exactly this.
-                cost += CROSSING_PENALTY * crossing_index.crosses(current, _AXIS[cur_dir])
+                cost += CROSSING_PENALTY * across(current, _AXIS[cur_dir])
 
             # Goal's own pass-through, independent of the check above and
             # never covered by it: this search returns the instant it pops a
@@ -548,16 +608,20 @@ def find_path(
                     # Multiplied by the count, same reasoning as the
                     # ``current`` check above: crossing two earlier streams
                     # at ``goal`` is not the same as crossing one.
-                    cost += CROSSING_PENALTY * crossing_index.crosses(goal, _AXIS[ndir])
-                elif crossing_index.crosses(goal, _AXIS[OPPOSITE[goal_dir]]):
+                    cost += CROSSING_PENALTY * across(goal, _AXIS[ndir])
+                elif across(goal, _AXIS[OPPOSITE[goal_dir]]):
                     # Not multiplied: however many lines the straight
                     # arrival would have crossed here, the side approach
                     # still draws exactly one bend, never more than one.
                     cost += bend_cost
 
+            neighbor_state = (neighbor, ndir)
+            if cost >= best_cost.get(neighbor_state, math.inf):
+                continue
+            best_cost[neighbor_state] = cost
             h = heuristic(neighbor, goal)
 
             counter += 1
-            heapq.heappush(queue, (cost + h, cost, counter, neighbor, ndir, path + [neighbor]))
+            heapq.heappush(queue, (cost + h, cost, counter, neighbor, ndir, (neighbor, path)))
 
     return []

@@ -43,6 +43,7 @@ def _overlaps(lines, clearance=0):
 class _OverlapPlan:
     """Reuse unaffected contributions when a trial moves one route."""
     def __init__(self, lines, clearance=0):
+        from math import fsum
         self.paths = {k: tuple(tuple(p) for p in v) for k, v in lines.items()}
         self.clearance = clearance
         self.entries, self.chunks = [], []
@@ -56,9 +57,10 @@ class _OverlapPlan:
                     self.affected[left].append(index)
                     self.affected[right].append(index)
                     self.chunks.append(_segment_overlaps(a, b, self.paths[right], clearance))
+        self.totals = [fsum(chunk) for chunk in self.chunks]
+        self.total = fsum(self.totals)
 
     def score(self, key, points):
-        from itertools import chain
         path = tuple(tuple(p) for p in points)
         if len(path) != len(self.paths[key]):
             raise ValueError("An overlap trial must retain its waypoint count")
@@ -69,15 +71,16 @@ class _OverlapPlan:
             bpts = path if right == key else self.paths[right]
             chunks[index] = _segment_overlaps(apts[segment], apts[segment+1], bpts, self.clearance)
         total = 0.0
-        for value in chain.from_iterable(chunks):
-            total += value
+        for chunk in chunks:
+            for value in chunk:
+                total += value
         return total
 
 
 def repair(fs, *, radius=5, max_passes=None):
     from pandid.portgeom import unit_box
     from pandid.routing.terminal_clearance import anchored_waypoints
-    from pandid.render.svg import stream_polyline
+    from pandid.render.native_routes import stream_polyline
     from pandid.routing.visibility import Rect
     from pandid.drawing_regions import captions
 
@@ -89,11 +92,24 @@ def repair(fs, *, radius=5, max_passes=None):
     # Scale the default finite budget with the routed stream count; retain an
     # explicit caller limit and the unchanged fail-closed crossing gate.
     if max_passes is None:
-        max_passes = max(8, len(lines))
+        max_passes = max(8, 4*len(lines))
     lost = crossing_order(lines, radius)[1]
     spacing = max(fs.layout_options.stream_spacing, 2*radius+2)
     if not lost and not _overlaps(lines, spacing):
         return
+    # Resolve the native hold before spending the finite pass budget on
+    # optional nearby-track improvements. A dense sheet can otherwise use
+    # every pass moving harmless parallel spans while a solvable hold stays.
+    from pandid.layout.subsystems import declared
+    if lost and hasattr(fs,'drawio_metadata') and declared(fs):
+        from pandid.routing.crossing_reroute import repair_one
+        for _ in range(len(lost)):
+            candidate=repair_one(fs,lines,lost,spacing,radius)
+            if candidate is None:
+                break
+            _,key,points,lost=candidate
+            fs.streams[key].route.waypoints=anchored_waypoints(fs.streams[key],points)
+            lines[key]=stream_polyline(fs.streams[key])
     boxes = [Rect(x0,x1,y0,y1) for u in fs.units if u.frame is not None
              for x0,y0,x1,y1 in [unit_box(u,u.frame)]]
     boxes += [Rect(c.x,c.x+c.w,c.y,c.y+c.h) for c in captions(fs)]
@@ -136,7 +152,7 @@ def repair(fs, *, radius=5, max_passes=None):
                     # Most dense-sheet candidates cannot improve either metric.
                     # Reject them before rebuilding the global crossing order;
                     # this keeps the same candidates and tie-breaking score.
-                    if (overlap > old_overlaps + 1e-6
+                    if ((not lost and overlap > old_overlaps + 1e-6)
                             or exact_plan.score(key, proposed) > old_exact_overlaps + 1e-6
                             or (not lost and overlap >= old_overlaps - 1e-6)):
                         continue
@@ -147,13 +163,21 @@ def repair(fs, *, radius=5, max_passes=None):
                     # Near-coincident tracks also merge native crossing gaps,
                     # so retain the requested parallel spacing after repair.
                     # Resolve that residual overlap as well as crossing gaps;
-                    # neither metric may get worse to improve the other.
+                    # A hard crossing hold outranks nearby parallel tracks;
+                    # with equal hold counts, spacing must strictly improve.
                     if (len(remaining) > len(lost)
                             or (len(remaining) == len(lost) and overlap >= old_overlaps - 1e-6)):
                         continue
-                    score=(overlap,len(remaining),abs(shift),key,j,shift)
+                    score=(len(remaining),overlap,abs(shift),key,j,shift)
                     if accepted is None or score<accepted[0]:
                         accepted=(score,key,proposed,remaining)
+        if accepted is None:
+            accepted = _detour(fs, lines, lost, spacing, radius)
+        if accepted is None and lost:
+            from pandid.layout.subsystems import declared
+            if hasattr(fs,'drawio_metadata') and declared(fs):
+                from pandid.routing.crossing_reroute import repair_one
+                accepted = repair_one(fs, lines, lost, spacing, radius)
         if accepted is None:
             return  # The export gate retains the unresolved hold.
         _,key,points,lost=accepted
@@ -161,3 +185,62 @@ def repair(fs, *, radius=5, max_passes=None):
         fs.streams[key].route.waypoints=anchored_waypoints(fs.streams[key], points)
         if not lost and not _overlaps(lines, spacing):
             return
+
+
+def _detour(fs, lines, lost, spacing, radius):
+    """Add a local dogleg when a short terminal span has no movable track.
+
+    Only unresolved native crossings trigger this fallback. A proposal must
+    remove a hold without adding overlaps, touching protected ink or creating
+    a self crossing. Endpoints and authored routes remain fixed.
+    """
+    from pandid.containment import route_obstacles
+    old_overlap, old_exact = _overlaps(lines, spacing), _overlaps(lines)
+    plan = CrossingPlan(lines, radius)
+    accepted = None
+    for key, points in lines.items():
+        stream = fs.streams[key]
+        if stream.route.manual:
+            continue
+        boxes = route_obstacles(fs, stream)
+        for j, (a, b) in enumerate(zip(points, points[1:])):
+            axis = 0 if a[1] == b[1] else 1
+            other = 1-axis
+            if a[other] != b[other]:
+                continue
+            lo, hi = sorted((a[axis], b[axis]))
+            cuts = {p[axis] for _, _, *p in lost
+                    if abs(p[other]-a[other]) < 1e-6 and lo < p[axis] < hi}
+            for cut in sorted(cuts):
+                gap = max(2*radius+2, spacing)
+                first, last = max(lo+gap,cut-gap), min(hi-gap,cut+gap)
+                if first >= last:
+                    continue
+                if a[axis] > b[axis]:
+                    first, last = last, first
+                for shift in (-gap,gap,-2*gap,2*gap,-4*gap,4*gap):
+                    corners = []
+                    for along, across in ((first,a[other]),(first,a[other]+shift),
+                                          (last,a[other]+shift),(last,a[other])):
+                        p=list(a);p[axis]=along;p[other]=across;corners.append(tuple(p))
+                    proposed = [*points[:j+1], *corners, *points[j+1:]]
+                    new = list(zip([a,*corners,b],[*corners,b]))
+                    if any(sum(box.intersects_segment(*c,*d) for c,d in new) >
+                           box.intersects_segment(*a,*b) for box in boxes):
+                        continue
+                    self_lines = {n:[c,d] for n,(c,d) in enumerate(zip(proposed,proposed[1:]))}
+                    from pandid.render.crossings import _pair_constraints
+                    if any(_pair_constraints(tuple(self_lines[l]),tuple(self_lines[r]),1e9,1e9)
+                           for l in self_lines for r in self_lines if r > l+1):
+                        continue
+                    trial = {**lines,key:proposed}
+                    overlap = _overlaps(trial,spacing)
+                    if _overlaps(trial) > old_exact+1e-6:
+                        continue
+                    remaining = plan.with_path(key,proposed)[1]
+                    if len(remaining) >= len(lost):
+                        continue
+                    score=(len(remaining),overlap,abs(shift),key,j,shift)
+                    if accepted is None or score < accepted[0]:
+                        accepted=(score,key,proposed,remaining)
+    return accepted

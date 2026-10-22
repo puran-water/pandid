@@ -1598,6 +1598,23 @@ def geometry_issues(fs: "Flowsheet", *, arrows: bool = True) -> list["Issue"]:
     # silently drawn, because a sheet that no longer conforms should say
     # so on the sheet that fails rather than in an issue.
     warnings.extend(_crowded_lines(fs))
+    from pandid.render.nameplates import fixed_boxes
+    from pandid.portgeom import unit_box
+    from pandid.routing.visibility import Rect
+    for index,(x0,y0,x1,y1) in enumerate(fixed_boxes(fs)):
+        box=Rect(x0,x1,y0,y1)
+        for unit in fs.units:
+            if unit.frame is None:
+                continue
+            ux0,uy0,ux1,uy1=unit_box(unit,unit.frame)
+            if min(x1,ux1)>max(x0,ux0) and min(y1,uy1)>max(y0,uy0):
+                errors.append(Issue('error','equipment-data-overlap',
+                    f'Equipment data box {index} overlaps {unit.name}'))
+        for stream in fs.streams:
+            if stream.route and any(box.intersects_segment(*a,*b)
+                                    for a,b in zip(stream.route.waypoints,stream.route.waypoints[1:])):
+                errors.append(Issue('error','route-crosses-equipment-data',
+                    f'{stream.name} crosses equipment data box {index}'))
 
     return errors + warnings
 

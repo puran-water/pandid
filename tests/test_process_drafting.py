@@ -500,7 +500,7 @@ def test_near_terminal_crossing_can_clear_more_than_two_parallel_tracks(monkeypa
     units=[SimpleNamespace(kind='unit',frame=Frame(x=a,y=b,w=c-a,h=d-b)) for a,b,c,d in data['bodies']]
     streams=[SimpleNamespace(route=Route(waypoints=p,manual=False)) for p in data['paths']]
     fs=SimpleNamespace(units=units,streams=streams,containments={},captions=[],regions=[],layout_options=SimpleNamespace(stream_spacing=14))
-    monkeypatch.setattr('pandid.render.svg.stream_polyline',lambda s:s.route.waypoints)
+    monkeypatch.setattr('pandid.render.native_routes.stream_polyline',lambda s:s.route.waypoints)
     before={i:s.route.waypoints for i,s in enumerate(streams)}
     assert crossing_order(before,5)[1]
     ends=[(p[0],p[-1]) for p in before.values()]

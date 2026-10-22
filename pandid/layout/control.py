@@ -74,6 +74,15 @@ def _place_free(fs: "Flowsheet") -> bool:
     taken = [Frame(x=x0,y=y0,w=x1-x0,h=y1-y0)
              for u in fs.units if u.frame is not None and u not in set(pending)
              for x0,y0,x1,y1 in [unit_box(u,u.frame)]]
+    from pandid.render.nameplates import fixed_boxes
+    taken.extend(Frame(x=x0,y=y0,w=x1-x0,h=y1-y0) for x0,y0,x1,y1 in fixed_boxes(fs))
+    from pandid.routing.captions import equipment_tags
+    # Equipment is frozen here. Following a route-dependent caption offset
+    # makes a free controller chase that caption on the next routing pass.
+    # Reserve nominal lettering for placement; the final tag/router passes
+    # still avoid the resulting control bodies and check all visible ink.
+    taken.extend(Frame(x=b.x_min,y=b.y_min,w=b.x_max-b.x_min,h=b.y_max-b.y_min)
+                 for b in equipment_tags(fs,use_cached=False).values())
     moved = False
     # Resolved in the order the sheet holds them, and a balloon wired
     # only to balloons still waiting is placed against whatever *is*
@@ -142,14 +151,33 @@ def _spot(fs: "Flowsheet", inst: "Unit", w: float, h: float,
         axis, coordinate = actuator
         want = tuple(coordinate - (w if axis == 0 else h) / 2 if i == axis else v
                      for i, v in enumerate(want))
+    bounds = None
+    from pandid.layout.subsystems import declared
+    if declared(fs) and fs.layout_options.boundary_page:
+        from pandid.render.drawio import fitted_band
+        from pandid.render.nameplates import plan
+        from pandid.layout.halo import balloon_pads, core_extent
+        width, height = fitted_band(fs, fs.layout_options.boundary_page)
+        _, data = plan(fs, (0, 0, width-50, 0))
+        extent = core_extent(((u, u.frame) for u in fs.units), balloon_pads(fs))
+        if extent:
+            bounds = (extent[0], 50., extent[1], height-data[3])
+        if getattr(fs, '_dense_nameplates', None):
+            bounds = (0., 50., width-50., height)
     if pin is None:
-        return _nearest_free(want[0], want[1], w, h, taken, True, True)
+        predicate = None
+        if declared(fs):
+            from pandid.layout.attach import _signal_escape_clear
+            boxes=[(f.x,f.y,f.x_max,f.y_max) for f in taken]
+            predicate=lambda x,y: _signal_escape_clear(inst,(x,y,x+w,y+h),boxes)
+        return _nearest_free(want[0], want[1], w, h, taken, True, True,
+                             bounds=bounds, predicate=predicate)
 
     cols, rows = _grid(fs)
     x = pin.x if pin.x is not None else _lane(cols, pin.col, COL_GAP)
     y = pin.y if pin.y is not None else _lane(rows, pin.row, ROW_GAP)
     return _nearest_free(want[0] if x is None else x, want[1] if y is None else y,
-                         w, h, taken, x is None, y is None)
+                         w, h, taken, x is None, y is None, bounds=bounds)
 
 
 def _actuator_axis(inst: "Unit") -> tuple[int, float] | None:
@@ -269,7 +297,7 @@ def _centroid(fs: "Flowsheet", inst: "Unit") -> tuple[float, float]:
 
 
 def _nearest_free(x: float, y: float, w: float, h: float, taken: list["Frame"],
-                  free_x: bool, free_y: bool) -> tuple[float, float]:
+                  free_x: bool, free_y: bool, *, bounds=None, predicate=None) -> tuple[float, float]:
     """The spot nearest ``(x, y)`` that no drawn box already holds.
 
     Walked as rings on a lattice so the answer is a function of the
@@ -290,7 +318,10 @@ def _nearest_free(x: float, y: float, w: float, h: float, taken: list["Frame"],
             if (dx and not free_x) or (dy and not free_y):
                 continue
             cx, cy = x + dx * STEP, y + dy * STEP
-            if not _hits(cx, cy, w, h, taken):
+            if bounds and not (bounds[0] <= cx and cx+w <= bounds[2]
+                               and bounds[1] <= cy and cy+h <= bounds[3]):
+                continue
+            if not _hits(cx, cy, w, h, taken) and (predicate is None or predicate(cx,cy)):
                 return cx, cy
     return x, y
 

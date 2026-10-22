@@ -37,6 +37,18 @@ def test_a_number_in_the_first_band_beside_its_run_needs_no_leader():
     assert abs(number.y) == pytest.approx(_first_band(DEPTH))
 
 
+def test_a_clear_interval_between_regular_anchors_is_used_on_the_pipe():
+    run=(((0.,0.),(120.,0.)),0.)
+    ink=[_Ink(-1.,-1.,121.,1.,'h',0.,'pipe',NAME),
+         _Ink(109.,-35.,111.,35.,'v',110.,'pipe','peer')]
+    number=_bare_stream_number([run],NAME,'black',NAME,10.,100.,20.,7,
+                              [(-20.,-35.,4.,35.),(-20.,10.,125.,35.),
+                               (-20.,-35.,125.,-10.)],[],ink,None,8.)
+    assert number.leader is None
+    assert number.y == 0
+    assert 4. < number.box[0] and number.box[2] < 109.
+
+
 def test_a_number_beyond_the_first_band_carries_a_leader_to_its_run():
     """The pipe and the first three bands are covered but for a 40-unit gap.
 

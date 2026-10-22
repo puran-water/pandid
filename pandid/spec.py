@@ -384,7 +384,7 @@ _QUADRANT_KEYS = {"safety": "a", "variable": "b", "high": "c", "low": "d"}
 _LOOP_KEYS = {"variable", "number"}
 _STREAM_KEYS = {
     "from", "to", "kind", "name", "draw_as_recycle", "properties", "tabulate", "via",
-    "color", "dasharray", "ends", "display_label", "flow_class", "representation",
+    "color", "dasharray", "ends", "display_label", "label_group", "flow_class", "representation",
     *LINE_NUMBER_FIELDS,
 }
 _COMPONENT_KEYS = {"name", "formula"}
@@ -410,6 +410,7 @@ _KIND_SIZES = {
 # valve or a blind sits with the plant running; a pump has no such
 # position, so naming one on it is a statement nothing draws.
 _KIND_TEXT = {
+    "direction": ("HeldPipeEnd",),
     "reference_code": ("Feed", "Product"),
     "normal_position": ("Valve", "Fitting"),
     # Where an actuated valve goes on loss of motive power. Narrower
@@ -1084,8 +1085,9 @@ def _read_stream(fs: Flowsheet, entry: Any, where: str) -> Stream:
     for key in ("color", "dasharray", "flow_class", "representation"):
         if key in data:
             setattr(stream, key, _text(data[key], f"{where}.{key}"))
-    if "display_label" in data:
-        stream.display_label = _text(data["display_label"], f"{where}.display_label")
+    for key in ("display_label", "label_group"):
+        if key in data:
+            setattr(stream, key, _text(data[key], f"{where}.{key}"))
     if "properties" in data:
         stream.properties = _read_properties(data["properties"], f"{where}.properties")
     if "tabulate" in data:
@@ -1319,7 +1321,7 @@ def _read_title_block(entry: Any, where: str) -> TitleBlock:
 
 
 _ANNOTATION_KEYS = {
-    "annotation": {"type", "title", "rows", "align", "position", "margin", "width", "font_size", "line_samples", "title_align", "title_font_size"},
+    "annotation": {"type", "title", "rows", "align", "position", "margin", "width", "font_size", "line_samples", "title_align", "title_font_size", "horizontal_padding"},
     "table": {"type", "title", "headers", "rows", "align", "position", "margin", "font_size",
               "col_align"},
     "equipment_list": {"type", "title", "align", "position", "margin", "width", "include"},
@@ -1411,6 +1413,8 @@ def _read_annotation(fs: Flowsheet, entry: Any, where: str) -> Annotation | Tabl
             kwargs["title_align"] = _text(data["title_align"], f"{where}.title_align")
         if "title_font_size" in data:
             kwargs['title_font_size'] = _number(data['title_font_size'], f'{where}.title_font_size')
+        if "horizontal_padding" in data:
+            kwargs['horizontal_padding'] = _number(data['horizontal_padding'], f'{where}.horizontal_padding')
         if "line_samples" in data:
             kwargs["line_samples"] = [dict(_mapping(v, f"{where}.line_samples"))
                                       for v in _sequence(data["line_samples"], f"{where}.line_samples")]
@@ -1565,6 +1569,8 @@ def _write_common(unit: Unit, entry: dict[str, Any]) -> dict[str, Any]:
         entry["reference"] = unit.reference
     if isinstance(unit, (unit_types.Feed, unit_types.Product)) and unit.reference_code:
         entry["reference_code"] = unit.reference_code
+    if isinstance(unit, unit_types.HeldPipeEnd) and unit.pipe.direction != 'inlet':
+        entry['direction'] = unit.pipe.direction
     for key in ("width", "height", "label_pos"):
         if getattr(unit, key) is not None:
             entry[key] = getattr(unit, key)
@@ -1894,6 +1900,8 @@ def _write_stream(stream: Stream) -> dict[str, Any]:
             entry[key] = getattr(stream, key)
     if stream.display_label is not None:
         entry["display_label"] = stream.display_label
+    if stream.label_group is not None:
+        entry["label_group"] = stream.label_group
     if stream.ends is not None:
         # A pair goes out as a list, which is what it came in as and
         # what YAML writes anyway; one name for both ends stays one
@@ -1970,6 +1978,8 @@ def _write_annotation(box: Annotation | TableBox) -> dict[str, Any]:
             entry["title_align"] = box.title_align
         if box.title_font_size is not None:
             entry['title_font_size'] = box.title_font_size
+        if box.horizontal_padding != 9:
+            entry['horizontal_padding'] = box.horizontal_padding
         if box.line_samples:
             entry["line_samples"] = [dict(sample) for sample in box.line_samples]
     entry["align"] = box.align

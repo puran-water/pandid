@@ -16,8 +16,22 @@ PAGE = "A1"
 ESCAPE_LANE = 50.0
 #: Clear pipe run between the padded core and each flag's nozzle rail.
 BOUNDARY_APPROACH = 110.0
+
+
+def boundary_approach(fs):
+    """A numbered boundary needs caption room; an unnumbered one needs exits.
+
+    Two ordinary 25-unit nozzle stand-offs remain on an unnumbered PFD.
+    The extra line-number reservation belongs only to sheets printing one.
+    """
+    from pandid.layout.subsystems import declared
+    numbered=any(s.kind in {'material','energy'} and s.label for s in fs.streams)
+    return 50. if declared(fs) and not numbered else BOUNDARY_APPROACH
+REFERENCE_FLAG_WIDTH = 290
+REFERENCE_FLAG_LINES = 4
 UNIT_SIZES = {"membrane_cage": (100, 134), "air_diffuser": (128, 64),
-              "basin_agitator": (64, 180), "submersible_mixer": (100, 70)}
+              "basin_agitator": (64, 180), "submersible_mixer": (100, 70),
+              "concrete_basin": (160, 120)}
 
 
 def apply(fs):
@@ -61,23 +75,73 @@ def lettering(fs, *, body, heading):
             if unit.kind in {'feed', 'product'} and getattr(unit, 'reference_code', ''):
                 from pandid.render.nameplates import _wrapped
                 from pandid.render.svg import FLAG_POINT, _FLAG_INSET
-                # Reference flags share one five-line construction size in
-                # process sheets and legends. Preserve the repeated-size gate:
-                # a long service cannot grow just one flag in the document.
-                unit.width = max(unit.width, 226 * ratio)
-                unit.height = max(unit.height, 5 * body * 1.2 + 2 * _FLAG_INSET + 8)
+                # One four-line construction plant-wide. Controlled drawing
+                # paths may wrap at a slash; every character is retained at the
+                # same body size instead of widening both rails for one token.
+                maximum = max(unit.width, REFERENCE_FLAG_WIDTH * ratio)
+                # Measure the four-line flag instead of spending the widest
+                # permitted rectangle for every short reference. The font,
+                # full destination and four-line construction are unchanged.
+                from pandid.render.reference_flags import wrap_reference
+                for candidate in range(math.ceil(unit.width), math.ceil(maximum) + 1, 5):
+                    available = candidate - max(30, .20*candidate) - FLAG_POINT - 8
+                    try:
+                        fits = len(wrap_reference(unit.tag, available, body)) <= REFERENCE_FLAG_LINES
+                    except ValueError:
+                        fits = False
+                    if fits:
+                        unit.width = candidate
+                        break
+                else:
+                    unit.width = maximum
+                if any(s.kind in {'material','energy'} and s.label for s in fs.streams):
+                    unit.width = maximum
+                unit.height = max(h * ratio, REFERENCE_FLAG_LINES * body * 1.2 + 2 * _FLAG_INSET + 8)
                 text_width_available = unit.width - max(30, .20 * unit.width) - FLAG_POINT - 8
-                unit.reference_body_lines = _wrapped(unit.tag, text_width_available, body)
-                if len(unit.reference_body_lines) > 5:
+                from pandid.render.reference_flags import wrap_reference
+                unit.reference_body_lines = wrap_reference(unit.tag, text_width_available, body)
+                if len(unit.reference_body_lines) > REFERENCE_FLAG_LINES:
                     raise ValueError('REFERENCE_FLAG_TEXT_CAPACITY: ' + unit.name)
             if unit.kind in {'feed', 'product'} and not getattr(unit, 'reference_code', ''):
                 lines = (unit.tag or '').splitlines() or ['']
                 unit.width = max(unit.width, max(text_width(s, body) for s in lines) + 40)
                 unit.height = max(unit.height, len(lines) * body * 1.2 + 12)
+    references = [u for u in fs.units if u.kind in {'feed','product'}
+                  and getattr(u, 'reference_code', '')]
+    if references:
+        common_width = max(u.width for u in references)
+        for unit in references:
+            unit.width = common_width
+            available = common_width - max(30, .20*common_width) - FLAG_POINT - 8
+            unit.reference_body_lines = wrap_reference(unit.tag, available, body)
     for row in fs.equipment_data.values():
         row['font_size'] = body
         row['heading_font_size'] = heading
     return fs
+
+
+def note_panels(fs, panels, *, font_size):
+    """One measured note band, with columns instead of stacked corner boxes."""
+    from pandid.document import Annotation
+    from pandid.render.nameplates import _wrapped
+    from pandid.render.svg import _page
+    from pandid.render.furniture import INNER
+    page = _page(PAGE, fs.print_scale)
+    width = page.width - 2 * INNER
+    count = min(3, len(panels))
+    if not count:
+        return
+    columns = [[] for _ in range(count)]
+    for title, rows in panels:
+        target = min(columns, key=len)
+        text = title + ': ' + '; '.join(str(row) for row in rows)
+        target.extend(_wrapped(text, width/count - 24, font_size))
+        target.append('')
+    lines = [tuple(col[i] if i < len(col) else '' for col in columns)
+             for i in range(max(map(len, columns)))]
+    fs.add_annotation(Annotation(title='CONTROL AND OPERATING NOTES', rows=lines,
+                                width=width, font_size=font_size, title_font_size=font_size,
+                                align='top'))
 
 
 def align_boundaries(fs):
@@ -93,11 +157,18 @@ def align_boundaries(fs):
     from dataclasses import replace
     from pandid.layout.halo import balloon_pads, core_extent
     boundaries = [u for u in fs.units if u.kind in {"feed", "product"}]
+    dense = getattr(fs, '_dense_boundaries', {})
+    if dense:
+        if set(dense) != {u.name for u in boundaries}:
+            raise ValueError('BOUNDARY_LAYOUT_INCOMPLETE')
+        for unit in boundaries:
+            unit.frame = replace(unit.frame, x=dense[unit.name][0], y=dense[unit.name][1])
+        return
     extent = core_extent(((u, u.frame) for u in fs.units), balloon_pads(fs))
     if extent is None or not boundaries:
         return
-    left = extent[0] - BOUNDARY_APPROACH
-    right = extent[1] + BOUNDARY_APPROACH
+    left = extent[0] - boundary_approach(fs)
+    right = extent[1] + boundary_approach(fs)
     page = getattr(fs.layout_options, "boundary_page", None)
     if page:
         from pandid.render.drawio import fitted_band
@@ -141,11 +212,23 @@ def align_boundaries(fs):
                              for p in ports if p.owner is not None and p.owner.frame is not None]
                 centre = sum(ordinates) / len(ordinates) if ordinates else unit.frame.cy
                 desired.append(centre - unit.frame.h / 2)
+            # Match the rail order to connected nozzles before packing. The
+            # old alphabetical order reversed parallel services and forced
+            # their routes behind neighbouring flags.
+            ordered = sorted(zip(rail, desired), key=lambda pair: (pair[1], pair[0].name))
+            rail, desired = [p[0] for p in ordered], [p[1] for p in ordered]
             # Reuse the engine's ordered least-squares row packing. A boundary
             # is charged its own height plus clear paper, not an old process
             # row's tallest cell. No pinned rail is moved by this policy.
-            ys = _aligned_positions(desired, [u.frame.h for u in rail],
-                                    float('-inf'), gap=fs.layout_options.boundary_flag_gap)
+            from pandid.layout.subsystems import declared
+            lower, upper = float('-inf'), None
+            if page and declared(fs):
+                from pandid.render.nameplates import plan
+                width, height = fitted_band(fs, page)
+                _, data = plan(fs, (0, 0, width-ESCAPE_LANE, 0))
+                lower, upper = 50., height-data[3]-ESCAPE_LANE+50
+            ys = _aligned_positions(desired, [u.frame.h for u in rail], lower,
+                                    right=upper, gap=fs.layout_options.boundary_flag_gap)
         for index, unit in enumerate(rail):
             f = unit.frame
             y = ys[index] if ys is not None else max(f.y, cursor)

@@ -135,8 +135,17 @@ def route_obstacles(fs, stream):
             boxes.extend(wall_boxes(unit))
         else:
             x0,y0,x1,y1=unit_box(unit,unit.frame)
+            # Preserve the actual body as a separate hard obstacle. A route
+            # already inside a clearance halo must never be moved through
+            # the symbol while retaining the same halo-intersection count.
+            boxes.append(Rect(x0,x1,y0,y1))
             if unit.kind == 'instrument' and unit not in {stream.source.owner, stream.dest.owner}:
                 pad=getattr(fs.layout_options, 'instrument_clearance', 0)
-                x0,y0,x1,y1=x0-pad,y0-pad,x1+pad,y1+pad
-            boxes.append(Rect(x0,x1,y0,y1))
-    return boxes+[Rect(c.x,c.x+c.w,c.y,c.y+c.h) for c in captions(fs)]
+                if pad:
+                    boxes.append(Rect(x0-pad,x1+pad,y0-pad,y1+pad))
+    from pandid.routing.captions import equipment_tags
+    from pandid.routing.captions import foreign_line_plates
+    from pandid.render.nameplates import fixed_boxes
+    boxes.extend(Rect(x0,x1,y0,y1) for x0,y0,x1,y1 in fixed_boxes(fs))
+    return (boxes + list(equipment_tags(fs).values()) + foreign_line_plates(fs,stream)
+            + [Rect(c.x,c.x+c.w,c.y,c.y+c.h) for c in captions(fs)])

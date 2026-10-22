@@ -350,7 +350,12 @@ def _clear_standoff(inst: "Instrument", tap: Point, ref: Point,
                 gap, against = -TOUCHING, obstacles
             else:
                 gap, against = RESOLVED_CLEARANCE, obstacles + keepouts
-            if not any(_intrusion(box, o, gap) > 0.0 for o in against):
+            clear = not any(_intrusion(box, o, gap) > 0.0 for o in against)
+            if clear and inst.flowsheet is not None:
+                from pandid.layout.subsystems import declared
+                if declared(inst.flowsheet) and inst.pin_ is None:
+                    clear = _signal_escape_clear(inst, box, obstacles)
+            if clear:
                 return distance, angle
             # Ranked on one rule for every candidate, and the checker's
             # rather than the search's: where the sheet has no free
@@ -361,6 +366,37 @@ def _clear_standoff(inst: "Instrument", tap: Point, ref: Point,
             if least is None or crowding < least:
                 fallback, least = (distance, angle), crowding
     return fallback
+
+
+def _signal_escape_clear(inst, box, obstacles):
+    """A separate bubble must also leave room for its connected signal ports.
+
+    Body-only spacing can leave the next bubble directly in front of an input
+    terminal. There is then no route into the terminal without crossing it.
+    """
+    from pandid.geometry import Frame
+    from pandid.portgeom import port_anchor
+    old = inst.frame
+    frame = Frame(x=box[0],y=box[1],w=box[2]-box[0],h=box[3]-box[1],
+                  port_faces=dict(old.port_faces) if old else {})
+    for corridor in _signal_keepouts(inst, frame):
+        if any(_intrusion(corridor,obstacle,RESOLVED_CLEARANCE)>0 for obstacle in obstacles):
+            return False
+    return True
+
+
+def _signal_keepouts(inst, frame):
+    from pandid.portgeom import port_anchor
+    corridors = []
+    for name, port in inst.ports.items():
+        if port.stream is None or port.role != 'signal':
+            continue
+        x,y,direction = port_anchor(inst,frame,name)
+        end = (x+ESCAPE_ROOM*({'E':1,'W':-1}.get(direction,0)),
+               y+ESCAPE_ROOM*({'S':1,'N':-1}.get(direction,0)))
+        corridor = (min(x,end[0]),min(y,end[1]),max(x,end[0]),max(y,end[1]))
+        corridors.append(corridor)
+    return corridors
 
 
 def place_attached(fs: "Flowsheet") -> bool:
@@ -396,6 +432,10 @@ def place_attached(fs: "Flowsheet") -> bool:
                  if u.frame is not None and not is_attached(u)
                  and not (fs.layout_options.control_grid and u.kind == 'instrument' and u.pin_ is None)]
     keepouts = _nozzle_keepouts(fs)
+    from pandid.render.nameplates import fixed_boxes
+    obstacles.extend(fixed_boxes(fs))
+    from pandid.routing.captions import equipment_tags
+    obstacles.extend((b.x_min,b.y_min,b.x_max,b.y_max) for b in equipment_tags(fs).values())
     stacks = shared_tap_stacks(fs)
     row_positions = {}
     # Balloons chain (an interlock hung under a controller hung off a
@@ -474,6 +514,14 @@ def place_attached(fs: "Flowsheet") -> bool:
                 port_faces=dict(old.port_faces) if old is not None else {},
             )
             inst.tap = (tx, ty)
+            from pandid.layout.subsystems import declared
+            if declared(fs):
+                # Later bubbles must preserve the signal escape room of the
+                # earlier ones, as well as clearing their bodies. Checking
+                # only the new bubble's own ports misses the reverse clash.
+                obstacles.extend((x0-RESOLVED_CLEARANCE,y0-RESOLVED_CLEARANCE,
+                                  x1+RESOLVED_CLEARANCE,y1+RESOLVED_CLEARANCE)
+                                 for x0,y0,x1,y1 in _signal_keepouts(inst,inst.frame))
             pending.remove(inst)
             progressed = True
         if not progressed:

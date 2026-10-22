@@ -190,6 +190,10 @@ class DefaultRouter:
         from pandid.routing.separation import preview_separated_waypoints
 
         _refuse_non_finite_geometry(fs)
+        fs._resolved_tag_boxes=None
+        fs._planned_label_leaders={}
+        from pandid.routing.captions import line_plates, foreign_line_plates
+        fs._planned_line_plates = line_plates(fs)
         graph = VisibilityGraph(fs, margin=15.0)
         graphs = {frozenset(): graph}
         edge_penalties: dict[tuple[tuple[float, float], tuple[float, float]], float] = {}
@@ -315,9 +319,10 @@ class DefaultRouter:
             )
 
             is_recycle = getattr(stream, "is_recycle", False)
+            reserved = foreign_line_plates(fs,stream)
             path = find_path(
                 graph, start_proj, goal_proj, start_dir, goal_dir,
-                edge_penalties, is_recycle, crossing_index,
+                edge_penalties, is_recycle, crossing_index, forbidden=reserved,
             )
 
             if path:
@@ -329,7 +334,7 @@ class DefaultRouter:
                     edge_penalties[(v_node, u_node)] = edge_penalties.get((v_node, u_node), 0.0) + 2000.0
             else:
                 path = _fallback_path(
-                    start, start_proj, goal_proj, goal, graph.obstacles, crossing_index
+                    start, start_proj, goal_proj, goal, graph.obstacles+reserved, crossing_index
                 )
 
             # Simplify (remove collinear intermediate points), but never drop the
@@ -370,7 +375,22 @@ class DefaultRouter:
             clear_bodies(fs)
             from pandid.routing.terminal_clearance import protect
             protect(fs)
+            from pandid.routing.obstacle_repair import repair as reroute_obstacles
+            reroute_obstacles(fs)
             from pandid.routing.crossing_clearance import repair
             repair(fs)
             from pandid.routing.terminal_clearance import square_interior_micro_jogs
             square_interior_micro_jogs(fs)
+            # Squaring a subpixel native jog changes the actual crossing
+            # geometry. It must precede the last clearance check, even when
+            # no line-number leader needs a further routing pass.
+            repair(fs)
+            from pandid.routing.captions import reserve_leaders
+            for _ in range(4):
+                if not reserve_leaders(fs):
+                    break
+                before=[tuple(s.route.waypoints) if s.route else None for s in fs.streams]
+                reroute_obstacles(fs)
+                repair(fs)
+                if before==[tuple(s.route.waypoints) if s.route else None for s in fs.streams]:
+                    break

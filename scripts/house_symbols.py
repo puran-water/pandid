@@ -15,10 +15,11 @@ from pandid.render.house_artwork import ARTWORK
 from mxgraph_to_svg import convert_shape
 
 KINDS = {
+    'house.pipe.held_end': ('held_pipe_end', 'default', {'pipe': 'W'}),
     'house.tank.atmospheric_vertical': ('tank', 'atmospheric', {'inlet': 'W', 'outlet': 'E'}),
     'house.filter.cartridge': ('filter', 'cartridge', {'inlet': 'W', 'outlet': 'E'}),
     'house.heater.immersion': ('heater', 'immersion', {'inlet': 'W', 'outlet': 'E'}),
-    'house.valve.pressure_relief': ('valve', 'pressure_relief', {'inlet': 'W', 'outlet': 'E'}),
+    'house.valve.pressure_relief': ('valve', 'pressure_relief', {'inlet': 'W', 'outlet': 'E', 'actuator': 'N'}),
     'house.dosing.injection_quill': ('injection_quill', 'default', {'chemical_in': 'W', 'injection': 'E'}),
     'house.membrane.pressure_vessel': ('pressure_membrane', 'default', {'inlet': 'W', 'concentrate': 'E', 'permeate': 'S'}),
     'house.membrane.pressure_array': ('pressure_membrane_array', 'default', {'inlet': 'W', 'concentrate': 'E', 'permeate': 'S'}),

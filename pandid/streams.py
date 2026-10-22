@@ -169,6 +169,7 @@ class Stream(TapHost):
     # P&ID-only rule that outranks all of this.
     ends: "str | tuple[str, str] | None" = None
     display_label: str | None = None  # None inherits identity; empty hides only lettering.
+    label_group: str | None = None  # Explicit physical line across its valve/tap segments.
     auto_named: bool = True  # False if the caller named it
     # Line-number components. The author supplies all but `sequence`,
     # which auto-numbering fills; see Flowsheet.renumber_streams().
@@ -219,7 +220,7 @@ class Stream(TapHost):
     def __setattr__(self, name: str, value) -> None:
         if name == "flow_class" and value not in {"main", "secondary"}:
             raise ValueError("flow_class must be main or secondary")
-        if name == "display_label" and value is not None and not isinstance(value, str):
+        if name in {"display_label", "label_group"} and value is not None and not isinstance(value, str):
             raise ValueError("stream display_label must be text or None")
         check = self._CHECKED.get(name)
         if check is not None and value is not None:

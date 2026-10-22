@@ -1269,7 +1269,7 @@ class _Tags(NamedTuple):
     findings: list = []
 
 
-def _tag_pass(fs, registry, joints: "str | None", direction: str) -> "_Tags":
+def _tag_pass(fs, registry, joints: "str | None", direction: str, *, pending_routes=False) -> "_Tags":
     """Run the sheet's equipment-tag placement, without drawing
     anything.
 
@@ -1303,8 +1303,10 @@ def _tag_pass(fs, registry, joints: "str | None", direction: str) -> "_Tags":
                                    tag_findings)
 
     sheet = SvgRenderer(registry)
-    ink = _ink(fs, direction)
+    ink = _ink(fs, direction, include_hops=not pending_routes)
     symbols = [(u, unit_box(u, u.frame)) for u in fs.units if u.frame is not None]
+    from pandid.render.nameplates import fixed_boxes
+    symbols += [(None,b) for b in fixed_boxes(fs)]
     # ``joints`` is the sheet's answer about its connections, and it is
     # threaded in for the same reason ``ink`` is: on a flanged sheet the
     # marks are ink the tag has to step off, and a pass told about the
@@ -1317,7 +1319,7 @@ def _tag_pass(fs, registry, joints: "str | None", direction: str) -> "_Tags":
     # runs, so both are told where it went; ``SvgRenderer._draw_units``
     # seeds itself with the same boxes and this pass has to see the same
     # paper taken, or the two settle a crowded tag on different sides.
-    codes = quadrant_labels(fs, direction)
+    codes = quadrant_labels(fs, direction, include_hops=not pending_routes)
     symbols += [(None, b) for b in map(_unit_label_box, codes) if b is not None]
     at: dict = {}
     items: list = []
@@ -1751,7 +1753,7 @@ class DrawioRenderer:
             body.extend(_quadrant_cell(f"q{n}", code, fit))
 
         from pandid.render.nameplates import plan
-        data, _ = plan(fs, self._drawing_box(fs, equipment_data=False, text_boxes=text_boxes))
+        data, _ = plan(fs, self._drawing_box(fs, equipment_data=False, text_boxes=text_boxes), fit_to_ink=True)
         for block in data:
             # The exporter uses fitted coordinates. A group transformation
             # keeps native textbox metrics, padding and line spacing in step.
@@ -2695,31 +2697,8 @@ class DrawioRenderer:
         when a route turns at the box: replacing its endpoint alone would make
         that first or last run diagonal in Desktop.
         """
-        points = stream_polyline(stream)
-        if not points:
-            return points
-        for reverse, unit in ((False, stream.source.owner), (True, stream.dest.owner)):
-            if unit.kind not in {"tee", "junction"}:
-                continue
-            if reverse:
-                points.reverse()
-            x0, y0, x1, y1 = self._cell_box(unit)
-            point = ((x0+x1)/2, points[0][1] if unit.kind == "junction" and unit.is_header else (y0+y1)/2)
-            if point != points[0]:
-                points.insert(0, point)
-            if reverse:
-                points.reverse()
-        simplified = []
-        for point in points:
-            if simplified and point == simplified[-1]:
-                continue
-            while len(simplified) >= 2 and (
-                simplified[-2][0] == simplified[-1][0] == point[0]
-                or simplified[-2][1] == simplified[-1][1] == point[1]
-            ):
-                simplified.pop()
-            simplified.append(point)
-        return simplified
+        from pandid.render.native_routes import stream_polyline as native_polyline
+        return native_polyline(stream)
 
     @staticmethod
     def _ends(exit_at, entry_at) -> list[str]:
@@ -2775,7 +2754,8 @@ class DrawioRenderer:
         placed = (stream_numbers(fs, list(tags.plates), joints, direction, fitted_region(fs),
                                  arrows, self.registry)
                   if number_plan is None else number_plan)
-        numbers = {number.name: number for number in placed}
+        from pandid.render.line_groups import caption_owners
+        numbers = caption_owners(fs, placed)
         shape = enclosure_shape(fs)
         # The same list the sheet reports, from the same placement: both
         # backends ask one function where a number goes, so both owe the
@@ -2889,9 +2869,9 @@ class DrawioRenderer:
             # :meth:`to_drawio` already states for a zone grid, and the
             # trade :func:`_leader` and :meth:`_taps` already take.
             boxed = False
-            if not signal and s.name not in labelled:
+            if not signal and id(s) in numbers and s.name not in labelled:
                 labelled.add(s.name)
-                number = numbers.get(s.name)
+                number = numbers[id(s)]
                 boxed = number is not None and shape != "none"
                 if not boxed:
                     label = s.label
@@ -3111,7 +3091,7 @@ class DrawioRenderer:
         inner = extend_bounds(inner,text_boxes)
         if equipment_data:
             from pandid.render.nameplates import plan
-            return plan(fs, inner)[1]
+            return plan(fs, inner, fit_to_ink=bool(text_boxes))[1]
         return inner
 
     @staticmethod
@@ -3393,7 +3373,8 @@ class DrawioRenderer:
             size, 0.0, 0.0, [])
         return _text_box(cid, title, [str(r) for r in rows], x, y, w, h, size,
                          title_h, title_align=getattr(obj, "title_align", "center"),
-                         title_font=F.annotation_title_font(obj))
+                         title_font=F.annotation_title_font(obj),
+                         horizontal_padding=getattr(obj, 'horizontal_padding', 9.0))
 
     def _title_strip(self, cid: str, block, x, y, w, h, name: str, date: str,
                      scale: str) -> list[str]:
@@ -4368,7 +4349,8 @@ def _stream_table(cid: str, table, x, y) -> list[str]:
 
 
 def _text_box(cid: str, title: str, rows, x, y, w, h, font: float = 11.0,
-              title_h: float = 0.0, title_align: str = "center", title_font: float | None = None) -> list[str]:
+              title_h: float = 0.0, title_align: str = "center", title_font: float | None = None,
+              horizontal_padding: float = 9.0) -> list[str]:
     """A box of free-form lines, for furniture that is not a grid.
 
     A note list written as sentences has one column, and ruling one
@@ -4399,7 +4381,7 @@ def _text_box(cid: str, title: str, rows, x, y, w, h, font: float = 11.0,
         # Centred, bold and one point larger, which is draw_annotation's
         # own rule; the band is `_ann_layout`'s so the rule under it
         # lands where the sheet rules it.
-        out += _strip_label(f"{cid}-t", ("text", x + (9 if title_align == "left" else w / 2), y + title_h - 6,
+        out += _strip_label(f"{cid}-t", ("text", x + (horizontal_padding if title_align == "left" else w / 2), y + title_h - 6,
                                          title, title_font or font + 1, "start" if title_align == "left" else "middle", True, "black"))
         out += _segment(f"{cid}-r", x, y + title_h, x + w, y + title_h,
                         _INK, F._BOX_UNDERLINE)
@@ -4407,7 +4389,7 @@ def _text_box(cid: str, title: str, rows, x, y, w, h, font: float = 11.0,
     # at `pad` = 9 from the box edge, less the two units a draw.io cell
     # spends before its first letter (:data:`_TEXT_INSET`).
     body = ("text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;"
-            f"align=left;verticalAlign=top;spacingLeft=7;fontSize={font:g};"
+            f"align=left;verticalAlign=top;spacingLeft={horizontal_padding-2:g};fontSize={font:g};"
             f"fontColor={_LINE_INK};")
     return out + [
         f'        <mxCell id="{cid}-b" '

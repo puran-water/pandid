@@ -372,9 +372,14 @@ class Annotation:
     line_samples: list[dict] = field(default_factory=list)
     title_align: str = "center"
     title_font_size: float | None = None
+    horizontal_padding: float = 9.0
 
     def __post_init__(self):
         self.align = _resolve_align(self.align, "top-right")
+        import math
+        if (type(self.horizontal_padding) not in {int, float}
+                or not math.isfinite(self.horizontal_padding) or self.horizontal_padding <= 0):
+            raise ValueError('annotation horizontal_padding must be positive and finite')
         if self.title_align not in {"left", "center"}:
             raise ValueError("annotation title_align must be left or center")
         if self.title_font_size is not None:
