@@ -1,5 +1,22 @@
 # pandid
 
+## Puran Water fork
+
+This is the Puran Water fork of the upstream drawing library credited below. It supports the drawing layer used in our engineering workflows; it does not calculate the plant balance or authorize an engineering issue.
+
+To use this fork, install its Git source rather than the upstream package-index release:
+
+```sh
+uv pip install 'pandid @ git+https://github.com/puran-water/pandid.git@main'
+```
+
+Pin a commit for repeatable rendering. The `pip install pandid` examples below describe upstream distribution, not a guarantee of the same fork revision. Licences, notices and symbol attribution remain in force.
+
+[Sizing-to-balance](https://github.com/puran-water/PuranOS-public/blob/main/docs/workflows.md) supplies retained engineering evidence; [PuranOS Studio](https://github.com/puran-water/PuranOS-public/blob/main/docs/studio.md) presents drawing and concept publications. The drawing library accepts supplied stream properties and does not establish their engineering validity.
+
+Maintained by [Puran Water](https://puranwater.com/) · [Discuss a process-engineering project](https://puranwater.com/contact/).
+
+
 Generate publication-quality P&IDs and process flow diagrams from a topological
 flowsheet, in pure Python with no runtime dependencies.
 
